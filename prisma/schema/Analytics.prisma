@@ -1,0 +1,34 @@
+// ============================================
+// ANALYTICS & TRACKING
+// ============================================
+
+model SearchHistory {
+    id           String @id @default(uuid())
+    query        String
+    resultsCount Int
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+
+    @@index([userId])
+    @@index([query])
+    @@map("search_history")
+}
+
+model ViewHistory {
+    id String @id @default(uuid())
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    productId String
+    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+    viewedAt DateTime @default(now())
+
+    @@index([userId])
+    @@index([productId])
+    @@map("view_history")
+}

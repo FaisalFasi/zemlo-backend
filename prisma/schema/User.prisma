@@ -1,0 +1,47 @@
+// ============================================
+// USER & AUTHENTICATION MODELS
+// ============================================
+
+model User {
+    id                   String    @id @default(uuid())
+    email                String    @unique
+    password             String
+    firstName            String
+    lastName             String
+    phone                String?
+    avatar               String?
+    role                 UserRole  @default(CUSTOMER)
+    isActive             Boolean   @default(true)
+    isVerified           Boolean   @default(false)
+    verificationToken    String?
+    resetPasswordToken   String?
+    resetPasswordExpires DateTime?
+    lastLogin            DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    addresses        Address[]
+    orders           Order[]
+    cart             Cart?
+    wishlist         Wishlist?
+    sellerProfile    SellerProfile?
+    reviews          Review[]
+    productQuestions ProductQuestion[]
+    productAnswers   ProductAnswer[]
+    notifications    Notification[]
+    searchHistories  SearchHistory[]
+    viewHistories    ViewHistory[]
+
+    @@index([email])
+    @@index([role])
+    @@map("users")
+}
+
+enum UserRole {
+    CUSTOMER
+    SELLER
+    ADMIN
+    SUPER_ADMIN
+}

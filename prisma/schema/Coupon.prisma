@@ -1,0 +1,45 @@
+
+// ============================================
+// COUPONS & PROMOTIONS
+// ============================================
+
+model Coupon {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  description   String?  @db.Text
+  
+  type          DiscountType
+  value         Decimal  @db.Decimal(10, 2) // Percentage or fixed amount
+  
+  // Restrictions
+  minOrderAmount Decimal? @db.Decimal(10, 2)
+  maxDiscount   Decimal? @db.Decimal(10, 2)
+  usageLimit    Int?     // Total times can be used
+  usageLimitPerUser Int? @default(1)
+  usageCount    Int      @default(0)
+  
+  // Validity
+  startsAt      DateTime
+  expiresAt     DateTime
+  
+  isActive      Boolean  @default(true)
+  
+  // Applicable to
+  appliesToCategories String[] // Category IDs
+  appliesToProducts   String[] // Product IDs
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders        Order[]
+
+  @@index([code])
+  @@index([expiresAt])
+  @@map("coupons")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}

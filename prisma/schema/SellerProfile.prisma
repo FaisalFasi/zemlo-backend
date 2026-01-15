@@ -1,0 +1,63 @@
+// ============================================
+// SELLER/VENDOR MODELS
+// ============================================
+
+model SellerProfile {
+    id     String @id @default(uuid())
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    businessName  String
+    businessEmail String  @unique
+    businessPhone String
+    taxId         String? // VAT/GST number
+    logo          String?
+    description   String? @db.Text
+
+    // Verification
+    isVerified Boolean   @default(false)
+    verifiedAt DateTime?
+
+    // Performance metrics
+    totalSales      Decimal @default(0) @db.Decimal(12, 2)
+    rating          Decimal @default(0) @db.Decimal(3, 2) // 0-5
+    totalReviews    Int     @default(0)
+    fulfillmentRate Decimal @default(100) @db.Decimal(5, 2) // Percentage
+    responseTime    Int     @default(24) // Hours
+
+    // Banking (for payouts)
+    bankName      String?
+    accountNumber String?
+    routingNumber String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    products      Product[]
+    warehouses    Warehouse[]
+    sellerReviews SellerReview[]
+    payouts       Payout[]
+
+    @@index([userId])
+    @@index([businessEmail])
+    @@map("seller_profiles")
+}
+
+model SellerReview {
+    id      String  @id @default(uuid())
+    rating  Int // 1-5
+    comment String? @db.Text
+
+    sellerId String
+    seller   SellerProfile @relation(fields: [sellerId], references: [id])
+
+    orderId String
+    order   Order  @relation(fields: [orderId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([sellerId])
+    @@map("seller_reviews")
+}

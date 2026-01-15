@@ -1,0 +1,42 @@
+// ============================================
+// SHIPPING & TRACKING
+// ============================================
+
+model Shipment {
+    id             String  @id @default(uuid())
+    trackingNumber String? @unique
+    carrier        String // "FedEx", "UPS", "DHL"
+    service        String // "Ground", "Express"
+
+    status ShipmentStatus @default(PENDING)
+
+    shippedAt         DateTime?
+    deliveredAt       DateTime?
+    estimatedDelivery DateTime?
+
+    orderId String
+    order   Order  @relation(fields: [orderId], references: [id])
+
+    trackingUrl String?
+    labelUrl    String?
+
+    weight Decimal? @db.Decimal(8, 2)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([orderId])
+    @@index([trackingNumber])
+    @@map("shipments")
+}
+
+enum ShipmentStatus {
+    PENDING
+    LABEL_CREATED
+    PICKED_UP
+    IN_TRANSIT
+    OUT_FOR_DELIVERY
+    DELIVERED
+    FAILED
+    RETURNED
+}
