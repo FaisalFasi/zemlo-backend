@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js" // using -js will create migration in node-module and we dont need output explicitly for default folder
+
+  // output   = "../generated/prisma"
 }
 
 datasource db {

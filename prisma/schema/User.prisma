@@ -33,6 +33,7 @@ model User {
     notifications    Notification[]
     searchHistories  SearchHistory[]
     viewHistories    ViewHistory[]
+    permissions      UserPermission[]
 
     @@index([email])
     @@index([role])
@@ -43,5 +44,4 @@ enum UserRole {
     CUSTOMER
     SELLER
     ADMIN
-    SUPER_ADMIN
 }

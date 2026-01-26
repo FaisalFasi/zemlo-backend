@@ -1,0 +1,62 @@
+model Permission {
+    id          String             @id @default(uuid())
+    name        String             @unique // "manage_products"
+    displayName String // "Manage Products"
+    description String? // "Create, edit, delete products"
+    category    PermissionCategory // Groups related permissions
+
+    createdAt DateTime @default(now())
+
+    // Relations
+    users        UserPermission[]
+    roleDefaults RolePermission[] // Default permissions for each role
+
+    @@index([category])
+    @@map("permissions")
+}
+
+enum PermissionCategory {
+    PRODUCTS
+    ORDERS
+    USERS
+    FINANCE
+    CONTENT
+    SETTINGS
+    ANALYTICS
+}
+
+model UserPermission {
+    id String @id @default(uuid())
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    permissionId String
+    permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+    // Audit trail
+    grantedBy String? // Admin user ID who granted this
+    grantedAt DateTime @default(now())
+
+    // Optional: Time-limited permissions
+    expiresAt DateTime?
+
+    @@unique([userId, permissionId])
+    @@index([userId])
+    @@index([permissionId])
+    @@map("user_permissions")
+}
+
+model RolePermission {
+    id   String   @id @default(uuid())
+    role UserRole
+
+    permissionId String
+    permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    @@unique([role, permissionId])
+    @@index([role])
+    @@map("role_permissions")
+}
