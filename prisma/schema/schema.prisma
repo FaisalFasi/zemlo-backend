@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js" // using -js will create migration in node-module and we dont need output explicitly for default folder
-
   // output   = "../generated/prisma"
 }
 

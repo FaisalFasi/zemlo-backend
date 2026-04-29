@@ -55,7 +55,8 @@ CREATE TABLE "addresses" (
     "country" TEXT NOT NULL,
     "isDefault" BOOLEAN NOT NULL DEFAULT false,
     "type" "AddressType" NOT NULL DEFAULT 'BOTH',
-    "userId" TEXT NOT NULL,
+    "userId" TEXT,
+    "isGuestAddress" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -68,6 +69,7 @@ CREATE TABLE "search_history" (
     "query" TEXT NOT NULL,
     "resultsCount" INTEGER NOT NULL,
     "userId" TEXT,
+    "sessionId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "search_history_pkey" PRIMARY KEY ("id")
@@ -78,6 +80,7 @@ CREATE TABLE "view_history" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
+    "sessionId" TEXT,
     "viewedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "view_history_pkey" PRIMARY KEY ("id")
@@ -86,7 +89,8 @@ CREATE TABLE "view_history" (
 -- CreateTable
 CREATE TABLE "carts" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "userId" TEXT,
+    "sessionId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -202,6 +206,11 @@ CREATE TABLE "notifications" (
 CREATE TABLE "orders" (
     "id" TEXT NOT NULL,
     "orderNumber" TEXT NOT NULL,
+    "userId" TEXT,
+    "guestEmail" TEXT,
+    "guestPhone" TEXT,
+    "guestFirstName" TEXT,
+    "guestLastName" TEXT,
     "subtotal" DECIMAL(10,2) NOT NULL,
     "tax" DECIMAL(10,2) NOT NULL,
     "shippingCost" DECIMAL(10,2) NOT NULL,
@@ -210,7 +219,6 @@ CREATE TABLE "orders" (
     "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
     "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
     "fulfillmentStatus" "FulfillmentStatus" NOT NULL DEFAULT 'UNFULFILLED',
-    "userId" TEXT NOT NULL,
     "shippingAddressId" TEXT NOT NULL,
     "billingAddressId" TEXT NOT NULL,
     "shippingMethod" TEXT,
@@ -318,6 +326,27 @@ CREATE TABLE "role_permissions" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "role_permissions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "platform_settings" (
+    "id" TEXT NOT NULL,
+    "allowPublicSellerRegistration" BOOLEAN NOT NULL DEFAULT false,
+    "requireSellerApproval" BOOLEAN NOT NULL DEFAULT true,
+    "commissionRate" DECIMAL(5,2) NOT NULL DEFAULT 0,
+    "allowGuestCheckout" BOOLEAN NOT NULL DEFAULT true,
+    "requireEmailVerification" BOOLEAN NOT NULL DEFAULT false,
+    "requireSellerPhoneVerification" BOOLEAN NOT NULL DEFAULT false,
+    "storeName" TEXT NOT NULL DEFAULT 'My E-Commerce Store',
+    "storeEmail" TEXT NOT NULL DEFAULT 'support@example.com',
+    "supportPhone" TEXT,
+    "enableReviews" BOOLEAN NOT NULL DEFAULT true,
+    "enableWishlist" BOOLEAN NOT NULL DEFAULT true,
+    "enableChat" BOOLEAN NOT NULL DEFAULT false,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedBy" TEXT,
+
+    CONSTRAINT "platform_settings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -521,6 +550,21 @@ CREATE TABLE "seller_reviews" (
 );
 
 -- CreateTable
+CREATE TABLE "sessions" (
+    "id" TEXT NOT NULL,
+    "sessionId" TEXT NOT NULL,
+    "userId" TEXT,
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "deviceId" TEXT,
+    "lastActivityAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "shipments" (
     "id" TEXT NOT NULL,
     "trackingNumber" TEXT,
@@ -544,7 +588,7 @@ CREATE TABLE "shipments" (
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "password" TEXT,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
     "phone" TEXT,
@@ -562,11 +606,22 @@ CREATE TABLE "users" (
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "_CartItemToSession" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+
+    CONSTRAINT "_CartItemToSession_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE INDEX "addresses_userId_idx" ON "addresses"("userId");
 
 -- CreateIndex
 CREATE INDEX "search_history_userId_idx" ON "search_history"("userId");
+
+-- CreateIndex
+CREATE INDEX "search_history_sessionId_idx" ON "search_history"("sessionId");
 
 -- CreateIndex
 CREATE INDEX "search_history_query_idx" ON "search_history"("query");
@@ -578,7 +633,13 @@ CREATE INDEX "view_history_userId_idx" ON "view_history"("userId");
 CREATE INDEX "view_history_productId_idx" ON "view_history"("productId");
 
 -- CreateIndex
+CREATE INDEX "view_history_sessionId_idx" ON "view_history"("sessionId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "carts_userId_key" ON "carts"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "carts_sessionId_key" ON "carts"("sessionId");
 
 -- CreateIndex
 CREATE INDEX "cart_items_cartId_idx" ON "cart_items"("cartId");
@@ -767,6 +828,18 @@ CREATE INDEX "seller_profiles_businessEmail_idx" ON "seller_profiles"("businessE
 CREATE INDEX "seller_reviews_sellerId_idx" ON "seller_reviews"("sellerId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "sessions_sessionId_key" ON "sessions"("sessionId");
+
+-- CreateIndex
+CREATE INDEX "sessions_sessionId_idx" ON "sessions"("sessionId");
+
+-- CreateIndex
+CREATE INDEX "sessions_userId_idx" ON "sessions"("userId");
+
+-- CreateIndex
+CREATE INDEX "sessions_expiresAt_idx" ON "sessions"("expiresAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "shipments_trackingNumber_key" ON "shipments"("trackingNumber");
 
 -- CreateIndex
@@ -784,11 +857,17 @@ CREATE INDEX "users_email_idx" ON "users"("email");
 -- CreateIndex
 CREATE INDEX "users_role_idx" ON "users"("role");
 
--- AddForeignKey
-ALTER TABLE "addresses" ADD CONSTRAINT "addresses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "_CartItemToSession_B_index" ON "_CartItemToSession"("B");
 
 -- AddForeignKey
-ALTER TABLE "search_history" ADD CONSTRAINT "search_history_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "addresses" ADD CONSTRAINT "addresses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "search_history" ADD CONSTRAINT "search_history_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "search_history" ADD CONSTRAINT "search_history_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "view_history" ADD CONSTRAINT "view_history_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -797,7 +876,13 @@ ALTER TABLE "view_history" ADD CONSTRAINT "view_history_userId_fkey" FOREIGN KEY
 ALTER TABLE "view_history" ADD CONSTRAINT "view_history_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "view_history" ADD CONSTRAINT "view_history_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "carts" ADD CONSTRAINT "carts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "carts" ADD CONSTRAINT "carts_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "carts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -833,7 +918,7 @@ ALTER TABLE "inventory" ADD CONSTRAINT "inventory_warehouseId_fkey" FOREIGN KEY 
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "orders" ADD CONSTRAINT "orders_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "orders" ADD CONSTRAINT "orders_shippingAddressId_fkey" FOREIGN KEY ("shippingAddressId") REFERENCES "addresses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -926,4 +1011,13 @@ ALTER TABLE "seller_reviews" ADD CONSTRAINT "seller_reviews_sellerId_fkey" FOREI
 ALTER TABLE "seller_reviews" ADD CONSTRAINT "seller_reviews_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "shipments" ADD CONSTRAINT "shipments_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_CartItemToSession" ADD CONSTRAINT "_CartItemToSession_A_fkey" FOREIGN KEY ("A") REFERENCES "cart_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_CartItemToSession" ADD CONSTRAINT "_CartItemToSession_B_fkey" FOREIGN KEY ("B") REFERENCES "sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;

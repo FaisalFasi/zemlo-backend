@@ -5,7 +5,7 @@
 model User {
     id                   String    @id @default(uuid())
     email                String    @unique
-    password             String
+    password             String?
     firstName            String
     lastName             String
     phone                String?
@@ -34,6 +34,7 @@ model User {
     searchHistories  SearchHistory[]
     viewHistories    ViewHistory[]
     permissions      UserPermission[]
+    sessions         Session[]
 
     @@index([email])
     @@index([role])

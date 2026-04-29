@@ -18,7 +18,7 @@ async function bootstrap() {
   );
 
   // ============================================
-  // Swagger config
+  // Swagger config ------->  http://localhost:3000/api
   // ============================================
   const config = new DocumentBuilder()
     .setTitle('Zemlo Api')

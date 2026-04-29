@@ -8,11 +8,16 @@ model SearchHistory {
     resultsCount Int
 
     userId String?
-    user   User?   @relation(fields: [userId], references: [id])
+    user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // Session link (if anonymous OR logged in)
+    sessionId String?
+    session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
 
     @@index([userId])
+    @@index([sessionId]) // ✅ ADD INDEX
     @@index([query])
     @@map("search_history")
 }
@@ -26,9 +31,14 @@ model ViewHistory {
     productId String
     product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+    // Session link (for anonymous OR logged in)
+    sessionId String?
+    session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
     viewedAt DateTime @default(now())
 
     @@index([userId])
     @@index([productId])
+    @@index([sessionId]) // ✅ ADD
     @@map("view_history")
 }

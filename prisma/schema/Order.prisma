@@ -18,9 +18,15 @@ model Order {
     paymentStatus     PaymentStatus     @default(PENDING)
     fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
 
-    // Customer
-    userId String
-    user   User   @relation(fields: [userId], references: [id])
+    //  User / Customer
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    // Guest customer info (when userId is null)
+    guestEmail     String?
+    guestPhone     String?
+    guestFirstName String?
+    guestLastName  String?
 
     // Addresses
     shippingAddressId String

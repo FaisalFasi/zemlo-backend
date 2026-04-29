@@ -304,6 +304,20 @@ async function main() {
   }
 
   console.log('🎉 Database seeding completed successfully!');
+
+  // initialize platform settings with default values
+  // In seed.ts or first-time setup
+  await prisma.platformSettings.create({
+    data: {
+      allowPublicSellerRegistration: false, // Start as your own store
+      requireSellerApproval: true,
+      commissionRate: 0, // No commission initially
+      allowGuestCheckout: true, // Guest checkout enabled
+      requireEmailVerification: false, // No email verification initially
+      storeName: 'Your Store Name',
+      storeEmail: 'support@yourstore.com',
+    },
+  });
 }
 
 // ============================================

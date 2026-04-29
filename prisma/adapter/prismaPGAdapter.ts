@@ -12,12 +12,6 @@ export const prismaPGAdapter = () => {
   // .env file root folder se load karo
   config({ path: resolve(__dirname, '../.env') });
 
-  // WHY: @prisma/client is auto-generated when you run "npx prisma generate"
-  // It contains:
-  // - PrismaClient: The database connection object
-  // - UserRole: Your enum (CUSTOMER, SELLER, ADMIN)
-  // - PermissionCategory: Your enum (PRODUCTS, ORDERS, etc.)
-
   // ============================================
   // CREATE DATABASE CONNECTION
   // ============================================
@@ -33,7 +27,7 @@ export const prismaPGAdapter = () => {
   const pool = new Pool({
     connectionString,
     // Neon ke liye SSL zaroori hai
-    ssl: true,
+    ssl: { rejectUnauthorized: false }, // Neon ke liye safer
   });
 
   // Adapter banayo
