@@ -1,43 +1,39 @@
-// ============================================
-// ADDRESS MODEL
-// ============================================
-
 model Address {
-    id        String  @id @default(uuid())
-    firstName String
-    lastName  String
-    company   String?
-    phone     String
+  id String @id @default(uuid())
 
-    street    String
-    apartment String?
-    city      String
-    state     String
-    zipCode   String
-    country   String
+  firstName String
+  lastName  String
+  company   String?
+  phone     String
 
-    isDefault Boolean     @default(false)
-    type      AddressType @default(BOTH)
+  street    String
+  apartment String?
+  city      String
+  state     String
+  zipCode   String
+  country   String  @default("US")
 
-    // For one-time guest use
-    isGuestAddress Boolean @default(false)
+  isDefault Boolean     @default(false)
+  type      AddressType @default(BOTH)
 
-    // Make user optional (for guest addresses)
-    userId String?
-    user   User?   @relation(fields: [userId], references: [id])
+  isGuestAddress Boolean @default(false)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-    shippingOrders Order[] @relation("ShippingAddress")
-    billingOrders  Order[] @relation("BillingAddress")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@index([userId])
-    @@map("addresses")
+  shippingOrders Order[] @relation("ShippingAddress")
+  billingOrders  Order[] @relation("BillingAddress")
+
+  @@index([userId])
+  @@index([isGuestAddress])
+  @@map("addresses")
 }
 
 enum AddressType {
-    SHIPPING
-    BILLING
-    BOTH
+  SHIPPING
+  BILLING
+  BOTH
 }

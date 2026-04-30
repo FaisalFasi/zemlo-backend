@@ -1,62 +1,60 @@
 model Permission {
-    id          String             @id @default(uuid())
-    name        String             @unique // "manage_products"
-    displayName String // "Manage Products"
-    description String? // "Create, edit, delete products"
-    category    PermissionCategory // Groups related permissions
+  id          String             @id @default(uuid())
+  name        String             @unique
+  displayName String
+  description String?
+  category    PermissionCategory
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    // Relations
-    users        UserPermission[]
-    roleDefaults RolePermission[] // Default permissions for each role
+  users        UserPermission[]
+  roleDefaults RolePermission[]
 
-    @@index([category])
-    @@map("permissions")
-}
-
-enum PermissionCategory {
-    PRODUCTS
-    ORDERS
-    USERS
-    FINANCE
-    CONTENT
-    SETTINGS
-    ANALYTICS
+  @@index([category])
+  @@map("permissions")
 }
 
 model UserPermission {
-    id String @id @default(uuid())
+  id String @id @default(uuid())
 
-    userId String
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    permissionId String
-    permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-    // Audit trail
-    grantedBy String? // Admin user ID who granted this
-    grantedAt DateTime @default(now())
+  grantedBy String?
+  grantedAt DateTime @default(now())
 
-    // Optional: Time-limited permissions
-    expiresAt DateTime?
+  expiresAt DateTime?
 
-    @@unique([userId, permissionId])
-    @@index([userId])
-    @@index([permissionId])
-    @@map("user_permissions")
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_permissions")
 }
 
 model RolePermission {
-    id   String   @id @default(uuid())
-    role UserRole
+  id   String   @id @default(uuid())
+  role UserRole
 
-    permissionId String
-    permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@unique([role, permissionId])
-    @@index([role])
-    @@map("role_permissions")
+  @@unique([role, permissionId])
+  @@index([role])
+  @@map("role_permissions")
+}
+
+enum PermissionCategory {
+  PRODUCTS
+  CATEGORIES
+  BRANDS
+  ORDERS
+  CUSTOMERS
+  STAFF
+  SETTINGS
+  ANALYTICS
 }

@@ -1,33 +1,26 @@
 model Session {
-    id        String @id @default(uuid())
-    sessionId String @unique // Cookie value
+  id        String @id @default(uuid())
+  sessionId String @unique
 
-    // Optional user (null for anonymous)
-    userId String?
-    user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    // Tracking data
-    ipAddress String?
-    userAgent String?
-    deviceId  String? // Browser fingerprint
+  refreshTokenHash String?
+  isRevoked        Boolean @default(false)
 
-    // Activity
-    lastActivityAt DateTime @default(now())
-    expiresAt      DateTime
+  ipAddress String?
+  userAgent String?
+  deviceId  String?
 
-    createdAt DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
 
-    // Relations
-    viewHistory   ViewHistory[]
-    searchHistory SearchHistory[]
-    cart          Cart?
-    cartItem      CartItem?       @relation(fields: [cartItemId], references: [id])
-    cartItemId    String?
+  cart Cart?
 
-    wishlist Wishlist?
-
-    @@index([sessionId])
-    @@index([userId])
-    @@index([expiresAt]) // For cleanup jobs
-    @@map("sessions")
+  @@index([sessionId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([isRevoked])
+  @@map("sessions")
 }

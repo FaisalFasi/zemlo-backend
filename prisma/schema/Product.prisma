@@ -1,194 +1,216 @@
-// ============================================
-// PRODUCT MODELS (Advanced)
-// ============================================
-
 model Category {
-    id          String  @id @default(uuid())
-    name        String  @unique
-    slug        String  @unique
-    description String? @db.Text
-    image       String?
-    icon        String?
-    isActive    Boolean @default(true)
+  id          String  @id @default(uuid())
+  name        String  @unique
+  slug        String  @unique
+  description String? @db.Text
+  image       String?
+  icon        String?
+  isActive    Boolean @default(true)
 
-    // Nested categories
-    parentId String?
-    parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-    children Category[] @relation("CategoryHierarchy")
+  parentId String?
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryHierarchy")
 
-    // SEO
-    metaTitle       String?
-    metaDescription String? @db.Text
+  metaTitle       String?
+  metaDescription String? @db.Text
 
-    position Int @default(0) // For ordering
+  position Int @default(0)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    // Relations
-    products   Product[]
-    attributes CategoryAttribute[]
+  products   Product[]
+  attributes CategoryAttribute[]
 
-    @@index([slug])
-    @@index([parentId])
-    @@map("categories")
+  @@index([slug])
+  @@index([parentId])
+  @@index([isActive])
+  @@map("categories")
 }
 
-// Flexible attributes per category (e.g., Electronics: Screen Size, RAM)
+model Brand {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  slug        String  @unique
+  description String? @db.Text
+  logo        String?
+  website     String?
+  isActive    Boolean @default(true)
+
+  metaTitle       String?
+  metaDescription String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("brands")
+}
+
 model CategoryAttribute {
-    id           String        @id @default(uuid())
-    name         String // "Screen Size", "RAM", "Material"
-    type         AttributeType // TEXT, NUMBER, SELECT, MULTI_SELECT
-    isRequired   Boolean       @default(false)
-    isFilterable Boolean       @default(true) // Can filter by this on frontend
+  id           String        @id @default(uuid())
+  name         String
+  type         AttributeType
+  isRequired   Boolean       @default(false)
+  isFilterable Boolean       @default(true)
 
-    categoryId String
-    category   Category @relation(fields: [categoryId], references: [id])
+  options String[] @default([])
 
-    // For SELECT types
-    options String[] // ["Small", "Medium", "Large"]
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-    productAttributes ProductAttribute[]
+  productAttributes ProductAttribute[]
 
-    @@index([categoryId])
-    @@map("category_attributes")
-}
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-enum AttributeType {
-    TEXT
-    NUMBER
-    SELECT
-    MULTI_SELECT
-    COLOR
+  @@index([categoryId])
+  @@map("category_attributes")
 }
 
 model Product {
-    id               String  @id @default(uuid())
-    name             String
-    slug             String  @unique
-    description      String? @db.Text
-    shortDescription String? @db.Text
+  id               String  @id @default(uuid())
+  name             String
+  slug             String  @unique
+  description      String? @db.Text
+  shortDescription String? @db.Text
 
-    // Base price (variants can override)
-    basePrice      Decimal  @db.Decimal(10, 2)
-    compareAtPrice Decimal? @db.Decimal(10, 2) // Original price for discounts
-    costPrice      Decimal? @db.Decimal(10, 2) // For profit calculation
+  sku String? @unique
 
-    // SEO
-    metaTitle       String?
-    metaDescription String?  @db.Text
-    keywords        String[]
+  price          Decimal  @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  costPrice      Decimal? @db.Decimal(10, 2)
 
-    // Status
-    status     ProductStatus @default(DRAFT)
-    isActive   Boolean       @default(true)
-    isFeatured Boolean       @default(false)
+  stock          Int     @default(0)
+  trackInventory Boolean @default(true)
+  allowBackorder Boolean @default(false)
+  hasVariants    Boolean @default(false)
 
-    // Metrics
-    views         Int     @default(0)
-    totalSales    Int     @default(0)
-    averageRating Decimal @default(0) @db.Decimal(3, 2)
-    reviewCount   Int     @default(0)
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  keywords        String[] @default([])
 
-    // Category & Seller
-    categoryId String
-    category   Category @relation(fields: [categoryId], references: [id])
+  status     ProductStatus @default(DRAFT)
+  isFeatured Boolean       @default(false)
 
-    // Shipping
-    weight Decimal? @db.Decimal(8, 2) // kg
-    length Decimal? @db.Decimal(8, 2) // cm
-    width  Decimal? @db.Decimal(8, 2)
-    height Decimal? @db.Decimal(8, 2)
+  views      Int @default(0)
+  totalSales Int @default(0)
 
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-    publishedAt DateTime?
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
-    // Relations
-    images        ProductImage[]
-    variants      ProductVariant[]
-    attributes    ProductAttribute[]
-    inventory     Inventory[]
-    reviews       Review[]
-    questions     ProductQuestion[]
-    orderItems    OrderItem[]
-    cartItems     CartItem[]
-    wishlistItems WishlistItem[]
-    viewHistory   ViewHistory[]
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: SetNull)
 
-    @@index([slug])
-    @@index([categoryId])
-    @@index([status])
-    @@index([isFeatured])
-    @@map("products")
-}
+  weight Decimal? @db.Decimal(8, 2)
+  length Decimal? @db.Decimal(8, 2)
+  width  Decimal? @db.Decimal(8, 2)
+  height Decimal? @db.Decimal(8, 2)
 
-enum ProductStatus {
-    DRAFT
-    ACTIVE
-    INACTIVE
-    OUT_OF_STOCK
-    DISCONTINUED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  images     ProductImage[]
+  variants   ProductVariant[]
+  attributes ProductAttribute[]
+
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+
+  @@index([slug])
+  @@index([sku])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([status])
+  @@index([isFeatured])
+  @@map("products")
 }
 
 model ProductImage {
-    id        String  @id @default(uuid())
-    url       String
-    altText   String?
-    position  Int     @default(0)
-    isDefault Boolean @default(false)
+  id        String  @id @default(uuid())
+  url       String
+  altText   String?
+  position  Int     @default(0)
+  isDefault Boolean @default(false)
 
-    productId String
-    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-    @@index([productId])
-    @@map("product_images")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@map("product_images")
 }
 
-// Product attributes (specific values for this product)
 model ProductAttribute {
-    id    String @id @default(uuid())
-    value String // "14 inches", "16GB", "Cotton"
+  id    String @id @default(uuid())
+  value String
 
-    productId String
-    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-    attributeId String
-    attribute   CategoryAttribute @relation(fields: [attributeId], references: [id])
+  attributeId String
+  attribute   CategoryAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
 
-    @@index([productId])
-    @@map("product_attributes")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, attributeId])
+  @@index([productId])
+  @@index([attributeId])
+  @@map("product_attributes")
 }
 
-// Product Variants (e.g., Red-Small, Blue-Medium)
 model ProductVariant {
-    id    String @id @default(uuid())
-    sku   String @unique
-    name  String // "Red - Small"
-    stock Int    @default(0)
+  id String @id @default(uuid())
 
-    // Override base price if needed
-    price          Decimal? @db.Decimal(10, 2)
-    compareAtPrice Decimal? @db.Decimal(10, 2)
+  sku  String @unique
+  name String
 
-    // Variant options
-    options Json // {"color": "Red", "size": "Small"}
+  stock          Int     @default(0)
+  trackInventory Boolean @default(true)
+  allowBackorder Boolean @default(false)
 
-    image    String?
-    isActive Boolean @default(true)
+  price          Decimal? @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
 
-    productId String
-    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options Json
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  image    String?
+  isActive Boolean @default(true)
 
-    // Relations
-    inventory  Inventory[]
-    orderItems OrderItem[]
-    cartItems  CartItem[]
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-    @@index([productId])
-    @@index([sku])
-    @@map("product_variants")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  @@index([productId])
+  @@index([sku])
+  @@index([isActive])
+  @@map("product_variants")
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum AttributeType {
+  TEXT
+  NUMBER
+  SELECT
+  MULTI_SELECT
+  COLOR
 }
