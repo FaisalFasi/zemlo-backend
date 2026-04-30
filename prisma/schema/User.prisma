@@ -26,7 +26,6 @@ model User {
     orders           Order[]
     cart             Cart?
     wishlist         Wishlist?
-    sellerProfile    SellerProfile?
     reviews          Review[]
     productQuestions ProductQuestion[]
     productAnswers   ProductAnswer[]
@@ -43,6 +42,7 @@ model User {
 
 enum UserRole {
     CUSTOMER
-    SELLER
+    STAFF
     ADMIN
+    SUPER_ADMIN
 }

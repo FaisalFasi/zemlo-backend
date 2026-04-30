@@ -94,9 +94,6 @@ model Product {
     categoryId String
     category   Category @relation(fields: [categoryId], references: [id])
 
-    sellerId String
-    seller   SellerProfile @relation(fields: [sellerId], references: [id])
-
     // Shipping
     weight Decimal? @db.Decimal(8, 2) // kg
     length Decimal? @db.Decimal(8, 2) // cm
@@ -121,7 +118,6 @@ model Product {
 
     @@index([slug])
     @@index([categoryId])
-    @@index([sellerId])
     @@index([status])
     @@index([isFeatured])
     @@map("products")
@@ -166,9 +162,10 @@ model ProductAttribute {
 
 // Product Variants (e.g., Red-Small, Blue-Medium)
 model ProductVariant {
-    id   String @id @default(uuid())
-    sku  String @unique
-    name String // "Red - Small"
+    id    String @id @default(uuid())
+    sku   String @unique
+    name  String // "Red - Small"
+    stock Int    @default(0)
 
     // Override base price if needed
     price          Decimal? @db.Decimal(10, 2)

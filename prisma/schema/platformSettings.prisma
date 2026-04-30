@@ -5,65 +5,17 @@
 model PlatformSettings {
     id String @id @default(uuid())
 
-    // ==========================================
-    // MARKETPLACE SETTINGS
-    // ==========================================
-
-    // Can sellers register themselves?
-    allowPublicSellerRegistration Boolean @default(false)
-    // Example: false = Only admin creates sellers (like your own brand store)
-    //          true = Anyone can apply to be seller (like Amazon marketplace)
-
-    // Require admin approval for sellers?
-    requireSellerApproval Boolean @default(true)
-    // Example: true = Admin reviews seller before activation
-    //          false = Sellers active immediately (not recommended)
-
-    // Platform commission (percentage)
-    commissionRate Decimal @default(0) @db.Decimal(5, 2)
-    // Example: 15.00 = 15% commission on each sale
-    //          0.00 = No commission (your own store)
-
-    // ==========================================
-    // CHECKOUT SETTINGS
-    // ==========================================
-
-    // Allow checkout without account?
-    allowGuestCheckout Boolean @default(true)
-    // Example: true = Amazon-style guest checkout
-    //          false = Must create account first
-
-    // ==========================================
-    // SECURITY SETTINGS
-    // ==========================================
-
-    // Require email verification after registration?
-    requireEmailVerification Boolean @default(false)
-    // Example: true = Send verification email, can't login until verified
-    //          false = Can login immediately
-
-    // Require phone verification for sellers?
-    requireSellerPhoneVerification Boolean @default(false)
-
-    // ==========================================
-    // STORE INFO
-    // ==========================================
-
     storeName    String  @default("My E-Commerce Store")
     storeEmail   String  @default("support@example.com")
     supportPhone String?
 
-    // ==========================================
-    // FEATURES (Turn on/off)
-    // ==========================================
+    allowGuestCheckout Boolean @default(true)
+
+    requireEmailVerification Boolean @default(false)
 
     enableReviews  Boolean @default(true)
     enableWishlist Boolean @default(true)
     enableChat     Boolean @default(false)
-
-    // ==========================================
-    // METADATA
-    // ==========================================
 
     updatedAt DateTime @updatedAt
     updatedBy String? // Admin user ID who changed settings

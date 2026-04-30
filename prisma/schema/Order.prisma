@@ -61,7 +61,6 @@ model Order {
     shipments     Shipment[]
     statusHistory OrderStatusHistory[]
     refunds       Refund[]
-    sellerReviews SellerReview[]
 
     @@index([userId])
     @@index([orderNumber])

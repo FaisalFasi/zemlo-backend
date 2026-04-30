@@ -2,33 +2,6 @@
 // INVENTORY & WAREHOUSE MODELS
 // ============================================
 
-model Warehouse {
-    id   String @id @default(uuid())
-    name String
-    code String @unique
-
-    // Address
-    street  String
-    city    String
-    state   String
-    zipCode String
-    country String
-
-    isActive Boolean @default(true)
-
-    sellerId String
-    seller   SellerProfile @relation(fields: [sellerId], references: [id])
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    // Relations
-    inventory Inventory[]
-
-    @@index([sellerId])
-    @@map("warehouses")
-}
-
 model Inventory {
     id        String @id @default(uuid())
     quantity  Int    @default(0)
@@ -43,16 +16,11 @@ model Inventory {
     variantId String?
     variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
-    warehouseId String
-    warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-
     lastRestockedAt DateTime?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@unique([productId, variantId, warehouseId])
-    @@index([warehouseId])
     @@index([productId])
     @@map("inventory")
 }
