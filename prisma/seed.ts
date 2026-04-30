@@ -318,6 +318,21 @@ async function main() {
       storeEmail: 'support@yourstore.com',
     },
   });
+  // or
+  // await prisma.platformSettings.upsert({
+  //   where: { id: 'default-settings' },
+  //   update: {}, // agar exist kare to kuch update nahi karna
+  //   create: {
+  //     id: 'default-settings', // fixed ID taake hamesha same row
+  //     allowPublicSellerRegistration: false,
+  //     requireSellerApproval: true,
+  //     commissionRate: 0,
+  //     allowGuestCheckout: true,
+  //     requireEmailVerification: false,
+  //     storeName: 'Your Store Name',
+  //     storeEmail: 'support@yourstore.com',
+  //   },
+  // });
 }
 
 // ============================================
