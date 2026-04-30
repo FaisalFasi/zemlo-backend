@@ -1,72 +1,48 @@
-// ============================================
-// PLATFORM SETTINGS (Admin Control Panel)
-// ============================================
-
 model PlatformSettings {
-    id String @id @default(uuid())
+  id String @id @default("default")
 
-    // ==========================================
-    // MARKETPLACE SETTINGS
-    // ==========================================
+  storeName       String  @default("Zemlo")
+  storeEmail      String  @default("support@zemlo.com")
+  supportPhone    String?
+  supportWhatsapp String?
+  storeLogoUrl    String?
+  storeFaviconUrl String?
 
-    // Can sellers register themselves?
-    allowPublicSellerRegistration Boolean @default(false)
-    // Example: false = Only admin creates sellers (like your own brand store)
-    //          true = Anyone can apply to be seller (like Amazon marketplace)
+  businessName    String?
+  businessAddress String?
+  businessCity    String?
+  businessState   String?
+  businessZipCode String?
+  businessCountry String? @default("US")
 
-    // Require admin approval for sellers?
-    requireSellerApproval Boolean @default(true)
-    // Example: true = Admin reviews seller before activation
-    //          false = Sellers active immediately (not recommended)
+  currency            String   @default("USD")
+  taxRate             Decimal  @default(0) @db.Decimal(5, 2)
+  freeShippingOver    Decimal? @db.Decimal(10, 2)
+  defaultShippingCost Decimal  @default(0) @db.Decimal(10, 2)
 
-    // Platform commission (percentage)
-    commissionRate Decimal @default(0) @db.Decimal(5, 2)
-    // Example: 15.00 = 15% commission on each sale
-    //          0.00 = No commission (your own store)
+  allowGuestCheckout       Boolean @default(true)
+  requireEmailVerification Boolean @default(false)
+  allowAccountRegistration Boolean @default(true)
 
-    // ==========================================
-    // CHECKOUT SETTINGS
-    // ==========================================
+  enableReviews   Boolean @default(false)
+  enableWishlist  Boolean @default(false)
+  enableCoupons   Boolean @default(false)
+  enableChat      Boolean @default(false)
+  maintenanceMode Boolean @default(false)
 
-    // Allow checkout without account?
-    allowGuestCheckout Boolean @default(true)
-    // Example: true = Amazon-style guest checkout
-    //          false = Must create account first
+  homepageTitle       String? @default("Zemlo")
+  homepageDescription String? @db.Text
+  announcementText    String?
+  announcementEnabled Boolean @default(false)
 
-    // ==========================================
-    // SECURITY SETTINGS
-    // ==========================================
+  instagramUrl String?
+  facebookUrl  String?
+  tiktokUrl    String?
+  youtubeUrl   String?
 
-    // Require email verification after registration?
-    requireEmailVerification Boolean @default(false)
-    // Example: true = Send verification email, can't login until verified
-    //          false = Can login immediately
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  updatedBy String?
 
-    // Require phone verification for sellers?
-    requireSellerPhoneVerification Boolean @default(false)
-
-    // ==========================================
-    // STORE INFO
-    // ==========================================
-
-    storeName    String  @default("My E-Commerce Store")
-    storeEmail   String  @default("support@example.com")
-    supportPhone String?
-
-    // ==========================================
-    // FEATURES (Turn on/off)
-    // ==========================================
-
-    enableReviews  Boolean @default(true)
-    enableWishlist Boolean @default(true)
-    enableChat     Boolean @default(false)
-
-    // ==========================================
-    // METADATA
-    // ==========================================
-
-    updatedAt DateTime @updatedAt
-    updatedBy String? // Admin user ID who changed settings
-
-    @@map("platform_settings")
+  @@map("platform_settings")
 }

@@ -4,348 +4,358 @@
 import { PrismaClient, UserRole, PermissionCategory } from '@prisma/client';
 import { prismaPGAdapter } from './adapter/prismaPGAdapter';
 
-// WHY: @prisma/client is auto-generated when you run "npx prisma generate"
-// It contains:
-// - PrismaClient: The database connection object
-// - UserRole: Your enum (CUSTOMER, SELLER, ADMIN)
-// - PermissionCategory: Your enum (PRODUCTS, ORDERS, etc.)
-
-// Adapter banayo
 const adapter = prismaPGAdapter();
 
 const prisma = new PrismaClient({
   adapter,
-  log: ['query', 'error', 'warn'], // Shows SQL queries in console (helps learning)
+  log: ['query', 'error', 'warn'],
 });
 
-// WHY: This creates a connection pool to PostgreSQL
-// Think of it like opening a phone line to your database
-// You use "prisma" to talk to the database
-
 // ============================================
-// MAIN SEEDING FUNCTION
+// MAIN SEED FUNCTION
 // ============================================
 async function main() {
-  // WHY "async"?
-  // Because database operations take time (they're not instant)
-  // "async" lets us use "await" to wait for operations to complete
-
-  console.log('🌱 Starting to seed database...');
+  console.log('🌱 Starting Zemlo database seed...');
 
   // ============================================
-  // STEP 1: CREATE ALL PERMISSIONS
+  // STEP 1: PLATFORM SETTINGS
   // ============================================
+  console.log('⚙️ Creating platform settings...');
 
-  // WHY: We define permissions FIRST because:
-  // 1. Users will need to reference these permissions
-  // 2. Roles will need to reference these permissions
-  // It's like building the foundation before the house
+  await prisma.platformSettings.upsert({
+    where: { id: 'default' },
+    update: {},
+    create: {
+      id: 'default',
+
+      storeName: 'Zemlo',
+      storeEmail: 'support@zemlo.com',
+      supportPhone: null,
+      supportWhatsapp: null,
+
+      businessCountry: 'US',
+
+      currency: 'USD',
+      taxRate: 0,
+      defaultShippingCost: 0,
+      freeShippingOver: null,
+
+      allowGuestCheckout: true,
+      requireEmailVerification: false,
+      allowAccountRegistration: true,
+
+      enableReviews: false,
+      enableWishlist: false,
+      enableCoupons: false,
+      enableChat: false,
+      maintenanceMode: false,
+
+      homepageTitle: 'Zemlo',
+      homepageDescription: 'Shop quality products from Zemlo.',
+      announcementEnabled: false,
+    },
+  });
+
+  console.log('✅ Platform settings ready');
+
+  // ============================================
+  // STEP 2: PERMISSIONS
+  // ============================================
+  console.log('📝 Creating permissions...');
 
   const permissionsData = [
-    // ========================================
-    // PRODUCTS CATEGORY
-    // ========================================
+    // PRODUCTS
     {
-      name: 'view_products', // Unique identifier (used in code)
-      displayName: 'View Products', // Human-readable (shown in UI)
-      description: 'Can view product listings',
-      category: PermissionCategory.PRODUCTS, // Groups related permissions
-    },
-    {
-      name: 'manage_own_products',
-      displayName: 'Manage Own Products',
-      description: 'Create, edit, delete own products (for sellers)',
+      name: 'products.view',
+      displayName: 'View Products',
+      description: 'Can view products',
       category: PermissionCategory.PRODUCTS,
     },
     {
-      name: 'manage_all_products',
-      displayName: 'Manage All Products',
-      description: 'Manage ANY product on platform (admin power)',
+      name: 'products.create',
+      displayName: 'Create Products',
+      description: 'Can create products',
       category: PermissionCategory.PRODUCTS,
     },
     {
-      name: 'approve_products',
-      displayName: 'Approve Products',
-      description: 'Approve/reject new product listings (content moderation)',
+      name: 'products.update',
+      displayName: 'Update Products',
+      description: 'Can update products',
+      category: PermissionCategory.PRODUCTS,
+    },
+    {
+      name: 'products.delete',
+      displayName: 'Delete Products',
+      description: 'Can delete or archive products',
       category: PermissionCategory.PRODUCTS,
     },
 
-    // ========================================
-    // ORDERS CATEGORY
-    // ========================================
+    // CATEGORIES
     {
-      name: 'view_own_orders',
+      name: 'categories.view',
+      displayName: 'View Categories',
+      description: 'Can view categories',
+      category: PermissionCategory.CATEGORIES,
+    },
+    {
+      name: 'categories.create',
+      displayName: 'Create Categories',
+      description: 'Can create categories',
+      category: PermissionCategory.CATEGORIES,
+    },
+    {
+      name: 'categories.update',
+      displayName: 'Update Categories',
+      description: 'Can update categories',
+      category: PermissionCategory.CATEGORIES,
+    },
+    {
+      name: 'categories.delete',
+      displayName: 'Delete Categories',
+      description: 'Can delete categories',
+      category: PermissionCategory.CATEGORIES,
+    },
+
+    // BRANDS
+    {
+      name: 'brands.view',
+      displayName: 'View Brands',
+      description: 'Can view brands',
+      category: PermissionCategory.BRANDS,
+    },
+    {
+      name: 'brands.create',
+      displayName: 'Create Brands',
+      description: 'Can create brands',
+      category: PermissionCategory.BRANDS,
+    },
+    {
+      name: 'brands.update',
+      displayName: 'Update Brands',
+      description: 'Can update brands',
+      category: PermissionCategory.BRANDS,
+    },
+    {
+      name: 'brands.delete',
+      displayName: 'Delete Brands',
+      description: 'Can delete brands',
+      category: PermissionCategory.BRANDS,
+    },
+
+    // ORDERS
+    {
+      name: 'orders.view_own',
       displayName: 'View Own Orders',
-      description: 'View orders you placed as customer',
+      description: 'Customers can view their own orders',
       category: PermissionCategory.ORDERS,
     },
     {
-      name: 'manage_store_orders',
-      displayName: 'Manage Store Orders',
-      description: 'Manage orders for products you sell',
-      category: PermissionCategory.ORDERS,
-    },
-    {
-      name: 'view_all_orders',
+      name: 'orders.view_all',
       displayName: 'View All Orders',
-      description: 'View ANY order on platform (admin/support)',
+      description: 'Can view all customer orders',
       category: PermissionCategory.ORDERS,
     },
     {
-      name: 'process_refunds',
-      displayName: 'Process Refunds',
-      description: 'Approve and process customer refunds',
+      name: 'orders.update',
+      displayName: 'Update Orders',
+      description: 'Can update order status and details',
+      category: PermissionCategory.ORDERS,
+    },
+    {
+      name: 'orders.cancel',
+      displayName: 'Cancel Orders',
+      description: 'Can cancel orders',
       category: PermissionCategory.ORDERS,
     },
 
-    // ========================================
-    // USERS CATEGORY
-    // ========================================
+    // CUSTOMERS
     {
-      name: 'view_users',
-      displayName: 'View Users',
-      description: 'View user profiles and information',
-      category: PermissionCategory.USERS,
+      name: 'customers.view',
+      displayName: 'View Customers',
+      description: 'Can view customer accounts',
+      category: PermissionCategory.CUSTOMERS,
     },
     {
-      name: 'ban_users',
-      displayName: 'Ban Users',
-      description: 'Ban/suspend/delete user accounts',
-      category: PermissionCategory.USERS,
+      name: 'customers.update',
+      displayName: 'Update Customers',
+      description: 'Can update customer details',
+      category: PermissionCategory.CUSTOMERS,
     },
     {
-      name: 'manage_permissions',
-      displayName: 'Manage Permissions',
-      description: 'Grant or revoke permissions to users',
-      category: PermissionCategory.USERS,
+      name: 'customers.disable',
+      displayName: 'Disable Customers',
+      description: 'Can disable customer accounts',
+      category: PermissionCategory.CUSTOMERS,
     },
 
-    // ========================================
-    // FINANCE CATEGORY
-    // ========================================
+    // STAFF
     {
-      name: 'view_own_earnings',
-      displayName: 'View Own Earnings',
-      description: 'See how much money you made from sales',
-      category: PermissionCategory.FINANCE,
+      name: 'staff.view',
+      displayName: 'View Staff',
+      description: 'Can view staff accounts',
+      category: PermissionCategory.STAFF,
     },
     {
-      name: 'view_all_transactions',
-      displayName: 'View All Transactions',
-      description: 'See ALL money flowing through platform',
-      category: PermissionCategory.FINANCE,
+      name: 'staff.create',
+      displayName: 'Create Staff',
+      description: 'Can create staff accounts',
+      category: PermissionCategory.STAFF,
     },
     {
-      name: 'process_payouts',
-      displayName: 'Process Payouts',
-      description: 'Send money to sellers',
-      category: PermissionCategory.FINANCE,
-    },
-
-    // ========================================
-    // CONTENT CATEGORY
-    // ========================================
-    {
-      name: 'moderate_reviews',
-      displayName: 'Moderate Reviews',
-      description: 'Remove fake/inappropriate reviews',
-      category: PermissionCategory.CONTENT,
+      name: 'staff.update',
+      displayName: 'Update Staff',
+      description: 'Can update staff accounts',
+      category: PermissionCategory.STAFF,
     },
     {
-      name: 'moderate_products',
-      displayName: 'Moderate Products',
-      description: 'Flag counterfeit/illegal products',
-      category: PermissionCategory.CONTENT,
+      name: 'staff.disable',
+      displayName: 'Disable Staff',
+      description: 'Can disable staff accounts',
+      category: PermissionCategory.STAFF,
+    },
+    {
+      name: 'staff.permissions',
+      displayName: 'Manage Staff Permissions',
+      description: 'Can assign or remove staff permissions',
+      category: PermissionCategory.STAFF,
     },
 
-    // ========================================
-    // SETTINGS CATEGORY
-    // ========================================
+    // SETTINGS
     {
-      name: 'manage_settings',
-      displayName: 'Manage Settings',
-      description: 'Configure platform settings (danger zone!)',
+      name: 'settings.view',
+      displayName: 'View Settings',
+      description: 'Can view platform settings',
+      category: PermissionCategory.SETTINGS,
+    },
+    {
+      name: 'settings.update',
+      displayName: 'Update Settings',
+      description: 'Can update platform settings',
       category: PermissionCategory.SETTINGS,
     },
 
-    // ========================================
-    // ANALYTICS CATEGORY
-    // ========================================
+    // ANALYTICS
     {
-      name: 'view_analytics',
+      name: 'analytics.view',
       displayName: 'View Analytics',
-      description: 'See platform statistics and charts',
+      description: 'Can view dashboard analytics',
       category: PermissionCategory.ANALYTICS,
     },
   ];
 
-  // ============================================
-  // LOOP THROUGH AND CREATE EACH PERMISSION
-  // ============================================
-  console.log('📝 Creating permissions in database...');
-
-  for (const permData of permissionsData) {
-    // WHY "upsert" instead of "create"?
-    // - If permission already exists (from previous seed), UPDATE it
-    // - If it doesn't exist, CREATE it
-    // This makes the seed script SAFE to run multiple times
-
+  for (const permission of permissionsData) {
     await prisma.permission.upsert({
-      where: { name: permData.name }, // Find by unique "name" field
-      update: {}, // If exists, don't change anything (empty update)
-      create: permData, // If doesn't exist, create with this data
+      where: { name: permission.name },
+      update: {
+        displayName: permission.displayName,
+        description: permission.description,
+        category: permission.category,
+      },
+      create: permission,
     });
   }
 
   console.log(`✅ Created/verified ${permissionsData.length} permissions`);
 
   // ============================================
-  // STEP 2: ASSIGN DEFAULT PERMISSIONS TO ROLES
+  // STEP 3: ROLE DEFAULT PERMISSIONS
   // ============================================
+  console.log('🔗 Assigning default permissions to roles...');
 
-  // WHY: When someone registers as CUSTOMER/SELLER/ADMIN,
-  // we automatically give them these permissions
-  // Think of it like: "Every ADMIN gets these keys by default"
+  const allPermissionNames = permissionsData.map(
+    (permission) => permission.name,
+  );
 
-  const rolePermissionsMap = {
-    // ========================================
-    // CUSTOMER ROLE
-    // ========================================
-    CUSTOMER: [
-      'view_products', // Can browse the store
-      'view_own_orders', // Can see orders they placed
+  const rolePermissionsMap: Record<UserRole, string[]> = {
+    CUSTOMER: ['products.view', 'orders.view_own'],
+
+    STAFF: [
+      'products.view',
+      'categories.view',
+      'brands.view',
+      'orders.view_all',
+      'customers.view',
     ],
-    // WHY SO LIMITED?
-    // Customers shouldn't manage products, ban users, etc.
-    // Security principle: "Least privilege" - only what they need
 
-    // ========================================
-    // SELLER ROLE
-    // ========================================
-    SELLER: [
-      'view_products', // Can browse (like customer)
-      'view_own_orders', // Can see their customer orders
-      'manage_own_products', // Can add/edit THEIR products
-      'manage_store_orders', // Can fulfill orders for THEIR products
-      'view_own_earnings', // Can see how much they earned
-    ],
-    // WHY: Sellers manage their OWN stuff, not other sellers' stuff
-    // They can't see platform finances or ban users
-
-    // ========================================
-    // ADMIN ROLE (YOU!)
-    // ========================================
     ADMIN: [
-      // ALL PERMISSIONS - Copy every permission name from above
-      'view_products',
-      'manage_own_products',
-      'manage_all_products', // Can edit ANY product
-      'approve_products',
-      'view_own_orders',
-      'manage_store_orders',
-      'view_all_orders', // Can see ALL orders
-      'process_refunds',
-      'view_users',
-      'ban_users', // Can ban anyone
-      'manage_permissions', // Can grant permissions
-      'view_own_earnings',
-      'view_all_transactions', // Can see ALL money
-      'process_payouts',
-      'moderate_reviews',
-      'moderate_products',
-      'manage_settings', // Can change platform settings
-      'view_analytics',
+      'products.view',
+      'products.create',
+      'products.update',
+      'products.delete',
+
+      'categories.view',
+      'categories.create',
+      'categories.update',
+      'categories.delete',
+
+      'brands.view',
+      'brands.create',
+      'brands.update',
+      'brands.delete',
+
+      'orders.view_own',
+      'orders.view_all',
+      'orders.update',
+      'orders.cancel',
+
+      'customers.view',
+      'customers.update',
+      'customers.disable',
+
+      'staff.view',
+      'staff.create',
+      'staff.update',
+      'staff.disable',
+
+      'settings.view',
+      'analytics.view',
     ],
-    // WHY ALL PERMISSIONS?
-    // You're the platform owner - you need full control
-    // This makes you AUTONOMOUS (no one else needed)
+
+    SUPER_ADMIN: allPermissionNames,
   };
 
-  // ============================================
-  // LOOP THROUGH ROLES AND ASSIGN PERMISSIONS
-  // ============================================
-  console.log('🔗 Assigning permissions to roles...');
-
-  for (const [roleName, permissionNames] of Object.entries(
-    rolePermissionsMap,
-  )) {
-    // "Object.entries" converts object to array:
-    // { CUSTOMER: [...] } becomes [['CUSTOMER', [...]]]
-
-    for (const permName of permissionNames) {
-      // Find the permission in database
+  for (const [role, permissionNames] of Object.entries(rolePermissionsMap)) {
+    for (const permissionName of permissionNames) {
       const permission = await prisma.permission.findUnique({
-        where: { name: permName },
+        where: { name: permissionName },
       });
 
       if (!permission) {
-        console.warn(`⚠️  Permission "${permName}" not found, skipping...`);
-        continue; // Skip if permission doesn't exist
+        console.warn(
+          `⚠️ Permission "${permissionName}" not found. Skipping...`,
+        );
+        continue;
       }
 
-      // Create the role-permission link
       await prisma.rolePermission.upsert({
         where: {
-          // Composite unique key: role + permissionId
           role_permissionId: {
-            role: roleName as UserRole,
+            role: role as UserRole,
             permissionId: permission.id,
           },
         },
-        update: {}, // If exists, don't change
+        update: {},
         create: {
-          role: roleName as UserRole,
+          role: role as UserRole,
           permissionId: permission.id,
         },
       });
     }
 
-    console.log(`  ✅ ${roleName} role configured`);
+    console.log(`✅ ${role} role configured`);
   }
 
-  console.log('🎉 Database seeding completed successfully!');
-
-  // initialize platform settings with default values
-  // In seed.ts or first-time setup
-  await prisma.platformSettings.create({
-    data: {
-      allowPublicSellerRegistration: false, // Start as your own store
-      requireSellerApproval: true,
-      commissionRate: 0, // No commission initially
-      allowGuestCheckout: true, // Guest checkout enabled
-      requireEmailVerification: false, // No email verification initially
-      storeName: 'Your Store Name',
-      storeEmail: 'support@yourstore.com',
-    },
-  });
-  // or
-  // await prisma.platformSettings.upsert({
-  //   where: { id: 'default-settings' },
-  //   update: {}, // agar exist kare to kuch update nahi karna
-  //   create: {
-  //     id: 'default-settings', // fixed ID taake hamesha same row
-  //     allowPublicSellerRegistration: false,
-  //     requireSellerApproval: true,
-  //     commissionRate: 0,
-  //     allowGuestCheckout: true,
-  //     requireEmailVerification: false,
-  //     storeName: 'Your Store Name',
-  //     storeEmail: 'support@yourstore.com',
-  //   },
-  // });
+  console.log('🎉 Zemlo database seed completed successfully');
 }
 
 // ============================================
-// RUN THE MAIN FUNCTION
+// RUN SEED
 // ============================================
 main()
   .catch((error) => {
-    // If anything goes wrong, show the error
     console.error('❌ Seeding failed:', error);
-    process.exit(1); // Exit with error code
+    process.exit(1);
   })
   .finally(async () => {
-    // Whether success or failure, disconnect from database
-    // WHY: Prevents hanging connections that waste resources
     await prisma.$disconnect();
   });

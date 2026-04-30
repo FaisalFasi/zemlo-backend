@@ -1,48 +1,43 @@
-// ============================================
-// USER & AUTHENTICATION MODELS
-// ============================================
-
 model User {
-    id                   String    @id @default(uuid())
-    email                String    @unique
-    password             String?
-    firstName            String
-    lastName             String
-    phone                String?
-    avatar               String?
-    role                 UserRole  @default(CUSTOMER)
-    isActive             Boolean   @default(true)
-    isVerified           Boolean   @default(false)
-    verificationToken    String?
-    resetPasswordToken   String?
-    resetPasswordExpires DateTime?
-    lastLogin            DateTime?
+  id String @id @default(uuid())
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  email    String  @unique
+  password String?
 
-    // Relations
-    addresses        Address[]
-    orders           Order[]
-    cart             Cart?
-    wishlist         Wishlist?
-    sellerProfile    SellerProfile?
-    reviews          Review[]
-    productQuestions ProductQuestion[]
-    productAnswers   ProductAnswer[]
-    notifications    Notification[]
-    searchHistories  SearchHistory[]
-    viewHistories    ViewHistory[]
-    permissions      UserPermission[]
-    sessions         Session[]
+  firstName String
+  lastName  String
+  phone     String?
+  avatar    String?
 
-    @@index([email])
-    @@index([role])
-    @@map("users")
+  role UserRole @default(CUSTOMER)
+
+  isActive   Boolean @default(true)
+  isVerified Boolean @default(false)
+
+  verificationToken    String?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+
+  lastLogin DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses   Address[]
+  orders      Order[]
+  cart        Cart?
+  wishlist    Wishlist?
+  permissions UserPermission[]
+  sessions    Session[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
 }
 
 enum UserRole {
-    CUSTOMER
-    SELLER
-    ADMIN
+  CUSTOMER
+  STAFF
+  ADMIN
+  SUPER_ADMIN
 }

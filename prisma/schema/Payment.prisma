@@ -1,64 +1,37 @@
-// ============================================
-// PAYMENT MODELS
-// ============================================
-
 model Payment {
-    id       String        @id @default(uuid())
-    amount   Decimal       @db.Decimal(10, 2)
-    currency String        @default("USD")
-    status   PaymentStatus @default(PENDING)
-    method   PaymentMethod
+  id String @id @default(uuid())
 
-    // Payment gateway details
-    transactionId   String? @unique
-    gatewayResponse Json?
+  amount   Decimal       @db.Decimal(10, 2)
+  currency String        @default("USD")
+  status   PaymentStatus @default(PENDING)
+  method   PaymentMethod
 
-    orderId String @unique
-    order   Order  @relation(fields: [orderId], references: [id])
+  transactionId   String? @unique
+  paymentIntentId String? @unique
+  gatewayResponse Json?
 
-    // Metadata
-    metadata Json?
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    paidAt    DateTime?
+  metadata Json?
 
-    @@index([orderId])
-    @@index([transactionId])
-    @@map("payments")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  paidAt    DateTime?
+
+  @@index([orderId])
+  @@index([transactionId])
+  @@index([paymentIntentId])
+  @@index([status])
+  @@map("payments")
 }
 
 enum PaymentMethod {
-    CREDIT_CARD
-    DEBIT_CARD
-    PAYPAL
-    STRIPE
-    BANK_TRANSFER
-    CASH_ON_DELIVERY
-}
-
-model Payout {
-    id     String       @id @default(uuid())
-    amount Decimal      @db.Decimal(10, 2)
-    status PayoutStatus @default(PENDING)
-
-    sellerId String
-    seller   SellerProfile @relation(fields: [sellerId], references: [id])
-
-    transactionId String? @unique
-
-    processedAt DateTime?
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@index([sellerId])
-    @@map("payouts")
-}
-
-enum PayoutStatus {
-    PENDING
-    PROCESSING
-    COMPLETED
-    FAILED
+  STRIPE
+  PAYPAL
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+  MANUAL
 }
