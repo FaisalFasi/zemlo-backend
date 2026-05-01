@@ -4,11 +4,16 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
+import configuration from './config/configuration';
+import { validate } from './config/env.config'; // ✅ Yaha se import
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [configuration],
+      validate,
+      cache: true,
     }),
     PrismaModule,
     AuthModule,

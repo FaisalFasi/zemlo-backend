@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { prismaPGAdapter } from '../../prisma/adapter/prismaPGAdapter';
+import { ConfigService } from '@nestjs/config';
 
 /**
  *  prisma client is auto generated type safe database client which let you write queries without needing raw sql queries.
@@ -21,9 +22,11 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
+    const database_url = configService.getOrThrow<string>('database.url');
+
     super({
-      adapter: prismaPGAdapter(),
+      adapter: prismaPGAdapter(database_url),
     });
   }
   async onModuleInit() {
