@@ -15,7 +15,7 @@ import { AuthenticatedUser } from '../../../common/types/authenticated-user.type
 // 8. Return user
 
 interface JwtPayload {
-  sub: string;
+  userId: string;
   email: string;
   role: string;
   sessionId: string;
@@ -50,6 +50,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     if (!session) {
       throw new UnauthorizedException('Session not found');
+    }
+    if (session.userId !== payload.userId) {
+      throw new UnauthorizedException('Invalid token session');
     }
 
     if (session.isRevoked) {
