@@ -3,11 +3,17 @@
 // ============================================
 import { PrismaClient, UserRole, PermissionCategory } from '@prisma/client';
 import { prismaPGAdapter } from './adapter/prismaPGAdapter';
+import 'dotenv/config';
 
-const adapter = prismaPGAdapter();
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error('❌ DATABASE_URL missing in seed');
+}
+// const adapter = prismaPGAdapter(databaseUrl);
 
 const prisma = new PrismaClient({
-  adapter,
+  adapter: prismaPGAdapter(databaseUrl),
   log: ['query', 'error', 'warn'],
 });
 
