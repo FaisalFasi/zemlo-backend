@@ -69,11 +69,12 @@ export class CheckoutAddressDto {
   @Length(3, 20)
   zipCode: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'US',
     default: 'US',
   })
+  @IsOptional()
   @IsString()
   @Length(2, 100)
-  country: string;
+  country?: string;
 }
