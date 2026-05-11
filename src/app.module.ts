@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import configuration from './config/configuration';
 import { validate } from './config/env.config'; // ✅ Yaha se import
 import { CheckoutModule } from './modules/checkout/checkout.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CheckoutModule } from './modules/checkout/checkout.module';
     PrismaModule,
     AuthModule,
     CheckoutModule,
+    AdminModule,
   ], // ConfigModule.forRoot() loads env variables
   controllers: [AppController],
   providers: [AppService],
