@@ -17,6 +17,7 @@ import { CheckoutInventoryService } from './services/checkout-inventory.service'
 import { CheckoutAddressService } from './services/checkout-address.service';
 import { CheckoutOrderService } from './services/checkout-order.service';
 import { ALLOWED_CHECKOUT_PAYMENT_METHODS } from './helpers/checkout-payment.helper';
+import { CheckoutAvailabilityService } from './services/checkout.availability.service';
 
 @Injectable()
 export class CheckoutService {
@@ -27,6 +28,7 @@ export class CheckoutService {
     private readonly inventoryService: CheckoutInventoryService,
     private readonly addressService: CheckoutAddressService,
     private readonly orderService: CheckoutOrderService,
+    private readonly availabilityService: CheckoutAvailabilityService,
   ) {}
 
   async guestCheckout(dto: GuestCheckoutDto) {
@@ -49,10 +51,15 @@ export class CheckoutService {
 
     this.validatePaymentMethod(dto.paymentMethod);
 
+    // here tx is a prisma db instance to fetch data from db
     return this.prisma.$transaction(async (tx) => {
       const settings = await tx.platformSettings.findFirst();
 
       this.settingsService.validateGuestCheckout(isGuest, settings);
+      await this.availabilityService.validateShippingCountry(
+        tx,
+        dto.shippingAddress,
+      );
 
       const normalizedItems = this.normalizeItems(dto.items);
 

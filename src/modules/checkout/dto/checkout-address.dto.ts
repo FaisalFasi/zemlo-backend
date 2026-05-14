@@ -71,10 +71,11 @@ export class CheckoutAddressDto {
 
   @ApiPropertyOptional({
     example: 'US',
+    description: 'ISO2 country code, for example US, DE, PK',
     default: 'US',
   })
   @IsOptional()
   @IsString()
-  @Length(2, 100)
-  country?: string;
+  @Length(2, 2)
+  country: string;
 }
