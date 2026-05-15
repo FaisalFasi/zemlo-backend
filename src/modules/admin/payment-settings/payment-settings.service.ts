@@ -35,12 +35,26 @@ export class PaymentSettingsService {
   }
 
   async update(method: PaymentMethod, dto: UpdatePaymentMethodSettingDto) {
-    await this.findOne(method);
+    const existingSetting = await this.findOne(method);
+
+    const finalMinAmount =
+      dto.minAmount !== undefined
+        ? dto.minAmount
+        : existingSetting.minAmount !== null
+          ? Number(existingSetting.minAmount)
+          : null;
+
+    const finalMaxAmount =
+      dto.maxAmount !== undefined
+        ? dto.maxAmount
+        : existingSetting.maxAmount !== null
+          ? Number(existingSetting.maxAmount)
+          : null;
 
     if (
-      dto.minAmount !== undefined &&
-      dto.maxAmount !== undefined &&
-      dto.minAmount > dto.maxAmount
+      finalMinAmount !== null &&
+      finalMaxAmount !== null &&
+      finalMinAmount > finalMaxAmount
     ) {
       throw new BadRequestException(
         'Minimum amount cannot be greater than maximum amount',

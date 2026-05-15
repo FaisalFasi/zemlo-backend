@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  ParseEnumPipe,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -35,7 +43,9 @@ export class PaymentSettingsController {
     enum: PaymentMethod,
     example: PaymentMethod.MANUAL,
   })
-  findOne(@Param('method') method: PaymentMethod) {
+  findOne(
+    @Param('method', new ParseEnumPipe(PaymentMethod)) method: PaymentMethod,
+  ) {
     return this.paymentSettingsService.findOne(method);
   }
 
@@ -47,7 +57,7 @@ export class PaymentSettingsController {
     example: PaymentMethod.STRIPE,
   })
   update(
-    @Param('method') method: PaymentMethod,
+    @Param('method', new ParseEnumPipe(PaymentMethod)) method: PaymentMethod,
     @Body() dto: UpdatePaymentMethodSettingDto,
   ) {
     return this.paymentSettingsService.update(method, dto);

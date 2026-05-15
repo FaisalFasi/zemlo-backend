@@ -32,6 +32,11 @@ export class CheckoutSettingsService {
         'This payment method is currently disabled',
       );
     }
+    if (paymentSetting.isOnline) {
+      throw new BadRequestException(
+        'Online payment methods are not available yet',
+      );
+    }
 
     if (
       paymentSetting.minAmount !== null &&
