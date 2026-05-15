@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import { PaymentMethod } from '@prisma/client';
 
 @Injectable()
 export class CheckoutSettingsService {
@@ -6,6 +11,47 @@ export class CheckoutSettingsService {
     if (isGuest && settings?.allowGuestCheckout === false) {
       throw new ForbiddenException('Guest checkout is currently disabled');
     }
+  }
+  async validatePaymentMethod(
+    tx: any,
+    paymentMethod: PaymentMethod,
+    orderTotal: number,
+  ) {
+    const paymentSetting = await tx.paymentMethodSetting.findUnique({
+      where: {
+        method: paymentMethod,
+      },
+    });
+
+    if (!paymentSetting) {
+      throw new BadRequestException('Payment method is not configured');
+    }
+
+    if (!paymentSetting.isEnabled) {
+      throw new BadRequestException(
+        'This payment method is currently disabled',
+      );
+    }
+
+    if (
+      paymentSetting.minAmount !== null &&
+      orderTotal < Number(paymentSetting.minAmount)
+    ) {
+      throw new BadRequestException(
+        `Minimum order amount for this payment method is ${paymentSetting.minAmount}`,
+      );
+    }
+
+    if (
+      paymentSetting.maxAmount !== null &&
+      orderTotal > Number(paymentSetting.maxAmount)
+    ) {
+      throw new BadRequestException(
+        `Maximum order amount for this payment method is ${paymentSetting.maxAmount}`,
+      );
+    }
+
+    return paymentSetting;
   }
 
   getCurrency(settings: any): string {

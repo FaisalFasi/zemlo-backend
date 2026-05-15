@@ -49,7 +49,7 @@ export class CheckoutService {
   private async createCheckout(params: CreateCheckoutParams) {
     const { dto, userId, isGuest } = params;
 
-    this.validatePaymentMethod(dto.paymentMethod);
+    // this.validatePaymentMethod(dto.paymentMethod);
 
     // here tx is a prisma db instance to fetch data from db
     return this.prisma.$transaction(async (tx) => {
@@ -71,7 +71,11 @@ export class CheckoutService {
         shippingCost: 0,
         discount: 0,
       });
-
+      await this.settingsService.validatePaymentMethod(
+        tx,
+        dto.paymentMethod,
+        totals.total,
+      );
       const { shippingAddressId, billingAddressId } =
         await this.addressService.createCheckoutAddresses(tx, {
           shippingAddress: dto.shippingAddress,
@@ -137,11 +141,11 @@ export class CheckoutService {
     });
   }
 
-  private validatePaymentMethod(paymentMethod: PaymentMethod) {
-    if (!ALLOWED_CHECKOUT_PAYMENT_METHODS.includes(paymentMethod)) {
-      throw new BadRequestException('This payment method is not available yet');
-    }
-  }
+  // private validatePaymentMethod(paymentMethod: PaymentMethod) {
+  //   if (!ALLOWED_CHECKOUT_PAYMENT_METHODS.includes(paymentMethod)) {
+  //     throw new BadRequestException('This payment method is not available yet');
+  //   }
+  // }
 
   private normalizeItems(items: CheckoutItemDto[]): NormalizedCheckoutItem[] {
     const map = new Map<string, NormalizedCheckoutItem>();

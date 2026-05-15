@@ -7,6 +7,7 @@ import { seedCountries } from './seeds/countries.seed';
 import { seedPermissions } from './seeds/permissions.seed';
 import { seedRolePermissions } from './seeds/role-permissions.seed';
 import { seedTestCatalog } from './seeds/test-catalog.seed';
+import { seedPaymentMethods } from './seeds/payment-method.seed';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -24,6 +25,7 @@ async function main() {
 
   await seedPlatformSettings(prisma);
   await seedCountries(prisma);
+  await seedPaymentMethods(prisma);
 
   await seedPermissions(prisma);
   await seedRolePermissions(prisma);

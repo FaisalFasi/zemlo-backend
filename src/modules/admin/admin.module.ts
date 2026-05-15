@@ -3,9 +3,10 @@ import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
 import { PlatformSettingsModule } from './platform-settings/platform-settings.module';
 import { CountrySettingsModule } from '../country-settings/country-settings.module';
+import { PaymentSettingsModule } from './payment-settings/payment-settings.module';
 
 @Module({
-  imports: [PlatformSettingsModule, CountrySettingsModule],
+  imports: [PlatformSettingsModule, CountrySettingsModule, PaymentSettingsModule],
   providers: [AdminService],
   controllers: [AdminController],
 })
