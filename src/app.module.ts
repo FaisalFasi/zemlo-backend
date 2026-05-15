@@ -9,6 +9,7 @@ import { validate } from './config/env.config'; // ✅ Yaha se import
 import { CheckoutModule } from './modules/checkout/checkout.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     CheckoutModule,
     AdminModule,
     OrdersModule,
+    CatalogModule,
   ], // ConfigModule.forRoot() loads env variables
   controllers: [AppController],
   providers: [AppService],

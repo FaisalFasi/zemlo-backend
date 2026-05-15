@@ -5,6 +5,8 @@ import { PlatformSettingsModule } from './platform-settings/platform-settings.mo
 import { CountrySettingsModule } from '../country-settings/country-settings.module';
 import { PaymentSettingsModule } from './payment-settings/payment-settings.module';
 import { AdminProductsModule } from './admin-products/admin-products.module';
+import { ProductImagesModule } from './product-images/product-images.module';
+import { ProductVariantsModule } from './product-variants/product-variants.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { AdminProductsModule } from './admin-products/admin-products.module';
     CountrySettingsModule,
     PaymentSettingsModule,
     AdminProductsModule,
+    ProductImagesModule,
+    ProductVariantsModule,
   ],
   providers: [AdminService],
   controllers: [AdminController],
