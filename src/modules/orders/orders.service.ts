@@ -11,8 +11,7 @@ import {
 } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { UpdateAdminOrderStatusDto } from './dto';
-
+import { GuestOrderLookupDto, UpdateAdminOrderStatusDto } from './dto';
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -251,5 +250,22 @@ export class OrdersService {
         },
       },
     };
+  }
+
+  async findGuestOrder(dto: GuestOrderLookupDto) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        orderNumber: dto.orderNumber.trim(),
+        guestEmail: dto.email.toLowerCase().trim(),
+        userId: null,
+      },
+      include: this.getOrderDetailsInclude(),
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return order;
   }
 }

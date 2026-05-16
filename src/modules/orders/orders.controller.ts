@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -7,7 +15,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 
 import { OrdersService } from './orders.service';
-import { UpdateAdminOrderStatusDto } from './dto';
+import { UpdateAdminOrderStatusDto, GuestOrderLookupDto } from './dto';
 
 @ApiTags('Orders')
 @ApiBearerAuth('access-token')
@@ -30,6 +38,12 @@ export class OrdersController {
     @Param('orderNumber') orderNumber: string,
   ) {
     return this.ordersService.findMyOrderByOrderNumber(user.id, orderNumber);
+  }
+
+  @Post('orders/guest/lookup')
+  @ApiOperation({ summary: 'Guest: lookup order by order number and email' })
+  findGuestOrder(@Body() dto: GuestOrderLookupDto) {
+    return this.ordersService.findGuestOrder(dto);
   }
 
   @Get('admin/orders')
