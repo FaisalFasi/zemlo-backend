@@ -70,6 +70,7 @@ export class CatalogService {
     return this.prisma.category.findMany({
       where: {
         isActive: true,
+        parentId: null,
       },
       orderBy: [
         {
@@ -86,6 +87,27 @@ export class CatalogService {
         description: true,
         image: true,
         parentId: true,
+        children: {
+          where: {
+            isActive: true,
+          },
+          orderBy: [
+            {
+              position: Prisma.SortOrder.asc,
+            },
+            {
+              name: Prisma.SortOrder.asc,
+            },
+          ],
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            image: true,
+            parentId: true,
+          },
+        },
       },
     });
   }

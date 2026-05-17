@@ -8,6 +8,7 @@ import { seedPermissions } from './seeds/permissions.seed';
 import { seedRolePermissions } from './seeds/role-permissions.seed';
 import { seedTestCatalog } from './seeds/test-catalog.seed';
 import { seedPaymentMethods } from './seeds/payment-method.seed';
+import { seedCategories } from './seeds/categories.seed';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -26,10 +27,10 @@ async function main() {
   await seedPlatformSettings(prisma);
   await seedCountries(prisma);
   await seedPaymentMethods(prisma);
+  await seedCategories(prisma);
 
   await seedPermissions(prisma);
   await seedRolePermissions(prisma);
-
   await seedTestCatalog(prisma);
 
   console.log('🎉 Zemlo database seed completed successfully');
