@@ -21,7 +21,7 @@ export class UpdateAdminOrderStatusDto {
 
   @ApiPropertyOptional({
     enum: FulfillmentStatus,
-    example: FulfillmentStatus.UNFULFILLED,
+    example: FulfillmentStatus.PARTIALLY_FULFILLED,
   })
   @IsOptional()
   @IsEnum(FulfillmentStatus)

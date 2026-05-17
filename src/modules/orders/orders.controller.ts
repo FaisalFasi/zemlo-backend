@@ -15,7 +15,11 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 
 import { OrdersService } from './orders.service';
-import { UpdateAdminOrderStatusDto, GuestOrderLookupDto } from './dto';
+import {
+  UpdateAdminOrderStatusDto,
+  GuestOrderLookupDto,
+  UpdateAdminOrderShippingDto,
+} from './dto';
 
 @ApiTags('Orders')
 @ApiBearerAuth('access-token')
@@ -51,6 +55,17 @@ export class OrdersController {
   @ApiOperation({ summary: 'Admin: get all orders' })
   findAllAdminOrders() {
     return this.ordersService.findAllAdminOrders();
+  }
+
+  @Patch('admin/orders/:id/shipping')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiOperation({ summary: 'Admin: update order shipping and tracking' })
+  updateAdminOrderShipping(
+    @Param('id') id: string,
+    @Body() dto: UpdateAdminOrderShippingDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.ordersService.updateAdminOrderShipping(id, dto, user.id);
   }
 
   @Get('admin/orders/:id')

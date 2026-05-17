@@ -11,7 +11,11 @@ import {
 } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { GuestOrderLookupDto, UpdateAdminOrderStatusDto } from './dto';
+import {
+  GuestOrderLookupDto,
+  UpdateAdminOrderStatusDto,
+  UpdateAdminOrderShippingDto,
+} from './dto';
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -207,6 +211,88 @@ export class OrdersService {
         },
         include: this.getOrderDetailsInclude(),
       });
+    });
+  }
+  async updateAdminOrderShipping(
+    id: string,
+    dto: UpdateAdminOrderShippingDto,
+    adminUserId: string,
+  ) {
+    const existingOrder = await this.prisma.order.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!existingOrder) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const data: {
+      shippingMethod?: string | null;
+      shippingCarrier?: string | null;
+      trackingNumber?: string | null;
+      trackingUrl?: string | null;
+      estimatedDelivery?: Date | null;
+      actualDelivery?: Date | null;
+      fulfillmentStatus?: FulfillmentStatus;
+    } = {};
+
+    if (dto.shippingMethod !== undefined) {
+      data.shippingMethod = dto.shippingMethod?.trim() || null;
+    }
+
+    if (dto.shippingCarrier !== undefined) {
+      data.shippingCarrier = dto.shippingCarrier?.trim() || null;
+    }
+
+    if (dto.trackingNumber !== undefined) {
+      data.trackingNumber = dto.trackingNumber?.trim() || null;
+    }
+
+    if (dto.trackingUrl !== undefined) {
+      data.trackingUrl = dto.trackingUrl?.trim() || null;
+    }
+
+    if (dto.estimatedDelivery !== undefined) {
+      data.estimatedDelivery = dto.estimatedDelivery
+        ? new Date(dto.estimatedDelivery)
+        : null;
+    }
+
+    if (dto.actualDelivery !== undefined) {
+      data.actualDelivery = dto.actualDelivery
+        ? new Date(dto.actualDelivery)
+        : null;
+    }
+
+    if (dto.fulfillmentStatus !== undefined) {
+      data.fulfillmentStatus = dto.fulfillmentStatus;
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedOrder = await tx.order.update({
+        where: {
+          id,
+        },
+        data,
+        include: this.getOrderDetailsInclude(),
+      });
+
+      if (dto.fulfillmentStatus !== undefined) {
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: id,
+            status: updatedOrder.status,
+            note:
+              dto.note?.trim() ||
+              `Fulfillment updated to ${dto.fulfillmentStatus}`,
+            changedBy: adminUserId,
+          },
+        });
+      }
+
+      return updatedOrder;
     });
   }
 
