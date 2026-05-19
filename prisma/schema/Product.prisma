@@ -1,6 +1,6 @@
 model Category {
   id          String  @id @default(uuid())
-  name        String  @unique
+  name        String
   slug        String  @unique
   description String? @db.Text
   image       String?
@@ -179,6 +179,7 @@ model ProductVariant {
 
   price          Decimal? @db.Decimal(10, 2)
   compareAtPrice Decimal? @db.Decimal(10, 2)
+  costPrice      Decimal? @db.Decimal(10, 2)
 
   options Json
 

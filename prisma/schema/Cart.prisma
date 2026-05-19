@@ -4,8 +4,7 @@ model Cart {
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  sessionId String?  @unique
-  session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  guestId String? @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -13,7 +12,7 @@ model Cart {
   items CartItem[]
 
   @@index([userId])
-  @@index([sessionId])
+  @@index([guestId])
   @@map("carts")
 }
 

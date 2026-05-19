@@ -16,8 +16,6 @@ model Session {
   expiresAt      DateTime
   createdAt      DateTime @default(now())
 
-  cart Cart?
-
   @@index([sessionId])
   @@index([userId])
   @@index([expiresAt])

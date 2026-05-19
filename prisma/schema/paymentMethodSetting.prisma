@@ -1,0 +1,23 @@
+model PaymentMethodSetting {
+    id String @id @default(uuid())
+
+    method PaymentMethod @unique
+
+    label       String
+    description String?
+
+    isEnabled Boolean @default(false)
+    isOnline  Boolean @default(false)
+
+    minAmount Decimal? @db.Decimal(10, 2)
+    maxAmount Decimal? @db.Decimal(10, 2)
+
+    sortOrder Int @default(0)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([isEnabled])
+    @@index([sortOrder])
+    @@map("payment_method_settings")
+}
