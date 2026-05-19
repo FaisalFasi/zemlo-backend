@@ -10,4 +10,8 @@ export default () => ({
   database: {
     url: process.env.DATABASE_URL,
   },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+  },
 });

@@ -2,7 +2,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PaymentMethod, ProductStatus } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { AuthCheckoutDto, CheckoutItemDto, GuestCheckoutDto } from './dto';
+import {
+  AuthCheckoutDto,
+  CheckoutItemDto,
+  FromCartCheckoutDto,
+  GuestCheckoutDto,
+} from './dto';
 
 import {
   CheckoutLine,
@@ -16,7 +21,6 @@ import { CheckoutPricingService } from './services/checkout-pricing.service';
 import { CheckoutInventoryService } from './services/checkout-inventory.service';
 import { CheckoutAddressService } from './services/checkout-address.service';
 import { CheckoutOrderService } from './services/checkout-order.service';
-import { ALLOWED_CHECKOUT_PAYMENT_METHODS } from './helpers/checkout-payment.helper';
 import { CheckoutAvailabilityService } from './services/checkout.availability.service';
 
 @Injectable()
@@ -46,106 +50,221 @@ export class CheckoutService {
     });
   }
 
-  private async createCheckout(params: CreateCheckoutParams) {
-    const { dto, userId, isGuest } = params;
+  async checkoutFromCart(
+    userId: string | undefined,
+    guestId: string | undefined,
+    dto: FromCartCheckoutDto,
+  ) {
+    const normalizedUserId = userId?.trim() || undefined;
+    const normalizedGuestId = guestId?.trim() || undefined;
+    const isGuest = !normalizedUserId;
 
-    // this.validatePaymentMethod(dto.paymentMethod);
+    if (isGuest && !normalizedGuestId) {
+      throw new BadRequestException(
+        'x-guest-id header is required for guest checkout',
+      );
+    }
 
-    // here tx is a prisma db instance to fetch data from db
+    this.validateFromCartGuestDetails(isGuest, dto);
+
     return this.prisma.$transaction(async (tx) => {
-      const settings = await tx.platformSettings.findFirst();
+      const cart = normalizedUserId
+        ? await tx.cart.findUnique({
+            where: {
+              userId: normalizedUserId,
+            },
+            include: {
+              items: true,
+            },
+          })
+        : await tx.cart.findUnique({
+            where: {
+              guestId: normalizedGuestId,
+            },
+            include: {
+              items: true,
+            },
+          });
 
-      this.settingsService.validateGuestCheckout(isGuest, settings);
-      await this.availabilityService.validateShippingCountry(
-        tx,
-        dto.shippingAddress,
-      );
-
-      const normalizedItems = this.normalizeItems(dto.items);
-
-      const lines = await this.buildCheckoutLines(tx, normalizedItems);
-
-      const totals = this.pricingService.calculateTotals({
-        lines,
-        taxRate: 0,
-        shippingCost: 0,
-        discount: 0,
-      });
-      await this.settingsService.validatePaymentMethod(
-        tx,
-        dto.paymentMethod,
-        totals.total,
-      );
-      const { shippingAddressId, billingAddressId } =
-        await this.addressService.createCheckoutAddresses(tx, {
-          shippingAddress: dto.shippingAddress,
-          billingAddress: dto.billingAddress,
-          userId,
-          isGuest,
-        });
-
-      for (const line of lines) {
-        await this.inventoryService.decreaseStock(tx, line);
+      if (!cart) {
+        throw new BadRequestException('Cart not found');
       }
 
-      const { order, payment } =
-        await this.orderService.createOrderWithItemsAndPayment(tx, {
-          userId,
-          isGuest,
-          dto,
-          lines,
-          totals,
-          shippingAddressId,
-          billingAddressId,
-          currency: 'USD',
-        });
+      if (cart.items.length === 0) {
+        throw new BadRequestException('Cart is empty');
+      }
+
+      const checkoutDto = {
+        ...dto,
+        guestEmail: dto.guestEmail,
+        guestPhone: dto.guestPhone,
+        guestFirstName: dto.guestFirstName,
+        guestLastName: dto.guestLastName,
+        items: cart.items.map((item) => ({
+          productId: item.productId,
+          variantId: item.variantId ?? undefined,
+          quantity: item.quantity,
+        })),
+      };
+
+      const result = await this.createCheckoutWithTransaction(tx, {
+        dto: checkoutDto,
+        userId: normalizedUserId,
+        isGuest,
+      });
+
+      await tx.cartItem.deleteMany({
+        where: {
+          cartId: cart.id,
+        },
+      });
 
       return {
+        ...result,
         message: isGuest
-          ? 'Guest checkout created successfully'
-          : 'Checkout created successfully',
-        order: {
-          id: order.id,
-          orderNumber: order.orderNumber,
-          status: order.status,
-          paymentStatus: order.paymentStatus,
-          fulfillmentStatus: order.fulfillmentStatus,
-          subtotal: totals.subtotal,
-          tax: totals.tax,
-          shippingCost: totals.shippingCost,
-          discount: totals.discount,
-          total: totals.total,
-          items: lines.map((line) => ({
-            productId: line.productId,
-            variantId: line.variantId ?? null,
-            name: line.name,
-            variantName: line.variantName ?? null,
-            sku: line.sku ?? null,
-            quantity: line.quantity,
-            unitPrice: line.unitPrice,
-            totalPrice: line.totalPrice,
-          })),
-        },
-        payment: {
-          id: payment.id,
-          method: payment.method,
-          status: payment.status,
-          amount: totals.total,
-          currency: payment.currency,
-        },
-        nextStep:
-          dto.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
-            ? 'Order is pending confirmation for cash on delivery'
-            : 'Order is pending manual payment confirmation',
+          ? 'Guest checkout from cart created successfully'
+          : 'Checkout from cart created successfully',
       };
     });
   }
 
-  // private validatePaymentMethod(paymentMethod: PaymentMethod) {
-  //   if (!ALLOWED_CHECKOUT_PAYMENT_METHODS.includes(paymentMethod)) {
-  //     throw new BadRequestException('This payment method is not available yet');
-  //   }
-  // }
+  private async createCheckout(params: CreateCheckoutParams) {
+    return this.prisma.$transaction((tx) =>
+      this.createCheckoutWithTransaction(tx, params),
+    );
+  }
+
+  private async createCheckoutWithTransaction(
+    tx: any,
+    params: CreateCheckoutParams,
+  ) {
+    const { dto, userId, isGuest } = params;
+
+    const settings = await tx.platformSettings.findFirst();
+
+    this.settingsService.validateGuestCheckout(isGuest, settings);
+
+    await this.availabilityService.validateShippingCountry(
+      tx,
+      dto.shippingAddress,
+    );
+
+    const normalizedItems = this.normalizeItems(dto.items);
+
+    const lines = await this.buildCheckoutLines(tx, normalizedItems);
+
+    const subtotal = roundMoney(
+      lines.reduce((sum, line) => sum + line.totalPrice, 0),
+    );
+
+    const freeShippingOver = this.settingsService.getFreeShippingOver(settings);
+
+    const shippingCost =
+      freeShippingOver !== null && subtotal >= freeShippingOver
+        ? 0
+        : this.settingsService.getDefaultShippingCost(settings);
+
+    const totals = this.pricingService.calculateTotals({
+      lines,
+      taxRate: this.settingsService.getTaxRate(settings),
+      shippingCost,
+      discount: 0,
+    });
+
+    await this.settingsService.validatePaymentMethod(
+      tx,
+      dto.paymentMethod,
+      totals.total,
+    );
+
+    const { shippingAddressId, billingAddressId } =
+      await this.addressService.createCheckoutAddresses(tx, {
+        shippingAddress: dto.shippingAddress,
+        billingAddress: dto.billingAddress,
+        userId,
+        isGuest,
+      });
+
+    for (const line of lines) {
+      await this.inventoryService.decreaseStock(tx, line);
+    }
+
+    const { order, payment } =
+      await this.orderService.createOrderWithItemsAndPayment(tx, {
+        userId,
+        isGuest,
+        dto,
+        lines,
+        totals,
+        shippingAddressId,
+        billingAddressId,
+        currency: this.settingsService.getCurrency(settings),
+      });
+
+    return {
+      message: isGuest
+        ? 'Guest checkout created successfully'
+        : 'Checkout created successfully',
+      order: {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        fulfillmentStatus: order.fulfillmentStatus,
+        subtotal: totals.subtotal,
+        tax: totals.tax,
+        shippingCost: totals.shippingCost,
+        discount: totals.discount,
+        total: totals.total,
+        items: lines.map((line) => ({
+          productId: line.productId,
+          variantId: line.variantId ?? null,
+          name: line.name,
+          variantName: line.variantName ?? null,
+          sku: line.sku ?? null,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          totalPrice: line.totalPrice,
+        })),
+      },
+      payment: {
+        id: payment.id,
+        method: payment.method,
+        status: payment.status,
+        amount: totals.total,
+        currency: payment.currency,
+      },
+      nextStep:
+        dto.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
+          ? 'Order is pending confirmation for cash on delivery'
+          : 'Order is pending manual payment confirmation',
+    };
+  }
+
+  private validateFromCartGuestDetails(
+    isGuest: boolean,
+    dto: FromCartCheckoutDto,
+  ) {
+    if (!isGuest) {
+      return;
+    }
+
+    if (!dto.guestEmail?.trim()) {
+      throw new BadRequestException('Guest email is required');
+    }
+
+    if (!dto.guestPhone?.trim()) {
+      throw new BadRequestException('Guest phone is required');
+    }
+
+    if (!dto.guestFirstName?.trim()) {
+      throw new BadRequestException('Guest first name is required');
+    }
+
+    if (!dto.guestLastName?.trim()) {
+      throw new BadRequestException('Guest last name is required');
+    }
+  }
 
   private normalizeItems(items: CheckoutItemDto[]): NormalizedCheckoutItem[] {
     const map = new Map<string, NormalizedCheckoutItem>();
