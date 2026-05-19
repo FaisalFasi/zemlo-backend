@@ -11,6 +11,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { PublicSettingsModule } from './modules/public-settings/public-settings.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PublicSettingsModule } from './modules/public-settings/public-settings.
     OrdersModule,
     CatalogModule,
     PublicSettingsModule,
+    CartModule,
   ], // ConfigModule.forRoot() loads env variables
   controllers: [AppController],
   providers: [AppService],
