@@ -8,6 +8,14 @@ type StripePaymentIntentResult = {
   status: string;
 };
 
+type StripeWebhookEvent = {
+  id: string;
+  type: string;
+  data: {
+    object: any;
+  };
+};
+
 @Injectable()
 export class StripeService {
   private readonly stripeClient: InstanceType<typeof Stripe> | null;
@@ -54,6 +62,29 @@ export class StripeService {
       clientSecret: paymentIntent.client_secret,
       status: paymentIntent.status,
     };
+  }
+
+  constructWebhookEvent(params: {
+    rawBody: Buffer;
+    signature: string;
+  }): StripeWebhookEvent {
+    const stripeClient = this.getStripeClient();
+
+    const webhookSecret = this.configService.get<string>(
+      'stripe.webhookSecret',
+    );
+
+    if (!webhookSecret) {
+      throw new BadRequestException(
+        'Stripe webhook secret is not configured. Please add STRIPE_WEBHOOK_SECRET to your .env file.',
+      );
+    }
+
+    return stripeClient.webhooks.constructEvent(
+      params.rawBody,
+      params.signature,
+      webhookSecret,
+    ) as StripeWebhookEvent;
   }
 
   private getStripeClient(): InstanceType<typeof Stripe> {

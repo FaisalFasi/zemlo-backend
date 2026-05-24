@@ -34,6 +34,10 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   STRIPE_PUBLISHABLE_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_WEBHOOK_SECRET?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

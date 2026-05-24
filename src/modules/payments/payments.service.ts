@@ -3,10 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { OrderStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
 
-import { PrismaService } from '../../prisma/prisma.service.js';
-import { CreateStripePaymentIntentDto } from './dto/create-stripe-payment-intent.dto.js';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateStripePaymentIntentDto } from './dto';
 import { StripeService } from './services/stripe.service';
 
 @Injectable()
@@ -105,6 +105,138 @@ export class PaymentsService {
       amount: Number(order.total),
       currency: order.payment.currency,
       status: paymentIntent.status,
+    };
+  }
+
+  async handleStripeWebhook(params: { rawBody: Buffer; signature: string }) {
+    const event = this.stripeService.constructWebhookEvent(params);
+
+    if (event.type === 'payment_intent.succeeded') {
+      return this.handlePaymentIntentSucceeded(event.data.object);
+    }
+
+    if (event.type === 'payment_intent.payment_failed') {
+      return this.handlePaymentIntentFailed(event.data.object);
+    }
+
+    return {
+      received: true,
+      ignored: true,
+      eventType: event.type,
+    };
+  }
+
+  private async handlePaymentIntentSucceeded(paymentIntent: any) {
+    const payment = await this.prisma.payment.findUnique({
+      where: {
+        paymentIntentId: paymentIntent.id,
+      },
+      include: {
+        order: true,
+      },
+    });
+
+    if (!payment) {
+      return {
+        received: true,
+        message: 'Payment record not found for PaymentIntent',
+      };
+    }
+
+    if (payment.status === PaymentStatus.PAID) {
+      return {
+        received: true,
+        message: 'Payment already marked as paid',
+      };
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: {
+          id: payment.id,
+        },
+        data: {
+          status: PaymentStatus.PAID,
+          gatewayResponse: paymentIntent,
+          paidAt: new Date(),
+        },
+      });
+
+      await tx.order.update({
+        where: {
+          id: payment.orderId,
+        },
+        data: {
+          paymentStatus: PaymentStatus.PAID,
+          status: OrderStatus.CONFIRMED,
+        },
+      });
+
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: payment.orderId,
+          status: OrderStatus.CONFIRMED,
+          note: 'Payment succeeded via Stripe',
+        },
+      });
+    });
+
+    return {
+      received: true,
+      paymentStatus: PaymentStatus.PAID,
+      orderStatus: OrderStatus.CONFIRMED,
+    };
+  }
+
+  private async handlePaymentIntentFailed(paymentIntent: any) {
+    const payment = await this.prisma.payment.findUnique({
+      where: {
+        paymentIntentId: paymentIntent.id,
+      },
+      include: {
+        order: true,
+      },
+    });
+
+    if (!payment) {
+      return {
+        received: true,
+        message: 'Payment record not found for PaymentIntent',
+      };
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: {
+          id: payment.id,
+        },
+        data: {
+          status: PaymentStatus.FAILED,
+          gatewayResponse: paymentIntent,
+        },
+      });
+
+      await tx.order.update({
+        where: {
+          id: payment.orderId,
+        },
+        data: {
+          paymentStatus: PaymentStatus.FAILED,
+        },
+      });
+
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: payment.orderId,
+          status: payment.order.status,
+          note: 'Payment failed via Stripe',
+        },
+      });
+    });
+
+    return {
+      received: true,
+      paymentStatus: PaymentStatus.FAILED,
     };
   }
 }
