@@ -1,5 +1,11 @@
 import { plainToClass } from 'class-transformer';
-import { IsString, IsNumber, validateSync, MinLength } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  MinLength,
+  validateSync,
+} from 'class-validator';
 
 export class EnvironmentVariables {
   // JWT Config
@@ -19,14 +25,22 @@ export class EnvironmentVariables {
   // Database
   @IsString()
   DATABASE_URL: string;
+
+  // Stripe
+  @IsOptional()
+  @IsString()
+  STRIPE_SECRET_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_PUBLISHABLE_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_WEBHOOK_SECRET?: string;
 }
 
 export function validate(config: Record<string, unknown>) {
-  // ✅ DEBUG: Dekho config me kya aata hai
-  //   console.log('🔍 Config received:', Object.keys(config));
-  //   console.log('📌 JWT_SECRET:', config.JWT_SECRET);
-  //   console.log('📌 DATABASE_URL:', config.DATABASE_URL);
-
   const validatedConfig = plainToClass(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });
@@ -38,5 +52,11 @@ export function validate(config: Record<string, unknown>) {
   if (errors.length > 0) {
     throw new Error(errors.toString());
   }
+
   return validatedConfig;
 }
+
+// ✅ DEBUG: Dekho config me kya aata hai
+//   console.log('🔍 Config received:', Object.keys(config));
+//   console.log('📌 JWT_SECRET:', config.JWT_SECRET);
+//   console.log('📌 DATABASE_URL:', config.DATABASE_URL);

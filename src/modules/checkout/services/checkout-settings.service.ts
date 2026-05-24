@@ -12,6 +12,7 @@ export class CheckoutSettingsService {
       throw new ForbiddenException('Guest checkout is currently disabled');
     }
   }
+
   async validatePaymentMethod(
     tx: any,
     paymentMethod: PaymentMethod,
@@ -32,9 +33,10 @@ export class CheckoutSettingsService {
         'This payment method is currently disabled',
       );
     }
-    if (paymentSetting.isOnline) {
+
+    if (paymentSetting.isOnline && paymentMethod !== PaymentMethod.STRIPE) {
       throw new BadRequestException(
-        'Online payment methods are not available yet',
+        'This online payment method is not available yet',
       );
     }
 
