@@ -21,7 +21,8 @@ export class StripeService {
   private readonly stripeClient: InstanceType<typeof Stripe> | null;
 
   constructor(private readonly configService: ConfigService) {
-    const secretKey = this.configService.get<string>('stripe.secretKey');
+    const secretKey = process.env.secretKey;
+    // const secretKey = this.configService.get<string>('stripe.secretKey');
 
     this.stripeClient = secretKey ? new Stripe(secretKey) : null;
   }

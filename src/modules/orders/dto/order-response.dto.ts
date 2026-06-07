@@ -9,19 +9,19 @@ import {
 } from '@prisma/client';
 
 export class OrderCustomerResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   firstName: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   lastName: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   phone?: string | null;
 
   @ApiProperty({ enum: UserRole })
@@ -29,59 +29,59 @@ export class OrderCustomerResponseDto {
 }
 
 export class OrderProductSummaryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku?: string | null;
 }
 
 export class OrderVariantSummaryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 }
 
 export class OrderItemResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderId: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   variantId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   productName: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   variantName: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   quantity: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   unitPrice: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   totalPrice: number;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
@@ -93,18 +93,18 @@ export class OrderItemResponseDto {
   @ApiPropertyOptional({ type: OrderVariantSummaryResponseDto, nullable: true })
   variant?: OrderVariantSummaryResponseDto | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }
 
 export class OrderPaymentResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderId: string;
 
   @ApiProperty({ enum: PaymentMethod })
@@ -113,28 +113,28 @@ export class OrderPaymentResponseDto {
   @ApiProperty({ enum: PaymentStatus })
   status: PaymentStatus;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   amount: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   currency: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   transactionId: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   paymentIntentId: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   paidAt: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   failedAt: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   refundedAt: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   failureReason: string | null;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
@@ -143,97 +143,97 @@ export class OrderPaymentResponseDto {
   @ApiPropertyOptional({ type: Object, nullable: true })
   metadata: unknown | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }
 
 export class OrderAddressResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderId: string;
 
   @ApiProperty({ enum: AddressType })
   type: AddressType;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   firstName: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   lastName: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   phone: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   street: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   apartment: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   city: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   state: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   zipCode: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   country: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }
 
 export class OrderStatusHistoryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderId: string;
 
   @ApiProperty({ enum: OrderStatus })
   status: OrderStatus;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   note: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   changedBy: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 }
 
 export class OrderSummaryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderNumber: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   userId: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   guestEmail: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   guestPhone: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   guestFirstName: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   guestLastName: string | null;
 
   @ApiProperty({ enum: OrderStatus })
@@ -245,49 +245,49 @@ export class OrderSummaryResponseDto {
   @ApiProperty({ enum: FulfillmentStatus })
   fulfillmentStatus: FulfillmentStatus;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   subtotal: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   tax: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   shippingCost: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   discount: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   total: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   customerNote: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   shippingMethod: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   shippingCarrier: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   trackingNumber: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   trackingUrl: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   paidAt: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   cancelledAt: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   completedAt: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   estimatedDelivery: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   actualDelivery: Date | null;
 
   @ApiProperty({ type: [OrderItemResponseDto] })
@@ -296,10 +296,10 @@ export class OrderSummaryResponseDto {
   @ApiPropertyOptional({ type: OrderPaymentResponseDto, nullable: true })
   payment: OrderPaymentResponseDto | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }
 

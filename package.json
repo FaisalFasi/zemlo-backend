@@ -11,6 +11,12 @@
   "scripts": {
     "prebuild": "prisma generate --schema=prisma/schema",
     "build": "nest build",
+    "build:check": "npm run build && npm run api:contract:check && echo \"✅ Build completed successfully\" && find dist -name main.js",
+    "swagger:dto:fix": "node scripts/fix-swagger-dto-types.cjs",
+    "api:contract:audit": "node scripts/audit-api-contracts.cjs",
+    "api:contract:check": "npm run api:contract:audit && npm run openapi:export",
+    "openapi:export": "tsx scripts/export-openapi.ts",
+    "swagger:dto:audit": "node scripts/audit-swagger-dtos.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start src/main",
     "start:dev": "nest start src/main --watch",
@@ -21,8 +27,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "build:check": "npm run build && echo \"✅ Build completed successfully\" && find dist -name main.js"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

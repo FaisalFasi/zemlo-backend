@@ -1,73 +1,73 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class PublicCategorySummaryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 }
 
 export class PublicBrandSummaryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   logo: string | null;
 }
 
 export class PublicProductImageResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   url: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   altText: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   position: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isDefault: boolean;
 }
 
 export class PublicProductVariantResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   price: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   image: string | null;
 
   @ApiProperty({

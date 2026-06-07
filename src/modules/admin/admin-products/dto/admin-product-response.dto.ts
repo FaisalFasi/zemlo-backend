@@ -2,171 +2,171 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
 
 export class AdminProductCategoryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 }
 
 export class AdminProductBrandResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 }
 
 export class AdminProductImageResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   url: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   altText: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   position: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isDefault: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }
 
 export class AdminProductVariantResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   price: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   image: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Object })
   options: unknown;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isActive: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }
 
 export class AdminProductResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   shortDescription: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   price: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   costPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   hasVariants: boolean;
 
   @ApiProperty({ enum: ProductStatus })
   status: ProductStatus;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isFeatured: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   categoryId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   brandId: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   weight: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   length: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   width: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   height: number | null;
 
   @ApiProperty({ type: [String] })
   keywords: string[];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   metaTitle: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   metaDescription: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   publishedAt: Date | null;
 
   @ApiProperty({ type: AdminProductCategoryResponseDto })
@@ -181,9 +181,9 @@ export class AdminProductResponseDto {
   @ApiProperty({ type: [AdminProductVariantResponseDto] })
   variants: AdminProductVariantResponseDto[];
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }

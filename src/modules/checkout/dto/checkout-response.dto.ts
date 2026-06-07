@@ -7,97 +7,105 @@ import {
 } from '@prisma/client';
 
 export class CheckoutOrderItemResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
+  id: string;
+
+  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   variantId: string | null;
 
-  @ApiProperty()
-  name: string;
+  @ApiProperty({ type: String })
+  productName: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   variantName: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   quantity: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   unitPrice: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   totalPrice: number;
+
+  @ApiPropertyOptional({ type: Object, nullable: true })
+  productSnapshot: unknown | null;
 }
 
 export class CheckoutOrderResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderNumber: string;
 
-  @ApiProperty({ enum: OrderStatus })
+  @ApiProperty({ enum: OrderStatus, enumName: 'OrderStatus' })
   status: OrderStatus;
 
-  @ApiProperty({ enum: PaymentStatus })
+  @ApiProperty({ enum: PaymentStatus, enumName: 'PaymentStatus' })
   paymentStatus: PaymentStatus;
 
-  @ApiProperty({ enum: FulfillmentStatus })
+  @ApiProperty({ enum: FulfillmentStatus, enumName: 'FulfillmentStatus' })
   fulfillmentStatus: FulfillmentStatus;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   subtotal: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   tax: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   shippingCost: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   discount: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   total: number;
 
-  @ApiProperty({ type: [CheckoutOrderItemResponseDto] })
+  @ApiProperty({ type: () => [CheckoutOrderItemResponseDto] })
   items: CheckoutOrderItemResponseDto[];
 }
 
 export class CheckoutPaymentResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty({ enum: PaymentMethod })
+  @ApiProperty({ enum: PaymentMethod, enumName: 'PaymentMethod' })
   method: PaymentMethod;
 
-  @ApiProperty({ enum: PaymentStatus })
+  @ApiProperty({ enum: PaymentStatus, enumName: 'PaymentStatus' })
   status: PaymentStatus;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   amount: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   currency: string;
 }
 
 export class CheckoutResponseDto {
   @ApiProperty({
+    type: String,
     example: 'Checkout created successfully',
   })
   message: string;
 
-  @ApiProperty({ type: CheckoutOrderResponseDto })
+  @ApiProperty({ type: () => CheckoutOrderResponseDto })
   order: CheckoutOrderResponseDto;
 
-  @ApiProperty({ type: CheckoutPaymentResponseDto })
+  @ApiProperty({ type: () => CheckoutPaymentResponseDto })
   payment: CheckoutPaymentResponseDto;
 
   @ApiProperty({
-    example: 'Order is pending confirmation for cash on delivery',
+    type: String,
+    example: 'Complete payment using the selected payment method',
   })
   nextStep: string;
 }

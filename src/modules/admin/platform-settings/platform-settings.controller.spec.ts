@@ -9,7 +9,9 @@ describe('PlatformSettingsController', () => {
       controllers: [PlatformSettingsController],
     }).compile();
 
-    controller = module.get<PlatformSettingsController>(PlatformSettingsController);
+    controller = module.get<PlatformSettingsController>(
+      PlatformSettingsController,
+    );
   });
 
   it('should be defined', () => {

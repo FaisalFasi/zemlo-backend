@@ -5,7 +5,6 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
 export const prismaPGAdapter = (database_url: string) => {
-  console.log('----- db url - connectionString:---', database_url);
   // ============================================
   // CREATE DATABASE CONNECTION
   // ============================================

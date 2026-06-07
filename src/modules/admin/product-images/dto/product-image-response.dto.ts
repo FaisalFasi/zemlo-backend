@@ -1,27 +1,27 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ProductImageResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   url: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   altText: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   position: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isDefault: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }

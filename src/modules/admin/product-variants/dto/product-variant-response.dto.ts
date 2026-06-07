@@ -1,40 +1,40 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ProductVariantResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   price: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   costPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isActive: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   image: string | null;
 
   @ApiProperty({
@@ -43,9 +43,9 @@ export class ProductVariantResponseDto {
   })
   options: unknown;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }

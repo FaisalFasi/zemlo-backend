@@ -1,79 +1,79 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class CartCategoryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 }
 
 class CartBrandResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   logo: string | null;
 }
 
 class CartImageResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   url: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   altText: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   position: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isDefault: boolean;
 }
 
 class CartProductResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   shortDescription: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   price: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   hasVariants: boolean;
 
   @ApiProperty({ type: CartCategoryResponseDto })
@@ -87,66 +87,66 @@ class CartProductResponseDto {
 }
 
 class CartVariantResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   price: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   image: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Object })
   options: unknown;
 }
 
 class CartItemResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   quantity: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   cartId: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   variantId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   variantKey: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   addedAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   unitPrice: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   lineTotal: number;
 
   @ApiProperty({ type: CartProductResponseDto })
@@ -157,30 +157,30 @@ class CartItemResponseDto {
 }
 
 export class CartResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   userId: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   guestId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 
   @ApiProperty({ type: [CartItemResponseDto] })
   items: CartItemResponseDto[];
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   totalItems: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   totalQuantity: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   subtotal: number;
 }

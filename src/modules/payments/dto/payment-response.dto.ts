@@ -1,56 +1,51 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class StripePaymentIntentResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderId: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   orderNumber: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   paymentId: string;
 
-  @ApiProperty({
-    example: 'pi_3TaczuBlX6tkIsTB36Pkwqlc',
-  })
+  @ApiProperty({ type: String, example: 'pi_3TaczuBlX6tkIsTB36Pkwqlc' })
   paymentIntentId: string;
 
   @ApiPropertyOptional({
+    type: String,
     nullable: true,
     example: 'pi_3TaczuBlX6tkIsTB36Pkwqlc_secret_xxx',
   })
   clientSecret: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   amount: number;
 
-  @ApiProperty({
-    example: 'USD',
-  })
+  @ApiProperty({ type: String, example: 'USD' })
   currency: string;
 
-  @ApiProperty({
-    example: 'requires_payment_method',
-  })
+  @ApiProperty({ type: String, example: 'requires_payment_method' })
   status: string;
 }
 
 export class StripeWebhookResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   received: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: Boolean })
   ignored?: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String })
   eventType?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String })
   message?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String })
   paymentStatus?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String })
   orderStatus?: string;
 }

@@ -2,41 +2,41 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
 
 export class AdminCategoryParentResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 }
 
 export class AdminCategoryChildResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isActive: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   position: number;
 }
 
 export class AdminCategoryProductSummaryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
   @ApiProperty({ enum: ProductStatus })
@@ -44,33 +44,33 @@ export class AdminCategoryProductSummaryResponseDto {
 }
 
 export class AdminCategoryCountResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   products: number;
 }
 
 export class AdminCategoryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   image: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isActive: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   position: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   parentId: string | null;
 
   @ApiPropertyOptional({ type: AdminCategoryParentResponseDto, nullable: true })
@@ -85,9 +85,9 @@ export class AdminCategoryResponseDto {
   @ApiPropertyOptional({ type: AdminCategoryCountResponseDto })
   _count?: AdminCategoryCountResponseDto;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }

@@ -8,54 +8,54 @@ import {
 } from './catalog-common-response.dto';
 
 export class PublicBrandDetailResponseDto extends PublicBrandSummaryResponseDto {
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   website: string | null;
 }
 
 export class PublicProductListItemResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   shortDescription: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   price: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   hasVariants: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isFeatured: boolean;
 
   @ApiProperty({ type: [String] })
   keywords: string[];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   metaTitle: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   metaDescription: string | null;
 
   @ApiProperty({ type: PublicCategorySummaryResponseDto })
@@ -72,64 +72,64 @@ export class PublicProductListItemResponseDto {
 }
 
 export class PublicProductDetailResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   shortDescription: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   price: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   stock: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   trackInventory: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   hasVariants: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isFeatured: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   weight: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   length: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   width: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   height: number | null;
 
   @ApiProperty({ type: [String] })
   keywords: string[];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   metaTitle: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   metaDescription: string | null;
 
   @ApiProperty({ type: PublicCategorySummaryResponseDto })

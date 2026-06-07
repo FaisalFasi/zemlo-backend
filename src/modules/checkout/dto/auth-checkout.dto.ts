@@ -49,9 +49,7 @@ export class AuthCheckoutDto {
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
 
-  @ApiPropertyOptional({
-    example: 'Please call before delivery',
-  })
+  @ApiPropertyOptional({ type: String, example: 'Please call before delivery' })
   @IsOptional()
   @IsString()
   @Length(1, 1000)

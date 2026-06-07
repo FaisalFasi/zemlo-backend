@@ -22,7 +22,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly permissionResolver: PermissionResolverService,
     configService: ConfigService,
   ) {
-    const jwtSecret = configService.get<string>('JWT_SECRET');
+    const jwtSecret = process.env.JWT_SECRET;
+
+    // const jwtSecret = configService.get<string>('JWT_SECRET');
 
     if (!jwtSecret) {
       throw new Error('JWT_SECRET is missing in .env');

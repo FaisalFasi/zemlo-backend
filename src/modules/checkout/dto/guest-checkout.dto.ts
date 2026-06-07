@@ -17,29 +17,21 @@ import { CheckoutItemDto } from './checkout-item.dto';
 import { CheckoutAddressDto } from './checkout-address.dto';
 
 export class GuestCheckoutDto {
-  @ApiProperty({
-    example: 'guest@test.com',
-  })
+  @ApiProperty({ type: String, example: 'guest@test.com' })
   @IsEmail()
   guestEmail: string;
 
-  @ApiProperty({
-    example: '+13001234567',
-  })
+  @ApiProperty({ type: String, example: '+13001234567' })
   @IsString()
   @Length(5, 30)
   guestPhone: string;
 
-  @ApiProperty({
-    example: 'Ali',
-  })
+  @ApiProperty({ type: String, example: 'Ali' })
   @IsString()
   @Length(1, 100)
   guestFirstName: string;
 
-  @ApiProperty({
-    example: 'Khan',
-  })
+  @ApiProperty({ type: String, example: 'Khan' })
   @IsString()
   @Length(1, 100)
   guestLastName: string;
@@ -77,9 +69,7 @@ export class GuestCheckoutDto {
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
 
-  @ApiPropertyOptional({
-    example: 'Please call before delivery',
-  })
+  @ApiPropertyOptional({ type: String, example: 'Please call before delivery' })
   @IsOptional()
   @IsString()
   @Length(1, 1000)

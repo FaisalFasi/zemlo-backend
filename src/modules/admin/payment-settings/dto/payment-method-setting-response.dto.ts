@@ -2,39 +2,39 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PaymentMethod } from '@prisma/client';
 
 export class PaymentMethodSettingResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty({ enum: PaymentMethod })
+  @ApiProperty({ enum: PaymentMethod, enumName: 'PaymentMethod' })
   method: PaymentMethod;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   label: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isEnabled: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isOnline: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   minAmount: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   maxAmount: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   sortOrder: number;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
   metadata: unknown | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }

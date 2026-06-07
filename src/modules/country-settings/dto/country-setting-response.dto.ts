@@ -1,45 +1,45 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CountrySettingResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   iso2: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   iso3: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   currency: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   phoneCode: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isActive: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowWebsiteAccess: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowCheckout: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   allowShipping: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean })
   isDefault: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number })
   sortOrder: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   updatedAt: Date;
 }
