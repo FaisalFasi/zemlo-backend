@@ -8,14 +8,25 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
+import { AdminMessageResponseDto } from '../common/dto/admin-message-response.dto';
 import { PERMISSIONS } from '../../../common/constants/permissions';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { AdminBrandsService } from './admin-brands.service';
-import { CreateAdminBrandDto, UpdateAdminBrandDto } from './dto';
+import {
+  AdminBrandResponseDto,
+  CreateAdminBrandDto,
+  UpdateAdminBrandDto,
+} from './dto';
 
 @ApiTags('Admin - Brands')
 @ApiBearerAuth('access-token')
@@ -27,6 +38,7 @@ export class AdminBrandsController {
   @Get()
   @RequirePermissions(PERMISSIONS.BRANDS_VIEW)
   @ApiOperation({ summary: 'Admin: get all brands' })
+  @ApiOkResponse({ type: [AdminBrandResponseDto] })
   findAll() {
     return this.adminBrandsService.findAll();
   }
@@ -34,6 +46,7 @@ export class AdminBrandsController {
   @Get(':id')
   @RequirePermissions(PERMISSIONS.BRANDS_VIEW)
   @ApiOperation({ summary: 'Admin: get brand by ID' })
+  @ApiOkResponse({ type: AdminBrandResponseDto })
   findOne(@Param('id') id: string) {
     return this.adminBrandsService.findOne(id);
   }
@@ -41,6 +54,7 @@ export class AdminBrandsController {
   @Post()
   @RequirePermissions(PERMISSIONS.BRANDS_CREATE)
   @ApiOperation({ summary: 'Admin: create brand' })
+  @ApiCreatedResponse({ type: AdminBrandResponseDto })
   create(@Body() dto: CreateAdminBrandDto) {
     return this.adminBrandsService.create(dto);
   }
@@ -48,6 +62,7 @@ export class AdminBrandsController {
   @Patch(':id')
   @RequirePermissions(PERMISSIONS.BRANDS_UPDATE)
   @ApiOperation({ summary: 'Admin: update brand' })
+  @ApiOkResponse({ type: AdminBrandResponseDto })
   update(@Param('id') id: string, @Body() dto: UpdateAdminBrandDto) {
     return this.adminBrandsService.update(id, dto);
   }
@@ -55,6 +70,7 @@ export class AdminBrandsController {
   @Delete(':id')
   @RequirePermissions(PERMISSIONS.BRANDS_DELETE)
   @ApiOperation({ summary: 'Admin: disable brand' })
+  @ApiOkResponse({ type: AdminMessageResponseDto })
   disable(@Param('id') id: string) {
     return this.adminBrandsService.disable(id);
   }

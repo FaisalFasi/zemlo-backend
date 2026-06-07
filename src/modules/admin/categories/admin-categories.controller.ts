@@ -8,14 +8,25 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
+import { AdminMessageResponseDto } from '../common/dto/admin-message-response.dto';
 import { PERMISSIONS } from '../../../common/constants/permissions';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { AdminCategoriesService } from './admin-categories.service';
-import { CreateAdminCategoryDto, UpdateAdminCategoryDto } from './dto';
+import {
+  AdminCategoryResponseDto,
+  CreateAdminCategoryDto,
+  UpdateAdminCategoryDto,
+} from './dto';
 
 @ApiTags('Admin - Categories')
 @ApiBearerAuth('access-token')
@@ -29,6 +40,7 @@ export class AdminCategoriesController {
   @Get()
   @RequirePermissions(PERMISSIONS.CATEGORIES_VIEW)
   @ApiOperation({ summary: 'Admin: get all categories' })
+  @ApiOkResponse({ type: [AdminCategoryResponseDto] })
   findAll() {
     return this.adminCategoriesService.findAll();
   }
@@ -36,6 +48,7 @@ export class AdminCategoriesController {
   @Get(':id')
   @RequirePermissions(PERMISSIONS.CATEGORIES_VIEW)
   @ApiOperation({ summary: 'Admin: get category by ID' })
+  @ApiOkResponse({ type: AdminCategoryResponseDto })
   findOne(@Param('id') id: string) {
     return this.adminCategoriesService.findOne(id);
   }
@@ -43,6 +56,7 @@ export class AdminCategoriesController {
   @Post()
   @RequirePermissions(PERMISSIONS.CATEGORIES_CREATE)
   @ApiOperation({ summary: 'Admin: create category' })
+  @ApiCreatedResponse({ type: AdminCategoryResponseDto })
   create(@Body() dto: CreateAdminCategoryDto) {
     return this.adminCategoriesService.create(dto);
   }
@@ -50,6 +64,7 @@ export class AdminCategoriesController {
   @Patch(':id')
   @RequirePermissions(PERMISSIONS.CATEGORIES_UPDATE)
   @ApiOperation({ summary: 'Admin: update category' })
+  @ApiOkResponse({ type: AdminCategoryResponseDto })
   update(@Param('id') id: string, @Body() dto: UpdateAdminCategoryDto) {
     return this.adminCategoriesService.update(id, dto);
   }
@@ -57,6 +72,7 @@ export class AdminCategoriesController {
   @Delete(':id')
   @RequirePermissions(PERMISSIONS.CATEGORIES_DELETE)
   @ApiOperation({ summary: 'Admin: disable category' })
+  @ApiOkResponse({ type: AdminMessageResponseDto })
   disable(@Param('id') id: string) {
     return this.adminCategoriesService.disable(id);
   }
