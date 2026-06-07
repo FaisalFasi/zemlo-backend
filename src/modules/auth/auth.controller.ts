@@ -1,15 +1,31 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
+import { MessageResponseDto } from '../../common/dto/message-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
+import { AuthService } from './auth.service';
+import {
+  AuthSessionResponseDto,
+  CurrentUserResponseDto,
+  LoginDto,
+  RegisterDto,
+} from './dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -18,14 +34,15 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register new user' })
-  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiCreatedResponse({ type: AuthSessionResponseDto })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
-  @ApiResponse({ status: 201, description: 'User logged in successfully' })
+  @ApiOkResponse({ type: AuthSessionResponseDto })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -34,6 +51,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get current logged-in user' })
+  @ApiOkResponse({ type: CurrentUserResponseDto })
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.me(user);
   }
@@ -41,7 +59,9 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout current user' })
+  @ApiOkResponse({ type: MessageResponseDto })
   logout(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.logout(user);
   }

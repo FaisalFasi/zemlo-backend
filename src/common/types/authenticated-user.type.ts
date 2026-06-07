@@ -7,5 +7,5 @@ export interface AuthenticatedUser {
   lastName: string;
   role: UserRole;
   sessionId: string;
-  //   permissions: string[];
+  permissions: string[];
 }
