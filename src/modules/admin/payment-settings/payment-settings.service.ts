@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PaymentMethod } from '@prisma/client';
+import { PaymentMethod, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpdatePaymentMethodSettingDto } from './dto';
@@ -13,11 +13,13 @@ export class PaymentSettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.paymentMethodSetting.findMany({
+    const settings = await this.prisma.paymentMethodSetting.findMany({
       orderBy: {
-        sortOrder: 'asc',
+        sortOrder: Prisma.SortOrder.asc,
       },
     });
+
+    return settings.map((setting) => this.toPaymentMethodResponse(setting));
   }
 
   async findOne(method: PaymentMethod) {
@@ -31,25 +33,17 @@ export class PaymentSettingsService {
       throw new NotFoundException('Payment method setting not found');
     }
 
-    return setting;
+    return this.toPaymentMethodResponse(setting);
   }
 
   async update(method: PaymentMethod, dto: UpdatePaymentMethodSettingDto) {
     const existingSetting = await this.findOne(method);
 
     const finalMinAmount =
-      dto.minAmount !== undefined
-        ? dto.minAmount
-        : existingSetting.minAmount !== null
-          ? Number(existingSetting.minAmount)
-          : null;
+      dto.minAmount !== undefined ? dto.minAmount : existingSetting.minAmount;
 
     const finalMaxAmount =
-      dto.maxAmount !== undefined
-        ? dto.maxAmount
-        : existingSetting.maxAmount !== null
-          ? Number(existingSetting.maxAmount)
-          : null;
+      dto.maxAmount !== undefined ? dto.maxAmount : existingSetting.maxAmount;
 
     if (
       finalMinAmount !== null &&
@@ -61,12 +55,14 @@ export class PaymentSettingsService {
       );
     }
 
-    return this.prisma.paymentMethodSetting.update({
+    const setting = await this.prisma.paymentMethodSetting.update({
       where: {
         method,
       },
       data: this.cleanDto(dto),
     });
+
+    return this.toPaymentMethodResponse(setting);
   }
 
   private cleanDto(dto: UpdatePaymentMethodSettingDto) {
@@ -82,5 +78,23 @@ export class PaymentSettingsService {
     }
 
     return data;
+  }
+
+  private toPaymentMethodResponse(setting: any) {
+    return {
+      ...setting,
+      minAmount: this.toNullableNumber(setting.minAmount),
+      maxAmount: this.toNullableNumber(setting.maxAmount),
+    };
+  }
+
+  private toNullableNumber(
+    value: Prisma.Decimal | number | string | null | undefined,
+  ) {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    return Number(value);
   }
 }

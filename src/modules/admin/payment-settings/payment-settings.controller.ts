@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
@@ -19,7 +20,10 @@ import { PERMISSIONS } from '../../../common/constants/permissions';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { UpdatePaymentMethodSettingDto } from './dto';
+import {
+  PaymentMethodSettingResponseDto,
+  UpdatePaymentMethodSettingDto,
+} from './dto';
 import { PaymentSettingsService } from './payment-settings.service';
 
 @ApiTags('Admin - Payment Settings')
@@ -34,6 +38,7 @@ export class PaymentSettingsController {
   @Get()
   @RequirePermissions(PERMISSIONS.SETTINGS_VIEW)
   @ApiOperation({ summary: 'Get all payment method settings' })
+  @ApiOkResponse({ type: [PaymentMethodSettingResponseDto] })
   findAll() {
     return this.paymentSettingsService.findAll();
   }
@@ -46,8 +51,10 @@ export class PaymentSettingsController {
     enum: PaymentMethod,
     example: PaymentMethod.MANUAL,
   })
+  @ApiOkResponse({ type: PaymentMethodSettingResponseDto })
   findOne(
-    @Param('method', new ParseEnumPipe(PaymentMethod)) method: PaymentMethod,
+    @Param('method', new ParseEnumPipe(PaymentMethod))
+    method: PaymentMethod,
   ) {
     return this.paymentSettingsService.findOne(method);
   }
@@ -60,8 +67,10 @@ export class PaymentSettingsController {
     enum: PaymentMethod,
     example: PaymentMethod.STRIPE,
   })
+  @ApiOkResponse({ type: PaymentMethodSettingResponseDto })
   update(
-    @Param('method', new ParseEnumPipe(PaymentMethod)) method: PaymentMethod,
+    @Param('method', new ParseEnumPipe(PaymentMethod))
+    method: PaymentMethod,
     @Body() dto: UpdatePaymentMethodSettingDto,
   ) {
     return this.paymentSettingsService.update(method, dto);
