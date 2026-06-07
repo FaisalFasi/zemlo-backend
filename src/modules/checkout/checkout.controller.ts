@@ -1,9 +1,9 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiHeader,
   ApiOperation,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -13,7 +13,12 @@ import type { AuthenticatedUser } from '../../common/types/authenticated-user.ty
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CheckoutService } from './checkout.service';
-import { AuthCheckoutDto, FromCartCheckoutDto, GuestCheckoutDto } from './dto';
+import {
+  AuthCheckoutDto,
+  CheckoutResponseDto,
+  FromCartCheckoutDto,
+  GuestCheckoutDto,
+} from './dto';
 
 @ApiTags('Checkout')
 @Controller('checkout')
@@ -22,7 +27,7 @@ export class CheckoutController {
 
   @Post('guest')
   @ApiOperation({ summary: 'Guest checkout without login' })
-  @ApiResponse({ status: 201, description: 'Guest checkout created' })
+  @ApiCreatedResponse({ type: CheckoutResponseDto })
   guestCheckout(@Body() dto: GuestCheckoutDto) {
     return this.checkoutService.guestCheckout(dto);
   }
@@ -31,7 +36,7 @@ export class CheckoutController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Authenticated user checkout' })
-  @ApiResponse({ status: 201, description: 'Authenticated checkout created' })
+  @ApiCreatedResponse({ type: CheckoutResponseDto })
   authCheckout(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: AuthCheckoutDto,
@@ -49,7 +54,7 @@ export class CheckoutController {
       'Required only for guest checkout from cart. Not required when Authorization bearer token is valid.',
   })
   @ApiOperation({ summary: 'Create checkout order from current cart' })
-  @ApiResponse({ status: 201, description: 'Order created from cart' })
+  @ApiCreatedResponse({ type: CheckoutResponseDto })
   checkoutFromCart(
     @CurrentUser() user: AuthenticatedUser | undefined,
     @Req() request: Request,

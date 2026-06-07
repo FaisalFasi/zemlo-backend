@@ -6,13 +6,22 @@ import {
   HttpStatus,
   Logger,
   Post,
+  type RawBodyRequest,
   Req,
 } from '@nestjs/common';
-import type { RawBodyRequest } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 
-import { CreateStripePaymentIntentDto } from './dto';
+import {
+  CreateStripePaymentIntentDto,
+  StripePaymentIntentResponseDto,
+  StripeWebhookResponseDto,
+} from './dto';
 import { PaymentsService } from './payments.service';
 
 @ApiTags('Payments')
@@ -26,9 +35,9 @@ export class PaymentsController {
   @ApiOperation({
     summary: 'Create Stripe PaymentIntent for an existing order',
   })
-  @ApiResponse({
-    status: 201,
-    description: 'Stripe PaymentIntent created',
+  @ApiOkResponse({
+    type: StripePaymentIntentResponseDto,
+    description: 'Stripe PaymentIntent created or retrieved',
   })
   createStripePaymentIntent(@Body() dto: CreateStripePaymentIntentDto) {
     return this.paymentsService.createStripePaymentIntent(dto);
@@ -39,6 +48,11 @@ export class PaymentsController {
   @ApiOperation({
     summary: 'Stripe webhook endpoint',
   })
+  @ApiResponse({
+    status: 200,
+    type: StripeWebhookResponseDto,
+    description: 'Stripe webhook event processed',
+  })
   async handleStripeWebhook(
     @Req() request: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature?: string,
@@ -46,8 +60,6 @@ export class PaymentsController {
     this.logger.log('Stripe webhook received');
 
     if (!signature) {
-      this.logger.warn('Stripe webhook missing signature');
-
       return {
         received: false,
         message: 'Missing stripe-signature header',
@@ -55,8 +67,6 @@ export class PaymentsController {
     }
 
     if (!request.rawBody) {
-      this.logger.warn('Stripe webhook missing raw body');
-
       return {
         received: false,
         message: 'Missing raw body',

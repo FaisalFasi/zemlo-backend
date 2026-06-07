@@ -10,15 +10,16 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { PERMISSIONS } from '../../../common/constants/permissions';
+import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
+import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../../../common/guards/admin.guard';
-
 import { ProductVariantsService } from './product-variants.service';
 import { CreateProductVariantDto, UpdateProductVariantDto } from './dto';
 
 @ApiTags('Admin - Product Variants')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin/products/:productId/variants')
 export class ProductVariantsController {
   constructor(
@@ -26,12 +27,14 @@ export class ProductVariantsController {
   ) {}
 
   @Get()
+  @RequirePermissions(PERMISSIONS.PRODUCTS_VIEW)
   @ApiOperation({ summary: 'Admin: get product variants' })
   findAll(@Param('productId') productId: string) {
     return this.productVariantsService.findAll(productId);
   }
 
   @Post()
+  @RequirePermissions(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Admin: create product variant' })
   create(
     @Param('productId') productId: string,
@@ -41,6 +44,7 @@ export class ProductVariantsController {
   }
 
   @Patch(':variantId')
+  @RequirePermissions(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Admin: update product variant' })
   update(
     @Param('productId') productId: string,
@@ -51,6 +55,7 @@ export class ProductVariantsController {
   }
 
   @Delete(':variantId')
+  @RequirePermissions(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Admin: delete product variant' })
   remove(
     @Param('productId') productId: string,

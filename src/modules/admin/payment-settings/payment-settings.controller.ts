@@ -3,8 +3,8 @@ import {
   Controller,
   Get,
   Param,
-  Patch,
   ParseEnumPipe,
+  Patch,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -15,15 +15,16 @@ import {
 } from '@nestjs/swagger';
 import { PaymentMethod } from '@prisma/client';
 
+import { PERMISSIONS } from '../../../common/constants/permissions';
+import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
+import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../../../common/guards/admin.guard';
-
-import { PaymentSettingsService } from './payment-settings.service';
 import { UpdatePaymentMethodSettingDto } from './dto';
+import { PaymentSettingsService } from './payment-settings.service';
 
 @ApiTags('Admin - Payment Settings')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin/payment-settings')
 export class PaymentSettingsController {
   constructor(
@@ -31,12 +32,14 @@ export class PaymentSettingsController {
   ) {}
 
   @Get()
+  @RequirePermissions(PERMISSIONS.SETTINGS_VIEW)
   @ApiOperation({ summary: 'Get all payment method settings' })
   findAll() {
     return this.paymentSettingsService.findAll();
   }
 
   @Get(':method')
+  @RequirePermissions(PERMISSIONS.SETTINGS_VIEW)
   @ApiOperation({ summary: 'Get single payment method setting' })
   @ApiParam({
     name: 'method',
@@ -50,6 +53,7 @@ export class PaymentSettingsController {
   }
 
   @Patch(':method')
+  @RequirePermissions(PERMISSIONS.SETTINGS_UPDATE)
   @ApiOperation({ summary: 'Update payment method setting' })
   @ApiParam({
     name: 'method',

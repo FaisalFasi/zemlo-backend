@@ -9,17 +9,18 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../../common/guards/admin.guard';
+import { PERMISSIONS } from '../../common/constants/permissions';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
-
-import { OrdersService } from './orders.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
-  UpdateAdminOrderStatusDto,
   GuestOrderLookupDto,
   UpdateAdminOrderShippingDto,
+  UpdateAdminOrderStatusDto,
 } from './dto';
+import { OrdersService } from './orders.service';
 
 @ApiTags('Orders')
 @ApiBearerAuth('access-token')
@@ -51,32 +52,24 @@ export class OrdersController {
   }
 
   @Get('admin/orders')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.ORDERS_VIEW_ALL)
   @ApiOperation({ summary: 'Admin: get all orders' })
   findAllAdminOrders() {
     return this.ordersService.findAllAdminOrders();
   }
 
-  @Patch('admin/orders/:id/shipping')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiOperation({ summary: 'Admin: update order shipping and tracking' })
-  updateAdminOrderShipping(
-    @Param('id') id: string,
-    @Body() dto: UpdateAdminOrderShippingDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.ordersService.updateAdminOrderShipping(id, dto, user.id);
-  }
-
   @Get('admin/orders/:id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.ORDERS_VIEW_ALL)
   @ApiOperation({ summary: 'Admin: get order by ID' })
   findAdminOrderById(@Param('id') id: string) {
     return this.ordersService.findAdminOrderById(id);
   }
 
   @Patch('admin/orders/:id/status')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.ORDERS_UPDATE)
   @ApiOperation({ summary: 'Admin: update order status' })
   updateAdminOrderStatus(
     @Param('id') id: string,
@@ -84,5 +77,17 @@ export class OrdersController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.ordersService.updateAdminOrderStatus(id, dto, user.id);
+  }
+
+  @Patch('admin/orders/:id/shipping')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.ORDERS_UPDATE)
+  @ApiOperation({ summary: 'Admin: update order shipping and tracking' })
+  updateAdminOrderShipping(
+    @Param('id') id: string,
+    @Body() dto: UpdateAdminOrderShippingDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.ordersService.updateAdminOrderShipping(id, dto, user.id);
   }
 }
