@@ -14,7 +14,6 @@ export class PublicSettingsService {
           id: 'default',
         },
       }),
-
       this.prisma.countrySetting.findMany({
         where: {
           isActive: true,
@@ -40,7 +39,6 @@ export class PublicSettingsService {
           isDefault: true,
         },
       }),
-
       this.prisma.paymentMethodSetting.findMany({
         where: {
           isEnabled: true,
@@ -68,18 +66,15 @@ export class PublicSettingsService {
         supportPhone: settings?.supportPhone ?? null,
         supportWhatsapp: settings?.supportWhatsapp ?? null,
       },
-
       homepage: {
         title: settings?.homepageTitle ?? 'Zemlo',
         description:
           settings?.homepageDescription ?? 'Shop quality products from Zemlo.',
       },
-
       announcement: {
         enabled: settings?.announcementEnabled ?? false,
         text: settings?.announcementText ?? null,
       },
-
       features: {
         guestCheckout: settings?.allowGuestCheckout ?? true,
         accountRegistration: settings?.allowAccountRegistration ?? true,
@@ -88,26 +83,39 @@ export class PublicSettingsService {
         coupons: settings?.enableCoupons ?? false,
         chat: settings?.enableChat ?? false,
       },
-
       commerce: {
         currency: settings?.currency ?? 'USD',
-        taxRate: settings?.taxRate ?? 0,
-        defaultShippingCost: settings?.defaultShippingCost ?? 0,
-        freeShippingOver: settings?.freeShippingOver ?? null,
+        taxRate: this.toNumber(settings?.taxRate ?? 0),
+        defaultShippingCost: this.toNumber(settings?.defaultShippingCost ?? 0),
+        freeShippingOver: this.toNullableNumber(settings?.freeShippingOver),
       },
-
       countries,
-
-      paymentMethods,
-
+      paymentMethods: paymentMethods.map((paymentMethod) => ({
+        ...paymentMethod,
+        minAmount: this.toNullableNumber(paymentMethod.minAmount),
+        maxAmount: this.toNullableNumber(paymentMethod.maxAmount),
+      })),
       social: {
         instagramUrl: settings?.instagramUrl ?? null,
         facebookUrl: settings?.facebookUrl ?? null,
         tiktokUrl: settings?.tiktokUrl ?? null,
         youtubeUrl: settings?.youtubeUrl ?? null,
       },
-
       maintenanceMode: settings?.maintenanceMode ?? false,
     };
+  }
+
+  private toNumber(value: Prisma.Decimal | number | string) {
+    return Number(value);
+  }
+
+  private toNullableNumber(
+    value: Prisma.Decimal | number | string | null | undefined,
+  ) {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    return Number(value);
   }
 }

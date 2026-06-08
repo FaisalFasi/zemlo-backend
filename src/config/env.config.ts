@@ -1,8 +1,8 @@
-import { plainToClass } from 'class-transformer';
+import { Type, plainToInstance } from 'class-transformer';
 import {
   IsNumber,
-  IsOptional,
   IsString,
+  Min,
   MinLength,
   validateSync,
 } from 'class-validator';
@@ -10,38 +10,32 @@ import {
 export class EnvironmentVariables {
   // JWT Config
   @IsString()
-  @MinLength(32, { message: 'JWT_SECRET must be at least 32 characters' })
+  @MinLength(32, {
+    message: 'JWT_SECRET must be at least 32 characters',
+  })
   JWT_SECRET: string;
 
   @IsString()
   JWT_EXPIRES_IN: string;
 
   @IsString()
+  @MinLength(32, {
+    message: 'JWT_REFRESH_SECRET must be at least 32 characters',
+  })
   JWT_REFRESH_SECRET: string;
 
+  @Type(() => Number)
   @IsNumber()
+  @Min(1)
   SESSION_EXPIRES_DAYS: number;
 
   // Database
   @IsString()
   DATABASE_URL: string;
-
-  // Stripe
-  @IsOptional()
-  @IsString()
-  STRIPE_SECRET_KEY?: string;
-
-  @IsOptional()
-  @IsString()
-  STRIPE_PUBLISHABLE_KEY?: string;
-
-  @IsOptional()
-  @IsString()
-  STRIPE_WEBHOOK_SECRET?: string;
 }
 
 export function validate(config: Record<string, unknown>) {
-  const validatedConfig = plainToClass(EnvironmentVariables, config, {
+  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });
 

@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { PublicSettingsResponseDto } from './dto';
 import { PublicSettingsService } from './public-settings.service';
 
 @ApiTags('Public Settings')
@@ -10,6 +11,7 @@ export class PublicSettingsController {
 
   @Get()
   @ApiOperation({ summary: 'Public: get store settings' })
+  @ApiOkResponse({ type: PublicSettingsResponseDto })
   getPublicSettings() {
     return this.publicSettingsService.getPublicSettings();
   }

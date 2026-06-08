@@ -9,7 +9,9 @@ describe('CountrySettingsController', () => {
       controllers: [CountrySettingsController],
     }).compile();
 
-    controller = module.get<CountrySettingsController>(CountrySettingsController);
+    controller = module.get<CountrySettingsController>(
+      CountrySettingsController,
+    );
   });
 
   it('should be defined', () => {

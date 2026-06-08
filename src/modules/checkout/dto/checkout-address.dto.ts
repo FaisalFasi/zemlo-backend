@@ -4,72 +4,55 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, Length } from 'class-validator';
 
 export class CheckoutAddressDto {
-  @ApiProperty({
-    example: 'Ali',
-  })
+  @ApiProperty({ type: String, example: 'Ali' })
   @IsString()
   @Length(1, 100)
   firstName: string;
 
-  @ApiProperty({
-    example: 'Khan',
-  })
+  @ApiProperty({ type: String, example: 'Khan' })
   @IsString()
   @Length(1, 100)
   lastName: string;
 
-  @ApiPropertyOptional({
-    example: 'Zemlo LLC',
-  })
+  @ApiPropertyOptional({ type: String, example: 'Zemlo LLC' })
   @IsOptional()
   @IsString()
   @Length(1, 150)
   company?: string;
 
-  @ApiProperty({
-    example: '+13001234567',
-  })
+  @ApiProperty({ type: String, example: '+13001234567' })
   @IsString()
   @Length(5, 30)
   phone: string;
 
-  @ApiProperty({
-    example: '123 Main Street',
-  })
+  @ApiProperty({ type: String, example: '123 Main Street' })
   @IsString()
   @Length(1, 255)
   street: string;
 
-  @ApiPropertyOptional({
-    example: 'Apartment 4B',
-  })
+  @ApiPropertyOptional({ type: String, example: 'Apartment 4B' })
   @IsOptional()
   @IsString()
   @Length(1, 100)
   apartment?: string;
 
-  @ApiProperty({
-    example: 'New York',
-  })
+  @ApiProperty({ type: String, example: 'New York' })
   @IsString()
   @Length(1, 100)
   city: string;
 
-  @ApiProperty({
-    example: 'NY',
-  })
+  @ApiProperty({ type: String, example: 'NY' })
   @IsString()
   @Length(1, 100)
   state: string;
 
-  @ApiProperty({
-    example: '10001',
-  })
+  @ApiProperty({ type: String, example: '10001' })
   @IsString()
   @Length(3, 20)
   zipCode: string;
 
   @ApiPropertyOptional({
+    type: String,
     example: 'US',
     description: 'ISO2 country code, for example US, DE, PK',
     default: 'US',

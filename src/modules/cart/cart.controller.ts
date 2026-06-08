@@ -14,7 +14,9 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiHeader,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
@@ -24,7 +26,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CartService } from './cart.service';
-import { AddCartItemDto, UpdateCartItemDto } from './dto';
+import { AddCartItemDto, CartResponseDto, UpdateCartItemDto } from './dto';
 
 @ApiTags('Cart')
 @ApiBearerAuth('access-token')
@@ -41,6 +43,7 @@ export class CartController {
 
   @Get()
   @ApiOperation({ summary: 'Get current user or guest cart' })
+  @ApiOkResponse({ type: CartResponseDto })
   getCart(
     @CurrentUser() user: AuthenticatedUser | undefined,
     @Req() request: Request,
@@ -50,6 +53,7 @@ export class CartController {
 
   @Post('items')
   @ApiOperation({ summary: 'Add item to cart' })
+  @ApiCreatedResponse({ type: CartResponseDto })
   addItem(
     @CurrentUser() user: AuthenticatedUser | undefined,
     @Req() request: Request,
@@ -60,6 +64,7 @@ export class CartController {
 
   @Patch('items/:itemId')
   @ApiOperation({ summary: 'Update cart item quantity' })
+  @ApiOkResponse({ type: CartResponseDto })
   updateItem(
     @CurrentUser() user: AuthenticatedUser | undefined,
     @Req() request: Request,
@@ -77,6 +82,7 @@ export class CartController {
   @Delete('items/:itemId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Remove item from cart' })
+  @ApiOkResponse({ type: CartResponseDto })
   removeItem(
     @CurrentUser() user: AuthenticatedUser | undefined,
     @Req() request: Request,
@@ -92,6 +98,7 @@ export class CartController {
   @Delete('clear')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Clear cart' })
+  @ApiOkResponse({ type: CartResponseDto })
   clearCart(
     @CurrentUser() user: AuthenticatedUser | undefined,
     @Req() request: Request,

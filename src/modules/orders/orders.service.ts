@@ -13,20 +13,21 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   GuestOrderLookupDto,
-  UpdateAdminOrderStatusDto,
   UpdateAdminOrderShippingDto,
+  UpdateAdminOrderStatusDto,
 } from './dto';
+
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findMyOrders(userId: string) {
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where: {
         userId,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: Prisma.SortOrder.desc,
       },
       include: {
         items: {
@@ -50,6 +51,8 @@ export class OrdersService {
         payment: true,
       },
     });
+
+    return orders.map((order) => this.toOrderResponse(order));
   }
 
   async findMyOrderByOrderNumber(userId: string, orderNumber: string) {
@@ -65,13 +68,13 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    return order;
+    return this.toOrderResponse(order);
   }
 
   async findAllAdminOrders() {
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       orderBy: {
-        createdAt: 'desc',
+        createdAt: Prisma.SortOrder.desc,
       },
       include: {
         user: {
@@ -87,6 +90,8 @@ export class OrdersService {
         items: true,
       },
     });
+
+    return orders.map((order) => this.toOrderResponse(order));
   }
 
   async findAdminOrderById(id: string) {
@@ -101,7 +106,7 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    return order;
+    return this.toOrderResponse(order);
   }
 
   async updateAdminOrderStatus(
@@ -127,7 +132,7 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const order = await this.prisma.$transaction(async (tx) => {
       const updateData: {
         status?: OrderStatus;
         paymentStatus?: PaymentStatus;
@@ -156,7 +161,6 @@ export class OrdersService {
 
         if (dto.paymentStatus === PaymentStatus.PAID) {
           const now = new Date();
-
           updateData.paidAt = now;
           paymentPaidAt = now;
         }
@@ -212,7 +216,14 @@ export class OrdersService {
         include: this.getOrderDetailsInclude(),
       });
     });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return this.toOrderResponse(order);
   }
+
   async updateAdminOrderShipping(
     id: string,
     dto: UpdateAdminOrderShippingDto,
@@ -270,7 +281,7 @@ export class OrdersService {
       data.fulfillmentStatus = dto.fulfillmentStatus;
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const order = await this.prisma.$transaction(async (tx) => {
       const updatedOrder = await tx.order.update({
         where: {
           id,
@@ -294,6 +305,25 @@ export class OrdersService {
 
       return updatedOrder;
     });
+
+    return this.toOrderResponse(order);
+  }
+
+  async findGuestOrder(dto: GuestOrderLookupDto) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        orderNumber: dto.orderNumber.trim(),
+        guestEmail: dto.email.toLowerCase().trim(),
+        userId: null,
+      },
+      include: this.getOrderDetailsInclude(),
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return this.toOrderResponse(order);
   }
 
   private getOrderDetailsInclude(): Prisma.OrderInclude {
@@ -338,20 +368,36 @@ export class OrdersService {
     };
   }
 
-  async findGuestOrder(dto: GuestOrderLookupDto) {
-    const order = await this.prisma.order.findFirst({
-      where: {
-        orderNumber: dto.orderNumber.trim(),
-        guestEmail: dto.email.toLowerCase().trim(),
-        userId: null,
-      },
-      include: this.getOrderDetailsInclude(),
-    });
+  private toOrderResponse(order: any) {
+    return {
+      ...order,
+      subtotal: this.toNumber(order.subtotal),
+      tax: this.toNumber(order.tax),
+      shippingCost: this.toNumber(order.shippingCost),
+      discount: this.toNumber(order.discount),
+      total: this.toNumber(order.total),
+      items:
+        order.items?.map((item: any) => this.toOrderItemResponse(item)) ?? [],
+      payment: order.payment ? this.toPaymentResponse(order.payment) : null,
+    };
+  }
 
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
+  private toOrderItemResponse(item: any) {
+    return {
+      ...item,
+      unitPrice: this.toNumber(item.unitPrice),
+      totalPrice: this.toNumber(item.totalPrice),
+    };
+  }
 
-    return order;
+  private toPaymentResponse(payment: any) {
+    return {
+      ...payment,
+      amount: this.toNumber(payment.amount),
+    };
+  }
+
+  private toNumber(value: Prisma.Decimal | number | string) {
+    return Number(value);
   }
 }

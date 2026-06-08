@@ -2,6 +2,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,10 +10,12 @@ import type { JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User, UserRole } from '@prisma/client';
 import { randomUUID } from 'crypto';
+
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto, RegisterDto } from './dto';
 import { comparePassword, hashPassword } from '../../common/utils/hash.util';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
+import { PermissionResolverService } from './services/permission-resolver.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly permissionResolver: PermissionResolverService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -45,7 +49,6 @@ export class AuthService {
     }
 
     const hashedPassword = await hashPassword(dto.password);
-
     const role = isFirstUser ? UserRole.SUPER_ADMIN : UserRole.CUSTOMER;
 
     const user = await this.prisma.user.create({
@@ -61,11 +64,16 @@ export class AuthService {
 
     const { accessToken, sessionId } = await this.createSessionAndToken(user);
 
+    const permissions = await this.permissionResolver.getUserPermissions({
+      userId: user.id,
+      role: user.role,
+    });
+
     return {
       message: isFirstUser
         ? 'Super admin account created successfully'
         : 'Account created successfully',
-      user: this.buildUserResponse(user, sessionId),
+      user: this.buildUserResponse(user, sessionId, permissions),
       accessToken,
     };
   }
@@ -91,23 +99,42 @@ export class AuthService {
       throw new ForbiddenException('Your account is disabled');
     }
 
-    await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
     });
 
-    const { accessToken, sessionId } = await this.createSessionAndToken(user);
+    const { accessToken, sessionId } =
+      await this.createSessionAndToken(updatedUser);
+
+    const permissions = await this.permissionResolver.getUserPermissions({
+      userId: updatedUser.id,
+      role: updatedUser.role,
+    });
 
     return {
       message: 'Login successful',
-      user: this.buildUserResponse(user, sessionId),
+      user: this.buildUserResponse(updatedUser, sessionId, permissions),
       accessToken,
     };
   }
 
-  me(user: AuthenticatedUser) {
+  async me(user: AuthenticatedUser) {
+    const freshUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!freshUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const permissions = await this.permissionResolver.getUserPermissions({
+      userId: freshUser.id,
+      role: freshUser.role,
+    });
+
     return {
-      user,
+      user: this.buildUserResponse(freshUser, user.sessionId, permissions),
     };
   }
 
@@ -129,7 +156,7 @@ export class AuthService {
 
   private async createSessionAndToken(user: User) {
     const sessionDays = Number(
-      this.configService.get<string>('SESSION_EXPIRES_DAYS') ?? 7,
+      this.configService.get('SESSION_EXPIRES_DAYS') ?? 7,
     );
 
     const expiresAt = new Date();
@@ -149,7 +176,8 @@ export class AuthService {
       role: user.role,
       sessionId: session.sessionId,
     };
-    const expiresIn = (this.configService.get<string>('JWT_EXPIRES_IN') ??
+
+    const expiresIn = (this.configService.get('JWT_EXPIRES_IN') ??
       '7d') as JwtSignOptions['expiresIn'];
 
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -162,7 +190,11 @@ export class AuthService {
     };
   }
 
-  private buildUserResponse(user: User, sessionId: string) {
+  private buildUserResponse(
+    user: User,
+    sessionId: string,
+    permissions: string[],
+  ) {
     return {
       id: user.id,
       email: user.email,
@@ -174,6 +206,7 @@ export class AuthService {
       isActive: user.isActive,
       isVerified: user.isVerified,
       sessionId,
+      permissions,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

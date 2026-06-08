@@ -1,23 +1,17 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { UserRole } from '@prisma/client';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { AuthenticatedUser } from '../../../common/types/authenticated-user.type';
 
-//  Extract token from Authorization header
-// 2. Verify token using JWT_SECRET
-// 3. Read token payload
-// 4. Find session in database
-// 5. Check session is not revoked
-// 6. Check session is not expired
-// 7. Check user still exists and is active
-// 8. Return user
+import { AuthenticatedUser } from '../../../common/types/authenticated-user.type';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { PermissionResolverService } from '../services/permission-resolver.service';
 
 interface JwtPayload {
   userId: string;
   email: string;
-  role: string;
+  role: UserRole;
   sessionId: string;
 }
 
@@ -25,9 +19,12 @@ interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly permissionResolver: PermissionResolverService,
     configService: ConfigService,
   ) {
-    const jwtSecret = configService.get<string>('JWT_SECRET');
+    const jwtSecret = process.env.JWT_SECRET;
+
+    // const jwtSecret = configService.get<string>('JWT_SECRET');
 
     if (!jwtSecret) {
       throw new Error('JWT_SECRET is missing in .env');
@@ -42,7 +39,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     const session = await this.prisma.session.findUnique({
-      where: { sessionId: payload.sessionId },
+      where: {
+        sessionId: payload.sessionId,
+      },
       include: {
         user: true,
       },
@@ -51,6 +50,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!session) {
       throw new UnauthorizedException('Session not found');
     }
+
     if (session.userId !== payload.userId) {
       throw new UnauthorizedException('Invalid token session');
     }
@@ -71,6 +71,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('User account is disabled');
     }
 
+    const permissions = await this.permissionResolver.getUserPermissions({
+      userId: session.user.id,
+      role: session.user.role,
+    });
+
     return {
       id: session.user.id,
       email: session.user.email,
@@ -78,6 +83,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       lastName: session.user.lastName,
       role: session.user.role,
       sessionId: session.sessionId,
+      permissions,
     };
   }
 }

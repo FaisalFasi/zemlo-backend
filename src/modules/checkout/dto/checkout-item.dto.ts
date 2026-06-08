@@ -5,6 +5,7 @@ import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CheckoutItemDto {
   @ApiProperty({
+    type: String,
     example: 'product-uuid-here',
     description: 'Product ID',
   })
@@ -13,6 +14,7 @@ export class CheckoutItemDto {
   productId: string;
 
   @ApiPropertyOptional({
+    type: String,
     example: 'variant-uuid-here',
     description: 'Optional variant ID if product has variants',
   })
@@ -22,6 +24,7 @@ export class CheckoutItemDto {
   variantId?: string;
 
   @ApiProperty({
+    type: Number,
     example: 2,
     description: 'Quantity user wants to buy',
   })

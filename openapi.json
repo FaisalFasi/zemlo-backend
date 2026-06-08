@@ -1,0 +1,4767 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register new user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Login user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get current logged-in user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Logout current user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/checkout/guest": {
+      "post": {
+        "operationId": "CheckoutController_guestCheckout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Guest checkout without login",
+        "tags": [
+          "Checkout"
+        ]
+      }
+    },
+    "/checkout/auth": {
+      "post": {
+        "operationId": "CheckoutController_authCheckout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Authenticated user checkout",
+        "tags": [
+          "Checkout"
+        ]
+      }
+    },
+    "/checkout/from-cart": {
+      "post": {
+        "operationId": "CheckoutController_checkoutFromCart",
+        "parameters": [
+          {
+            "name": "x-guest-id",
+            "in": "header",
+            "description": "Required only for guest checkout from cart. Not required when Authorization bearer token is valid.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create checkout order from current cart",
+        "tags": [
+          "Checkout"
+        ]
+      }
+    },
+    "/admin/platform-settings": {
+      "get": {
+        "operationId": "PlatformSettingsController_getSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get platform settings",
+        "tags": [
+          "Admin - Platform Settings"
+        ]
+      },
+      "patch": {
+        "operationId": "PlatformSettingsController_updateSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update platform settings",
+        "tags": [
+          "Admin - Platform Settings"
+        ]
+      }
+    },
+    "/admin/countries": {
+      "get": {
+        "operationId": "CountrySettingsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountrySettingResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get all country settings",
+        "tags": [
+          "Admin - Country Settings"
+        ]
+      },
+      "post": {
+        "operationId": "CountrySettingsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountrySettingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create country setting",
+        "tags": [
+          "Admin - Country Settings"
+        ]
+      }
+    },
+    "/admin/countries/{id}": {
+      "patch": {
+        "operationId": "CountrySettingsController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountrySettingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update country setting",
+        "tags": [
+          "Admin - Country Settings"
+        ]
+      },
+      "delete": {
+        "operationId": "CountrySettingsController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete country setting",
+        "tags": [
+          "Admin - Country Settings"
+        ]
+      }
+    },
+    "/admin/payment-settings": {
+      "get": {
+        "operationId": "PaymentSettingsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentMethodSettingResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get all payment method settings",
+        "tags": [
+          "Admin - Payment Settings"
+        ]
+      }
+    },
+    "/admin/payment-settings/{method}": {
+      "get": {
+        "operationId": "PaymentSettingsController_findOne",
+        "parameters": [
+          {
+            "name": "method",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "STRIPE",
+                "PAYPAL",
+                "CREDIT_CARD",
+                "DEBIT_CARD",
+                "BANK_TRANSFER",
+                "CASH_ON_DELIVERY",
+                "MANUAL"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodSettingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get single payment method setting",
+        "tags": [
+          "Admin - Payment Settings"
+        ]
+      },
+      "patch": {
+        "operationId": "PaymentSettingsController_update",
+        "parameters": [
+          {
+            "name": "method",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "STRIPE",
+                "PAYPAL",
+                "CREDIT_CARD",
+                "DEBIT_CARD",
+                "BANK_TRANSFER",
+                "CASH_ON_DELIVERY",
+                "MANUAL"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodSettingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update payment method setting",
+        "tags": [
+          "Admin - Payment Settings"
+        ]
+      }
+    },
+    "/admin/products": {
+      "get": {
+        "operationId": "AdminProductsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminProductResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get all products",
+        "tags": [
+          "Admin - Products"
+        ]
+      },
+      "post": {
+        "operationId": "AdminProductsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminProductResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: create product",
+        "tags": [
+          "Admin - Products"
+        ]
+      }
+    },
+    "/admin/products/{id}": {
+      "get": {
+        "operationId": "AdminProductsController_findOne",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminProductResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get product by ID",
+        "tags": [
+          "Admin - Products"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminProductsController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminProductResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: update product",
+        "tags": [
+          "Admin - Products"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminProductsController_archive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: archive product",
+        "tags": [
+          "Admin - Products"
+        ]
+      }
+    },
+    "/admin/products/{productId}/images": {
+      "get": {
+        "operationId": "ProductImagesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductImageResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get product images",
+        "tags": [
+          "Admin - Product Images"
+        ]
+      },
+      "post": {
+        "operationId": "ProductImagesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: add product image",
+        "tags": [
+          "Admin - Product Images"
+        ]
+      }
+    },
+    "/admin/products/{productId}/images/{imageId}": {
+      "patch": {
+        "operationId": "ProductImagesController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: update product image",
+        "tags": [
+          "Admin - Product Images"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductImagesController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: delete product image",
+        "tags": [
+          "Admin - Product Images"
+        ]
+      }
+    },
+    "/admin/products/{productId}/images/{imageId}/default": {
+      "patch": {
+        "operationId": "ProductImagesController_setDefault",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: set product image as default",
+        "tags": [
+          "Admin - Product Images"
+        ]
+      }
+    },
+    "/admin/products/{productId}/variants": {
+      "get": {
+        "operationId": "ProductVariantsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductVariantResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get product variants",
+        "tags": [
+          "Admin - Product Variants"
+        ]
+      },
+      "post": {
+        "operationId": "ProductVariantsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductVariantResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: create product variant",
+        "tags": [
+          "Admin - Product Variants"
+        ]
+      }
+    },
+    "/admin/products/{productId}/variants/{variantId}": {
+      "patch": {
+        "operationId": "ProductVariantsController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductVariantResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: update product variant",
+        "tags": [
+          "Admin - Product Variants"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductVariantsController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: delete product variant",
+        "tags": [
+          "Admin - Product Variants"
+        ]
+      }
+    },
+    "/admin/categories": {
+      "get": {
+        "operationId": "AdminCategoriesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminCategoryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get all categories",
+        "tags": [
+          "Admin - Categories"
+        ]
+      },
+      "post": {
+        "operationId": "AdminCategoriesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminCategoryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: create category",
+        "tags": [
+          "Admin - Categories"
+        ]
+      }
+    },
+    "/admin/categories/{id}": {
+      "get": {
+        "operationId": "AdminCategoriesController_findOne",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminCategoryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get category by ID",
+        "tags": [
+          "Admin - Categories"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminCategoriesController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminCategoryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: update category",
+        "tags": [
+          "Admin - Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminCategoriesController_disable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: disable category",
+        "tags": [
+          "Admin - Categories"
+        ]
+      }
+    },
+    "/admin/brands": {
+      "get": {
+        "operationId": "AdminBrandsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminBrandResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get all brands",
+        "tags": [
+          "Admin - Brands"
+        ]
+      },
+      "post": {
+        "operationId": "AdminBrandsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBrandResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: create brand",
+        "tags": [
+          "Admin - Brands"
+        ]
+      }
+    },
+    "/admin/brands/{id}": {
+      "get": {
+        "operationId": "AdminBrandsController_findOne",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBrandResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get brand by ID",
+        "tags": [
+          "Admin - Brands"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminBrandsController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBrandResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: update brand",
+        "tags": [
+          "Admin - Brands"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminBrandsController_disable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: disable brand",
+        "tags": [
+          "Admin - Brands"
+        ]
+      }
+    },
+    "/orders/my-orders": {
+      "get": {
+        "operationId": "OrdersController_findMyOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderSummaryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get current user orders",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/orders/my-orders/{orderNumber}": {
+      "get": {
+        "operationId": "OrdersController_findMyOrderByOrderNumber",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get current user order by order number",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/orders/guest/lookup": {
+      "post": {
+        "operationId": "OrdersController_findGuestOrder",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Guest: lookup order by order number and email",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/admin/orders": {
+      "get": {
+        "operationId": "OrdersController_findAllAdminOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderSummaryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get all orders",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/admin/orders/{id}": {
+      "get": {
+        "operationId": "OrdersController_findAdminOrderById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: get order by ID",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/admin/orders/{id}/status": {
+      "patch": {
+        "operationId": "OrdersController_updateAdminOrderStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: update order status",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/admin/orders/{id}/shipping": {
+      "patch": {
+        "operationId": "OrdersController_updateAdminOrderShipping",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: update order shipping and tracking",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/products": {
+      "get": {
+        "operationId": "CatalogController_findProducts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicProductListItemResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public: get active products",
+        "tags": [
+          "Catalog"
+        ]
+      }
+    },
+    "/products/{slug}": {
+      "get": {
+        "operationId": "CatalogController_findProductBySlug",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProductDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public: get active product by slug",
+        "tags": [
+          "Catalog"
+        ]
+      }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "CatalogController_findCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCategoryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public: get active categories",
+        "tags": [
+          "Catalog"
+        ]
+      }
+    },
+    "/brands": {
+      "get": {
+        "operationId": "CatalogController_findBrands",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicBrandResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public: get active brands",
+        "tags": [
+          "Catalog"
+        ]
+      }
+    },
+    "/public/settings": {
+      "get": {
+        "operationId": "PublicSettingsController_getPublicSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public: get store settings",
+        "tags": [
+          "Public Settings"
+        ]
+      }
+    },
+    "/cart": {
+      "get": {
+        "operationId": "CartController_getCart",
+        "parameters": [
+          {
+            "name": "x-guest-id",
+            "in": "header",
+            "description": "Required only for guest cart requests. Not required when Authorization bearer token is valid.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get current user or guest cart",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/cart/items": {
+      "post": {
+        "operationId": "CartController_addItem",
+        "parameters": [
+          {
+            "name": "x-guest-id",
+            "in": "header",
+            "description": "Required only for guest cart requests. Not required when Authorization bearer token is valid.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Add item to cart",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/cart/items/{itemId}": {
+      "patch": {
+        "operationId": "CartController_updateItem",
+        "parameters": [
+          {
+            "name": "x-guest-id",
+            "in": "header",
+            "description": "Required only for guest cart requests. Not required when Authorization bearer token is valid.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update cart item quantity",
+        "tags": [
+          "Cart"
+        ]
+      },
+      "delete": {
+        "operationId": "CartController_removeItem",
+        "parameters": [
+          {
+            "name": "x-guest-id",
+            "in": "header",
+            "description": "Required only for guest cart requests. Not required when Authorization bearer token is valid.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove item from cart",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/cart/clear": {
+      "delete": {
+        "operationId": "CartController_clearCart",
+        "parameters": [
+          {
+            "name": "x-guest-id",
+            "in": "header",
+            "description": "Required only for guest cart requests. Not required when Authorization bearer token is valid.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Clear cart",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/payments/stripe/create-intent": {
+      "post": {
+        "operationId": "PaymentsController_createStripePaymentIntent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Stripe PaymentIntent created or retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripePaymentIntentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create Stripe PaymentIntent for an existing order",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payments/stripe/webhook": {
+      "post": {
+        "operationId": "PaymentsController_handleStripeWebhook",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Stripe webhook event processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeWebhookResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Stripe webhook endpoint",
+        "tags": [
+          "Payments"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Zemlo API",
+    "description": "Zemlo e-commerce backend API contract",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "access-token": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Enter JWT access token"
+      }
+    },
+    "schemas": {
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "CUSTOMER",
+          "STAFF",
+          "ADMIN",
+          "SUPER_ADMIN"
+        ]
+      },
+      "AuthUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "b5a2e7e3-2bc0-4969-9b1f-6d0c4d5f2f11"
+          },
+          "email": {
+            "type": "string",
+            "example": "admin@zemlo.com"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Faisal"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Rehman"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "example": "+13001234567"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://res.cloudinary.com/zemlo/avatar.png"
+          },
+          "role": {
+            "example": "CUSTOMER",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserRole"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "isVerified": {
+            "type": "boolean",
+            "example": true
+          },
+          "sessionId": {
+            "type": "string",
+            "example": "0bbec080-42ba-4559-b0aa-0fa7211575a4"
+          },
+          "permissions": {
+            "example": [
+              "products.view",
+              "orders.view_own"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "firstName",
+          "lastName",
+          "role",
+          "isActive",
+          "isVerified",
+          "sessionId",
+          "permissions",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AuthSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Login successful"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserResponseDto"
+          },
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "message",
+          "user",
+          "accessToken"
+        ]
+      },
+      "CurrentUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUserResponseDto"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "MessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "OrderStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "CONFIRMED",
+          "PROCESSING",
+          "SHIPPED",
+          "DELIVERED",
+          "CANCELLED",
+          "REFUNDED"
+        ]
+      },
+      "PaymentStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "PAID",
+          "FAILED",
+          "REFUNDED",
+          "PARTIALLY_REFUNDED"
+        ]
+      },
+      "FulfillmentStatus": {
+        "type": "string",
+        "enum": [
+          "UNFULFILLED",
+          "PARTIALLY_FULFILLED",
+          "FULFILLED"
+        ]
+      },
+      "CheckoutOrderItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "variantId": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string"
+          },
+          "variantName": {
+            "type": "string",
+            "nullable": true
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unitPrice": {
+            "type": "number"
+          },
+          "totalPrice": {
+            "type": "number"
+          },
+          "productSnapshot": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "productName",
+          "quantity",
+          "unitPrice",
+          "totalPrice"
+        ]
+      },
+      "CheckoutOrderResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderStatus"
+              }
+            ]
+          },
+          "paymentStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentStatus"
+              }
+            ]
+          },
+          "fulfillmentStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FulfillmentStatus"
+              }
+            ]
+          },
+          "subtotal": {
+            "type": "number"
+          },
+          "tax": {
+            "type": "number"
+          },
+          "shippingCost": {
+            "type": "number"
+          },
+          "discount": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckoutOrderItemResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "status",
+          "paymentStatus",
+          "fulfillmentStatus",
+          "subtotal",
+          "tax",
+          "shippingCost",
+          "discount",
+          "total",
+          "items"
+        ]
+      },
+      "PaymentMethod": {
+        "type": "string",
+        "enum": [
+          "STRIPE",
+          "PAYPAL",
+          "CREDIT_CARD",
+          "DEBIT_CARD",
+          "BANK_TRANSFER",
+          "CASH_ON_DELIVERY",
+          "MANUAL"
+        ]
+      },
+      "CheckoutPaymentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "method": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentMethod"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentStatus"
+              }
+            ]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "method",
+          "status",
+          "amount",
+          "currency"
+        ]
+      },
+      "CheckoutResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Checkout created successfully"
+          },
+          "order": {
+            "$ref": "#/components/schemas/CheckoutOrderResponseDto"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/CheckoutPaymentResponseDto"
+          },
+          "nextStep": {
+            "type": "string",
+            "example": "Complete payment using the selected payment method"
+          }
+        },
+        "required": [
+          "message",
+          "order",
+          "payment",
+          "nextStep"
+        ]
+      },
+      "PlatformSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "storeEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeLogoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeFaviconUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "supportPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "supportWhatsapp": {
+            "type": "string",
+            "nullable": true
+          },
+          "homepageTitle": {
+            "type": "string"
+          },
+          "homepageDescription": {
+            "type": "string"
+          },
+          "announcementEnabled": {
+            "type": "boolean"
+          },
+          "announcementText": {
+            "type": "string",
+            "nullable": true
+          },
+          "allowGuestCheckout": {
+            "type": "boolean"
+          },
+          "allowAccountRegistration": {
+            "type": "boolean"
+          },
+          "requireEmailVerification": {
+            "type": "boolean"
+          },
+          "enableReviews": {
+            "type": "boolean"
+          },
+          "enableWishlist": {
+            "type": "boolean"
+          },
+          "enableCoupons": {
+            "type": "boolean"
+          },
+          "enableChat": {
+            "type": "boolean"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "taxRate": {
+            "type": "number"
+          },
+          "defaultShippingCost": {
+            "type": "number"
+          },
+          "freeShippingOver": {
+            "type": "number",
+            "nullable": true
+          },
+          "instagramUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "facebookUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "tiktokUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "youtubeUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "maintenanceMode": {
+            "type": "boolean"
+          },
+          "maintenanceMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "storeName",
+          "homepageTitle",
+          "homepageDescription",
+          "announcementEnabled",
+          "allowGuestCheckout",
+          "allowAccountRegistration",
+          "requireEmailVerification",
+          "enableReviews",
+          "enableWishlist",
+          "enableCoupons",
+          "enableChat",
+          "currency",
+          "taxRate",
+          "defaultShippingCost",
+          "maintenanceMode",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CountrySettingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "iso2": {
+            "type": "string"
+          },
+          "iso3": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "allowWebsiteAccess": {
+            "type": "boolean"
+          },
+          "allowCheckout": {
+            "type": "boolean"
+          },
+          "allowShipping": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "iso2",
+          "isActive",
+          "allowWebsiteAccess",
+          "allowCheckout",
+          "allowShipping",
+          "isDefault",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AdminMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "PaymentMethodSettingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "method": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentMethod"
+              }
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "isOnline": {
+            "type": "boolean"
+          },
+          "minAmount": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxAmount": {
+            "type": "number",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "metadata": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "method",
+          "label",
+          "isEnabled",
+          "isOnline",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AdminProductCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "AdminProductBrandResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "AdminProductImageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "number"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "url",
+          "position",
+          "isDefault",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AdminProductVariantResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "nullable": true
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "object"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "name",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "options",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AdminProductResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "shortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number"
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "costPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "hasVariants": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "INACTIVE",
+              "ARCHIVED"
+            ]
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "brandId": {
+            "type": "string",
+            "nullable": true
+          },
+          "weight": {
+            "type": "number",
+            "nullable": true
+          },
+          "length": {
+            "type": "number",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "nullable": true
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metaTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/AdminProductCategoryResponseDto"
+          },
+          "brand": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminProductBrandResponseDto"
+              }
+            ]
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminProductImageResponseDto"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminProductVariantResponseDto"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "price",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "hasVariants",
+          "status",
+          "isFeatured",
+          "categoryId",
+          "keywords",
+          "category",
+          "images",
+          "variants",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ProductImageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "number"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "url",
+          "position",
+          "isDefault",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ProductVariantResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "nullable": true
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "costPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "object",
+            "description": "Variant option values, for example color/size metadata."
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "name",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "isActive",
+          "options",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AdminCategoryParentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "AdminCategoryChildResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "isActive",
+          "position"
+        ]
+      },
+      "AdminCategoryProductSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "INACTIVE",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status"
+        ]
+      },
+      "AdminCategoryCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "products"
+        ]
+      },
+      "AdminCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "number"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "parent": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminCategoryParentResponseDto"
+              }
+            ]
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminCategoryChildResponseDto"
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminCategoryProductSummaryResponseDto"
+            }
+          },
+          "_count": {
+            "$ref": "#/components/schemas/AdminCategoryCountResponseDto"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "isActive",
+          "position",
+          "children",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AdminBrandProductSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "INACTIVE",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status"
+        ]
+      },
+      "AdminBrandCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "products"
+        ]
+      },
+      "AdminBrandResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminBrandProductSummaryResponseDto"
+            }
+          },
+          "_count": {
+            "$ref": "#/components/schemas/AdminBrandCountResponseDto"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OrderProductSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "OrderVariantSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "OrderItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "variantId": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string"
+          },
+          "variantName": {
+            "type": "string",
+            "nullable": true
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unitPrice": {
+            "type": "number"
+          },
+          "totalPrice": {
+            "type": "number"
+          },
+          "productSnapshot": {
+            "type": "object",
+            "nullable": true
+          },
+          "product": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderProductSummaryResponseDto"
+              }
+            ]
+          },
+          "variant": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderVariantSummaryResponseDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "productId",
+          "productName",
+          "quantity",
+          "unitPrice",
+          "totalPrice",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OrderPaymentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "STRIPE",
+              "PAYPAL",
+              "CREDIT_CARD",
+              "DEBIT_CARD",
+              "BANK_TRANSFER",
+              "CASH_ON_DELIVERY",
+              "MANUAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "FAILED",
+              "REFUNDED",
+              "PARTIALLY_REFUNDED"
+            ]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "transactionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentIntentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "paidAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "failedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "refundedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "failureReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "gatewayResponse": {
+            "type": "object",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "method",
+          "status",
+          "amount",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OrderSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestFirstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestLastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "PROCESSING",
+              "SHIPPED",
+              "DELIVERED",
+              "CANCELLED",
+              "REFUNDED"
+            ]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "FAILED",
+              "REFUNDED",
+              "PARTIALLY_REFUNDED"
+            ]
+          },
+          "fulfillmentStatus": {
+            "type": "string",
+            "enum": [
+              "UNFULFILLED",
+              "PARTIALLY_FULFILLED",
+              "FULFILLED"
+            ]
+          },
+          "subtotal": {
+            "type": "number"
+          },
+          "tax": {
+            "type": "number"
+          },
+          "shippingCost": {
+            "type": "number"
+          },
+          "discount": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "customerNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "shippingMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "shippingCarrier": {
+            "type": "string",
+            "nullable": true
+          },
+          "trackingNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "trackingUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "paidAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "cancelledAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "estimatedDelivery": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "actualDelivery": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemResponseDto"
+            }
+          },
+          "payment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderPaymentResponseDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "status",
+          "paymentStatus",
+          "fulfillmentStatus",
+          "subtotal",
+          "tax",
+          "shippingCost",
+          "discount",
+          "total",
+          "items",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OrderCustomerResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "STAFF",
+              "ADMIN",
+              "SUPER_ADMIN"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "firstName",
+          "lastName",
+          "role"
+        ]
+      },
+      "OrderAddressResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SHIPPING",
+              "BILLING",
+              "BOTH"
+            ]
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "apartment": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "zipCode": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "type",
+          "firstName",
+          "lastName",
+          "phone",
+          "street",
+          "city",
+          "state",
+          "zipCode",
+          "country",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OrderStatusHistoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "PROCESSING",
+              "SHIPPED",
+              "DELIVERED",
+              "CANCELLED",
+              "REFUNDED"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "changedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "status",
+          "createdAt"
+        ]
+      },
+      "OrderDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestFirstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestLastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "PROCESSING",
+              "SHIPPED",
+              "DELIVERED",
+              "CANCELLED",
+              "REFUNDED"
+            ]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "FAILED",
+              "REFUNDED",
+              "PARTIALLY_REFUNDED"
+            ]
+          },
+          "fulfillmentStatus": {
+            "type": "string",
+            "enum": [
+              "UNFULFILLED",
+              "PARTIALLY_FULFILLED",
+              "FULFILLED"
+            ]
+          },
+          "subtotal": {
+            "type": "number"
+          },
+          "tax": {
+            "type": "number"
+          },
+          "shippingCost": {
+            "type": "number"
+          },
+          "discount": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "customerNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "shippingMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "shippingCarrier": {
+            "type": "string",
+            "nullable": true
+          },
+          "trackingNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "trackingUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "paidAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "cancelledAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "estimatedDelivery": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "actualDelivery": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemResponseDto"
+            }
+          },
+          "payment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderPaymentResponseDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "user": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderCustomerResponseDto"
+              }
+            ]
+          },
+          "shippingAddress": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderAddressResponseDto"
+              }
+            ]
+          },
+          "billingAddress": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderAddressResponseDto"
+              }
+            ]
+          },
+          "statusHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderStatusHistoryResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "status",
+          "paymentStatus",
+          "fulfillmentStatus",
+          "subtotal",
+          "tax",
+          "shippingCost",
+          "discount",
+          "total",
+          "items",
+          "createdAt",
+          "updatedAt",
+          "statusHistory"
+        ]
+      },
+      "PublicCategorySummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "PublicBrandSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "PublicProductImageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "number"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "position",
+          "isDefault"
+        ]
+      },
+      "PublicProductVariantResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "nullable": true
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "object",
+            "description": "Variant option values, for example color/size metadata."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "options"
+        ]
+      },
+      "PublicProductListItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number"
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "hasVariants": {
+            "type": "boolean"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metaTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/PublicCategorySummaryResponseDto"
+          },
+          "brand": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicBrandSummaryResponseDto"
+              }
+            ]
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProductImageResponseDto"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProductVariantResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "price",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "hasVariants",
+          "isFeatured",
+          "keywords",
+          "category",
+          "images",
+          "variants"
+        ]
+      },
+      "PublicBrandDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "PublicProductDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "shortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number"
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "hasVariants": {
+            "type": "boolean"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "weight": {
+            "type": "number",
+            "nullable": true
+          },
+          "length": {
+            "type": "number",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "nullable": true
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metaTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/PublicCategorySummaryResponseDto"
+          },
+          "brand": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicBrandDetailResponseDto"
+              }
+            ]
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProductImageResponseDto"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProductVariantResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "price",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "hasVariants",
+          "isFeatured",
+          "keywords",
+          "category",
+          "images",
+          "variants"
+        ]
+      },
+      "PublicCategoryChildResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "PublicCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicCategoryChildResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "children"
+        ]
+      },
+      "PublicBrandResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "PublicStoreResponseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "faviconUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "supportPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "supportWhatsapp": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "PublicHomepageResponseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description"
+        ]
+      },
+      "PublicAnnouncementResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "enabled"
+        ]
+      },
+      "PublicFeaturesResponseDto": {
+        "type": "object",
+        "properties": {
+          "guestCheckout": {
+            "type": "boolean"
+          },
+          "accountRegistration": {
+            "type": "boolean"
+          },
+          "reviews": {
+            "type": "boolean"
+          },
+          "wishlist": {
+            "type": "boolean"
+          },
+          "coupons": {
+            "type": "boolean"
+          },
+          "chat": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "guestCheckout",
+          "accountRegistration",
+          "reviews",
+          "wishlist",
+          "coupons",
+          "chat"
+        ]
+      },
+      "PublicCommerceResponseDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "taxRate": {
+            "type": "number"
+          },
+          "defaultShippingCost": {
+            "type": "number"
+          },
+          "freeShippingOver": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "currency",
+          "taxRate",
+          "defaultShippingCost"
+        ]
+      },
+      "PublicCountryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "iso2": {
+            "type": "string"
+          },
+          "iso3": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "phoneCode": {
+            "type": "string"
+          },
+          "allowCheckout": {
+            "type": "boolean"
+          },
+          "allowShipping": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "iso2",
+          "iso3",
+          "currency",
+          "phoneCode",
+          "allowCheckout",
+          "allowShipping",
+          "isDefault"
+        ]
+      },
+      "PublicPaymentMethodResponseDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "STRIPE",
+              "PAYPAL",
+              "CREDIT_CARD",
+              "DEBIT_CARD",
+              "BANK_TRANSFER",
+              "CASH_ON_DELIVERY",
+              "MANUAL"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isOnline": {
+            "type": "boolean"
+          },
+          "minAmount": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxAmount": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "method",
+          "label",
+          "isOnline"
+        ]
+      },
+      "PublicSocialResponseDto": {
+        "type": "object",
+        "properties": {
+          "instagramUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "facebookUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "tiktokUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "youtubeUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PublicSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "store": {
+            "$ref": "#/components/schemas/PublicStoreResponseDto"
+          },
+          "homepage": {
+            "$ref": "#/components/schemas/PublicHomepageResponseDto"
+          },
+          "announcement": {
+            "$ref": "#/components/schemas/PublicAnnouncementResponseDto"
+          },
+          "features": {
+            "$ref": "#/components/schemas/PublicFeaturesResponseDto"
+          },
+          "commerce": {
+            "$ref": "#/components/schemas/PublicCommerceResponseDto"
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicCountryResponseDto"
+            }
+          },
+          "paymentMethods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPaymentMethodResponseDto"
+            }
+          },
+          "social": {
+            "$ref": "#/components/schemas/PublicSocialResponseDto"
+          },
+          "maintenanceMode": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "store",
+          "homepage",
+          "announcement",
+          "features",
+          "commerce",
+          "countries",
+          "paymentMethods",
+          "social",
+          "maintenanceMode"
+        ]
+      },
+      "CartCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "CartBrandResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "CartImageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "number"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "position",
+          "isDefault"
+        ]
+      },
+      "CartProductResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number"
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "hasVariants": {
+            "type": "boolean"
+          },
+          "category": {
+            "$ref": "#/components/schemas/CartCategoryResponseDto"
+          },
+          "brand": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CartBrandResponseDto"
+              }
+            ]
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CartImageResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "price",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "hasVariants",
+          "category",
+          "images"
+        ]
+      },
+      "CartVariantResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "nullable": true
+          },
+          "compareAtPrice": {
+            "type": "number",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "trackInventory": {
+            "type": "boolean"
+          },
+          "allowBackorder": {
+            "type": "boolean"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "stock",
+          "trackInventory",
+          "allowBackorder",
+          "options"
+        ]
+      },
+      "CartItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "cartId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "variantId": {
+            "type": "string",
+            "nullable": true
+          },
+          "variantKey": {
+            "type": "string"
+          },
+          "addedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "unitPrice": {
+            "type": "number"
+          },
+          "lineTotal": {
+            "type": "number"
+          },
+          "product": {
+            "$ref": "#/components/schemas/CartProductResponseDto"
+          },
+          "variant": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CartVariantResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "quantity",
+          "cartId",
+          "productId",
+          "variantKey",
+          "addedAt",
+          "updatedAt",
+          "unitPrice",
+          "lineTotal",
+          "product"
+        ]
+      },
+      "CartResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "guestId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CartItemResponseDto"
+            }
+          },
+          "totalItems": {
+            "type": "number"
+          },
+          "totalQuantity": {
+            "type": "number"
+          },
+          "subtotal": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "items",
+          "totalItems",
+          "totalQuantity",
+          "subtotal"
+        ]
+      },
+      "StripePaymentIntentResponseDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "paymentId": {
+            "type": "string"
+          },
+          "paymentIntentId": {
+            "type": "string",
+            "example": "pi_3TaczuBlX6tkIsTB36Pkwqlc"
+          },
+          "clientSecret": {
+            "type": "string",
+            "nullable": true,
+            "example": "pi_3TaczuBlX6tkIsTB36Pkwqlc_secret_xxx"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "status": {
+            "type": "string",
+            "example": "requires_payment_method"
+          }
+        },
+        "required": [
+          "orderId",
+          "orderNumber",
+          "paymentId",
+          "paymentIntentId",
+          "amount",
+          "currency",
+          "status"
+        ]
+      },
+      "StripeWebhookResponseDto": {
+        "type": "object",
+        "properties": {
+          "received": {
+            "type": "boolean"
+          },
+          "ignored": {
+            "type": "boolean"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "paymentStatus": {
+            "type": "string"
+          },
+          "orderStatus": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "received"
+        ]
+      }
+    }
+  }
+}

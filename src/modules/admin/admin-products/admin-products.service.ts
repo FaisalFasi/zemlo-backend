@@ -13,7 +13,7 @@ export class AdminProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.product.findMany({
+    const products = await this.prisma.product.findMany({
       where: {
         status: {
           not: ProductStatus.ARCHIVED,
@@ -24,6 +24,8 @@ export class AdminProductsService {
       },
       include: this.getProductInclude(),
     });
+
+    return products.map((product) => this.toProductResponse(product));
   }
 
   async findOne(id: string) {
@@ -38,9 +40,8 @@ export class AdminProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    return product;
+    return this.toProductResponse(product);
   }
-
   async create(dto: CreateAdminProductDto) {
     const slug = this.toSlug(dto.slug || dto.name);
 
@@ -51,41 +52,32 @@ export class AdminProductsService {
 
     const status = dto.status ?? ProductStatus.DRAFT;
 
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         name: dto.name.trim(),
         slug,
         description: dto.description?.trim() || null,
         shortDescription: dto.shortDescription?.trim() || null,
         sku: dto.sku?.trim() || null,
-
         price: dto.price,
         compareAtPrice: dto.compareAtPrice ?? null,
         costPrice: dto.costPrice ?? null,
-
         stock: dto.stock ?? 0,
         trackInventory: dto.trackInventory ?? true,
         allowBackorder: dto.allowBackorder ?? false,
         hasVariants: dto.hasVariants ?? false,
-
         status,
         isFeatured: dto.isFeatured ?? false,
-
         categoryId: dto.categoryId,
         brandId: dto.brandId ?? null,
-
         weight: dto.weight ?? null,
         length: dto.length ?? null,
         width: dto.width ?? null,
         height: dto.height ?? null,
-
         keywords: dto.keywords ?? [],
-
         metaTitle: dto.metaTitle?.trim() || null,
         metaDescription: dto.metaDescription?.trim() || null,
-
         publishedAt: status === ProductStatus.ACTIVE ? new Date() : null,
-
         images: dto.images?.length
           ? {
               create: this.normalizeImages(dto.images),
@@ -94,6 +86,8 @@ export class AdminProductsService {
       },
       include: this.getProductInclude(),
     });
+
+    return this.toProductResponse(product);
   }
 
   async update(id: string, dto: UpdateAdminProductDto) {
@@ -231,13 +225,15 @@ export class AdminProductsService {
       data.metaDescription = dto.metaDescription?.trim() || null;
     }
 
-    return this.prisma.product.update({
+    const product = await this.prisma.product.update({
       where: {
         id,
       },
       data,
       include: this.getProductInclude(),
     });
+
+    return this.toProductResponse(product);
   }
 
   async archive(id: string) {
@@ -383,5 +379,38 @@ export class AdminProductsService {
         },
       },
     };
+  }
+
+  private toProductResponse(product: any) {
+    return {
+      ...product,
+      price: this.toNumber(product.price),
+      compareAtPrice: this.toNullableNumber(product.compareAtPrice),
+      costPrice: this.toNullableNumber(product.costPrice),
+      weight: this.toNullableNumber(product.weight),
+      length: this.toNullableNumber(product.length),
+      width: this.toNullableNumber(product.width),
+      height: this.toNullableNumber(product.height),
+      variants:
+        product.variants?.map((variant: any) => ({
+          ...variant,
+          price: this.toNullableNumber(variant.price),
+          compareAtPrice: this.toNullableNumber(variant.compareAtPrice),
+        })) ?? [],
+    };
+  }
+
+  private toNumber(value: Prisma.Decimal | number | string) {
+    return Number(value);
+  }
+
+  private toNullableNumber(
+    value: Prisma.Decimal | number | string | null | undefined,
+  ) {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    return Number(value);
   }
 }

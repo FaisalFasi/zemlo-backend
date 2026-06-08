@@ -5,37 +5,41 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthenticatedUser } from '../types/authenticated-user.type';
+
 import { REQUIRED_PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
+import type { AuthenticatedUser } from '../types/authenticated-user.type';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
-      REQUIRED_PERMISSIONS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredPermissions =
+      this.reflector.getAllAndOverride<string[]>(REQUIRED_PERMISSIONS_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ?? [];
 
-    if (!requiredPermissions || requiredPermissions.length === 0) {
+    if (requiredPermissions.length === 0) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
-    const user = request.user as AuthenticatedUser;
+    const user = request.user as AuthenticatedUser | undefined;
 
     if (!user) {
-      throw new ForbiddenException('User not found in request');
+      throw new ForbiddenException('Authenticated user not found');
     }
 
-    // const hasPermission = requiredPermissions.every((permission) =>
-    //   user.permissions.includes(permission),
-    // );
+    const userPermissions = new Set(user.permissions ?? []);
 
-    // if (!hasPermission) {
-    //   throw new ForbiddenException('You do not have permission');
-    // }
+    const hasAllPermissions = requiredPermissions.every((permission) =>
+      userPermissions.has(permission),
+    );
+
+    if (!hasAllPermissions) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
 
     return true;
   }

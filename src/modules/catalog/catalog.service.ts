@@ -3,28 +3,158 @@ import { Prisma, ProductStatus } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 
+const publicProductListSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  shortDescription: true,
+  price: true,
+  compareAtPrice: true,
+  stock: true,
+  trackInventory: true,
+  allowBackorder: true,
+  hasVariants: true,
+  isFeatured: true,
+  keywords: true,
+  metaTitle: true,
+  metaDescription: true,
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+  brand: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      logo: true,
+    },
+  },
+  images: {
+    where: {
+      isDefault: true,
+    },
+    orderBy: {
+      position: Prisma.SortOrder.asc,
+    },
+    select: {
+      id: true,
+      url: true,
+      altText: true,
+      position: true,
+      isDefault: true,
+    },
+    take: 1,
+  },
+  variants: {
+    where: {
+      isActive: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      price: true,
+      compareAtPrice: true,
+      stock: true,
+      trackInventory: true,
+      allowBackorder: true,
+      image: true,
+      options: true,
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
+const publicProductDetailSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  shortDescription: true,
+  sku: true,
+  price: true,
+  compareAtPrice: true,
+  stock: true,
+  trackInventory: true,
+  allowBackorder: true,
+  hasVariants: true,
+  isFeatured: true,
+  weight: true,
+  length: true,
+  width: true,
+  height: true,
+  keywords: true,
+  metaTitle: true,
+  metaDescription: true,
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+  brand: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      logo: true,
+      website: true,
+    },
+  },
+  images: {
+    orderBy: {
+      position: Prisma.SortOrder.asc,
+    },
+    select: {
+      id: true,
+      url: true,
+      altText: true,
+      position: true,
+      isDefault: true,
+    },
+  },
+  variants: {
+    where: {
+      isActive: true,
+    },
+    orderBy: {
+      createdAt: Prisma.SortOrder.asc,
+    },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      price: true,
+      compareAtPrice: true,
+      stock: true,
+      trackInventory: true,
+      allowBackorder: true,
+      image: true,
+      options: true,
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
+type PublicProductListItem = Prisma.ProductGetPayload<{
+  select: typeof publicProductListSelect;
+}>;
+
+type PublicProductDetail = Prisma.ProductGetPayload<{
+  select: typeof publicProductDetailSelect;
+}>;
+
 @Injectable()
 export class CatalogService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findProducts() {
-    return this.prisma.product.findMany({
-      where: {
-        status: ProductStatus.ACTIVE,
-        category: {
-          isActive: true,
-        },
-        OR: [
-          {
-            brandId: null,
-          },
-          {
-            brand: {
-              isActive: true,
-            },
-          },
-        ],
-      },
+    const products = await this.prisma.product.findMany({
+      where: this.getActiveProductWhere(),
       orderBy: [
         {
           isFeatured: Prisma.SortOrder.desc,
@@ -33,37 +163,26 @@ export class CatalogService {
           createdAt: Prisma.SortOrder.desc,
         },
       ],
-      select: this.getPublicProductListSelect(),
+      select: publicProductListSelect,
     });
+
+    return products.map((product) => this.toPublicProductListItem(product));
   }
 
   async findProductBySlug(slug: string) {
     const product = await this.prisma.product.findFirst({
       where: {
         slug,
-        status: ProductStatus.ACTIVE,
-        category: {
-          isActive: true,
-        },
-        OR: [
-          {
-            brandId: null,
-          },
-          {
-            brand: {
-              isActive: true,
-            },
-          },
-        ],
+        ...this.getActiveProductWhere(),
       },
-      select: this.getPublicProductDetailSelect(),
+      select: publicProductDetailSelect,
     });
 
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
-    return product;
+    return this.toPublicProductDetail(product);
   }
 
   async findCategories() {
@@ -131,152 +250,66 @@ export class CatalogService {
     });
   }
 
-  private getPublicProductListSelect(): Prisma.ProductSelect {
+  private getActiveProductWhere(): Prisma.ProductWhereInput {
     return {
-      id: true,
-      name: true,
-      slug: true,
-      shortDescription: true,
-      price: true,
-      compareAtPrice: true,
-      stock: true,
-      trackInventory: true,
-      allowBackorder: true,
-      hasVariants: true,
-      isFeatured: true,
-      keywords: true,
-      metaTitle: true,
-      metaDescription: true,
-
+      status: ProductStatus.ACTIVE,
       category: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
+        isActive: true,
       },
-
-      brand: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          logo: true,
+      OR: [
+        {
+          brandId: null,
         },
-      },
-
-      images: {
-        where: {
-          isDefault: true,
+        {
+          brand: {
+            isActive: true,
+          },
         },
-        orderBy: {
-          position: Prisma.SortOrder.asc,
-        },
-        select: {
-          id: true,
-          url: true,
-          altText: true,
-          position: true,
-          isDefault: true,
-        },
-        take: 1,
-      },
-
-      variants: {
-        where: {
-          isActive: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          sku: true,
-          price: true,
-          compareAtPrice: true,
-          stock: true,
-          trackInventory: true,
-          allowBackorder: true,
-          image: true,
-          options: true,
-        },
-      },
+      ],
     };
   }
 
-  private getPublicProductDetailSelect(): Prisma.ProductSelect {
+  private toPublicProductListItem(product: PublicProductListItem) {
     return {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      shortDescription: true,
-      sku: true,
-      price: true,
-      compareAtPrice: true,
-      stock: true,
-      trackInventory: true,
-      allowBackorder: true,
-      hasVariants: true,
-      isFeatured: true,
-      weight: true,
-      length: true,
-      width: true,
-      height: true,
-      keywords: true,
-      metaTitle: true,
-      metaDescription: true,
-
-      category: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      },
-
-      brand: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          logo: true,
-          website: true,
-        },
-      },
-
-      images: {
-        orderBy: {
-          position: Prisma.SortOrder.asc,
-        },
-        select: {
-          id: true,
-          url: true,
-          altText: true,
-          position: true,
-          isDefault: true,
-        },
-      },
-
-      variants: {
-        where: {
-          isActive: true,
-        },
-        orderBy: {
-          createdAt: Prisma.SortOrder.asc,
-        },
-        select: {
-          id: true,
-          name: true,
-          sku: true,
-          price: true,
-          compareAtPrice: true,
-          stock: true,
-          trackInventory: true,
-          allowBackorder: true,
-          image: true,
-          options: true,
-        },
-      },
+      ...product,
+      price: this.toNumber(product.price),
+      compareAtPrice: this.toNullableNumber(product.compareAtPrice),
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        price: this.toNullableNumber(variant.price),
+        compareAtPrice: this.toNullableNumber(variant.compareAtPrice),
+      })),
     };
+  }
+
+  private toPublicProductDetail(product: PublicProductDetail) {
+    return {
+      ...product,
+      price: this.toNumber(product.price),
+      compareAtPrice: this.toNullableNumber(product.compareAtPrice),
+      weight: this.toNullableNumber(product.weight),
+      length: this.toNullableNumber(product.length),
+      width: this.toNullableNumber(product.width),
+      height: this.toNullableNumber(product.height),
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        price: this.toNullableNumber(variant.price),
+        compareAtPrice: this.toNullableNumber(variant.compareAtPrice),
+      })),
+    };
+  }
+
+  private toNumber(value: Prisma.Decimal | number | string) {
+    return Number(value);
+  }
+
+  private toNullableNumber(
+    value: Prisma.Decimal | number | string | null | undefined,
+  ) {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    return Number(value);
   }
 }

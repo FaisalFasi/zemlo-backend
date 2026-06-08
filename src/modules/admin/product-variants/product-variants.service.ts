@@ -15,7 +15,7 @@ export class ProductVariantsService {
   async findAll(productId: string) {
     await this.validateProduct(productId);
 
-    return this.prisma.productVariant.findMany({
+    const variants = await this.prisma.productVariant.findMany({
       where: {
         productId,
       },
@@ -23,6 +23,8 @@ export class ProductVariantsService {
         createdAt: Prisma.SortOrder.asc,
       },
     });
+
+    return variants.map((variant) => this.toVariantResponse(variant));
   }
 
   async create(productId: string, dto: CreateProductVariantDto) {
@@ -48,7 +50,7 @@ export class ProductVariantsService {
 
     await this.syncProductHasVariants(productId);
 
-    return variant;
+    return this.toVariantResponse(variant);
   }
 
   async update(
@@ -115,12 +117,14 @@ export class ProductVariantsService {
       data.options = dto.options;
     }
 
-    return this.prisma.productVariant.update({
+    const variant = await this.prisma.productVariant.update({
       where: {
         id: variantId,
       },
       data,
     });
+
+    return this.toVariantResponse(variant);
   }
 
   async remove(productId: string, variantId: string) {
@@ -216,5 +220,24 @@ export class ProductVariantsService {
         hasVariants: variantCount > 0,
       },
     });
+  }
+
+  private toVariantResponse(variant: any) {
+    return {
+      ...variant,
+      price: this.toNullableNumber(variant.price),
+      compareAtPrice: this.toNullableNumber(variant.compareAtPrice),
+      costPrice: this.toNullableNumber(variant.costPrice),
+    };
+  }
+
+  private toNullableNumber(
+    value: Prisma.Decimal | number | string | null | undefined,
+  ) {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    return Number(value);
   }
 }
