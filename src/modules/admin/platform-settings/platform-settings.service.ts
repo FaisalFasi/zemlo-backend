@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
+import { toNullableNumber, toNumber } from '../../../common/utils/decimal.util';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpdatePlatformSettingsDto } from './dto';
 
@@ -68,26 +69,14 @@ export class PlatformSettingsService {
     return data;
   }
 
-  private toSettingsResponse(settings: any) {
+  private toSettingsResponse(
+    settings: Prisma.PlatformSettingsGetPayload<object>,
+  ) {
     return {
       ...settings,
-      taxRate: this.toNumber(settings.taxRate),
-      defaultShippingCost: this.toNumber(settings.defaultShippingCost),
-      freeShippingOver: this.toNullableNumber(settings.freeShippingOver),
+      taxRate: toNumber(settings.taxRate),
+      defaultShippingCost: toNumber(settings.defaultShippingCost),
+      freeShippingOver: toNullableNumber(settings.freeShippingOver),
     };
-  }
-
-  private toNumber(value: Prisma.Decimal | number | string) {
-    return Number(value);
-  }
-
-  private toNullableNumber(
-    value: Prisma.Decimal | number | string | null | undefined,
-  ) {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    return Number(value);
   }
 }

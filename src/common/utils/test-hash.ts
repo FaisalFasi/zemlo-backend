@@ -45,4 +45,4 @@ async function test() {
   console.log('(Should be ~100ms with saltRounds=10)');
 }
 
-test();
+void test();

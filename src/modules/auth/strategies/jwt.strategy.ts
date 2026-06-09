@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
 import { PassportStrategy } from '@nestjs/passport';
@@ -18,13 +18,16 @@ interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
+    @Inject(PrismaService)
     private readonly prisma: PrismaService,
+
+    @Inject(PermissionResolverService)
     private readonly permissionResolver: PermissionResolverService,
+
+    @Inject(ConfigService)
     configService: ConfigService,
   ) {
-    const jwtSecret = process.env.JWT_SECRET;
-
-    // const jwtSecret = configService.get<string>('JWT_SECRET');
+    const jwtSecret = configService.get<string>('jwt.secret');
 
     if (!jwtSecret) {
       throw new Error('JWT_SECRET is missing in .env');

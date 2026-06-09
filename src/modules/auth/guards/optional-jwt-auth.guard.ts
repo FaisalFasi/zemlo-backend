@@ -16,11 +16,8 @@ export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
   }
 
   handleRequest<TUser = AuthenticatedUser | undefined>(
-    err: any,
+    err: unknown,
     user: TUser,
-    _info: any,
-    _context: ExecutionContext,
-    _status?: any,
   ): TUser {
     if (err || !user) {
       return undefined as TUser;

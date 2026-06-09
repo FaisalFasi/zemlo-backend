@@ -35,7 +35,7 @@ export class CheckoutOrderItemResponseDto {
   totalPrice: number;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
-  productSnapshot: unknown | null;
+  productSnapshot: Record<string, unknown> | null;
 }
 
 export class CheckoutOrderResponseDto {

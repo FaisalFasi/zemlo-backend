@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PaymentMethod, ProductStatus } from '@prisma/client';
+import { PaymentMethod, Prisma, ProductStatus } from '@prisma/client';
 
+import type { PrismaTransactionClient } from '../../common/types/prisma-transaction.type';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   AuthCheckoutDto,
@@ -11,6 +12,7 @@ import {
 
 import {
   CheckoutLine,
+  CheckoutProductWithRelations,
   CreateCheckoutParams,
   NormalizedCheckoutItem,
 } from './types/checkout.types';
@@ -135,7 +137,7 @@ export class CheckoutService {
   }
 
   private async createCheckoutWithTransaction(
-    tx: any,
+    tx: PrismaTransactionClient,
     params: CreateCheckoutParams,
   ) {
     const { dto, userId, isGuest } = params;
@@ -233,13 +235,8 @@ export class CheckoutService {
         status: payment.status,
         amount: totals.total,
         currency: payment.currency,
-        paymentIntentId:
-          payment.paymentIntentId ??
-          payment.stripePaymentIntentId ??
-          payment.providerPaymentIntentId ??
-          null,
-        clientSecret:
-          payment.clientSecret ?? payment.stripeClientSecret ?? null,
+        paymentIntentId: payment.paymentIntentId ?? null,
+        clientSecret: null,
       },
       nextStep:
         dto.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
@@ -296,7 +293,7 @@ export class CheckoutService {
   }
 
   private async buildCheckoutLines(
-    tx: any,
+    tx: PrismaTransactionClient,
     items: NormalizedCheckoutItem[],
   ): Promise<CheckoutLine[]> {
     const productIds = [...new Set(items.map((item) => item.productId))];
@@ -311,7 +308,7 @@ export class CheckoutService {
         variants: true,
         images: {
           orderBy: {
-            position: 'asc',
+            position: Prisma.SortOrder.asc,
           },
           take: 1,
         },
@@ -335,7 +332,7 @@ export class CheckoutService {
 
   private buildCheckoutLine(
     item: NormalizedCheckoutItem,
-    product: any,
+    product: CheckoutProductWithRelations,
   ): CheckoutLine {
     if (product.status !== ProductStatus.ACTIVE) {
       throw new BadRequestException(`${product.name} is not available`);

@@ -30,7 +30,7 @@ export class PaymentMethodSettingResponseDto {
   sortOrder: number;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
-  metadata: unknown | null;
+  metadata: Record<string, unknown> | null;
 
   @ApiProperty({ type: Date })
   createdAt: Date;

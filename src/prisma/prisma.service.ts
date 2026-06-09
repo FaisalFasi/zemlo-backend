@@ -44,6 +44,6 @@ export class PrismaService
 
   async onModuleDestroy() {
     await this.$disconnect();
-    console.log('❌ Database disconnected');
+    console.log('✅ Database connection closed');
   }
 }
