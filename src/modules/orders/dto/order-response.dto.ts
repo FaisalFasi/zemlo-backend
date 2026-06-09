@@ -85,7 +85,7 @@ export class OrderItemResponseDto {
   totalPrice: number;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
-  productSnapshot: unknown | null;
+  productSnapshot: Record<string, unknown> | null;
 
   @ApiPropertyOptional({ type: OrderProductSummaryResponseDto, nullable: true })
   product?: OrderProductSummaryResponseDto | null;
@@ -138,10 +138,10 @@ export class OrderPaymentResponseDto {
   failureReason: string | null;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
-  gatewayResponse: unknown | null;
+  gatewayResponse: Record<string, unknown> | null;
 
   @ApiPropertyOptional({ type: Object, nullable: true })
-  metadata: unknown | null;
+  metadata: Record<string, unknown> | null;
 
   @ApiProperty({ type: Date })
   createdAt: Date;

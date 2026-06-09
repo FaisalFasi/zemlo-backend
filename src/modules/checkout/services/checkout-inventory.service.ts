@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import type { PrismaTransactionClient } from '../../../common/types/prisma-transaction.type';
 import { CheckoutLine } from '../types/checkout.types';
 
 @Injectable()
 export class CheckoutInventoryService {
-  async decreaseStock(tx: any, line: CheckoutLine) {
+  async decreaseStock(tx: PrismaTransactionClient, line: CheckoutLine) {
     if (!line.trackInventory) {
       return;
     }

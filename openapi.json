@@ -1988,6 +1988,16 @@
           },
           "currency": {
             "type": "string"
+          },
+          "paymentIntentId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Stripe PaymentIntent id or provider payment intent id."
+          },
+          "clientSecret": {
+            "type": "string",
+            "nullable": true,
+            "description": "Stripe client secret used by the frontend PaymentElement."
           }
         },
         "required": [

@@ -10,12 +10,23 @@ import {
   Prisma,
 } from '@prisma/client';
 
+import { toNumber } from '../../common/utils/decimal.util';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   GuestOrderLookupDto,
   UpdateAdminOrderShippingDto,
   UpdateAdminOrderStatusDto,
 } from './dto';
+
+type OrderResponseSource = Prisma.OrderGetPayload<{
+  include: {
+    items: true;
+    payment: true;
+  };
+}>;
+
+type OrderItemResponseSource = OrderResponseSource['items'][number];
+type PaymentResponseSource = NonNullable<OrderResponseSource['payment']>;
 
 @Injectable()
 export class OrdersService {
@@ -368,36 +379,31 @@ export class OrdersService {
     };
   }
 
-  private toOrderResponse(order: any) {
+  private toOrderResponse(order: OrderResponseSource) {
     return {
       ...order,
-      subtotal: this.toNumber(order.subtotal),
-      tax: this.toNumber(order.tax),
-      shippingCost: this.toNumber(order.shippingCost),
-      discount: this.toNumber(order.discount),
-      total: this.toNumber(order.total),
-      items:
-        order.items?.map((item: any) => this.toOrderItemResponse(item)) ?? [],
+      subtotal: toNumber(order.subtotal),
+      tax: toNumber(order.tax),
+      shippingCost: toNumber(order.shippingCost),
+      discount: toNumber(order.discount),
+      total: toNumber(order.total),
+      items: order.items.map((item) => this.toOrderItemResponse(item)),
       payment: order.payment ? this.toPaymentResponse(order.payment) : null,
     };
   }
 
-  private toOrderItemResponse(item: any) {
+  private toOrderItemResponse(item: OrderItemResponseSource) {
     return {
       ...item,
-      unitPrice: this.toNumber(item.unitPrice),
-      totalPrice: this.toNumber(item.totalPrice),
+      unitPrice: toNumber(item.unitPrice),
+      totalPrice: toNumber(item.totalPrice),
     };
   }
 
-  private toPaymentResponse(payment: any) {
+  private toPaymentResponse(payment: PaymentResponseSource) {
     return {
       ...payment,
-      amount: this.toNumber(payment.amount),
+      amount: toNumber(payment.amount),
     };
-  }
-
-  private toNumber(value: Prisma.Decimal | number | string) {
-    return Number(value);
   }
 }

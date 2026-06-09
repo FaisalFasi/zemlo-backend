@@ -1,16 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { FulfillmentStatus, OrderStatus, PaymentStatus } from '@prisma/client';
-import { CheckoutLine, CheckoutTotals } from '../types/checkout.types';
+import type { PrismaTransactionClient } from '../../../common/types/prisma-transaction.type';
 import { generateOrderNumber } from '../helpers/checkout-order.helper';
+import {
+  CheckoutCustomerDetails,
+  CheckoutLine,
+  CheckoutTotals,
+} from '../types/checkout.types';
 
 @Injectable()
 export class CheckoutOrderService {
   async createOrderWithItemsAndPayment(
-    tx: any,
+    tx: PrismaTransactionClient,
     params: {
       userId?: string;
       isGuest: boolean;
-      dto: any;
+      dto: CheckoutCustomerDetails;
       lines: CheckoutLine[];
       totals: CheckoutTotals;
       shippingAddressId: string;
@@ -29,16 +34,18 @@ export class CheckoutOrderService {
       currency,
     } = params;
 
+    const guestDetails = isGuest ? this.getGuestDetails(dto) : null;
+
     const order = await tx.order.create({
       data: {
         orderNumber: generateOrderNumber(),
 
         userId: userId ?? null,
 
-        guestEmail: isGuest ? dto.guestEmail.toLowerCase().trim() : null,
-        guestPhone: isGuest ? dto.guestPhone.trim() : null,
-        guestFirstName: isGuest ? dto.guestFirstName.trim() : null,
-        guestLastName: isGuest ? dto.guestLastName.trim() : null,
+        guestEmail: guestDetails?.email ?? null,
+        guestPhone: guestDetails?.phone ?? null,
+        guestFirstName: guestDetails?.firstName ?? null,
+        guestLastName: guestDetails?.lastName ?? null,
 
         subtotal: totals.subtotal,
         tax: totals.tax,
@@ -94,6 +101,31 @@ export class CheckoutOrderService {
     return {
       order,
       payment,
+    };
+  }
+
+  private getGuestDetails(dto: CheckoutCustomerDetails): {
+    email: string;
+    phone: string;
+    firstName: string;
+    lastName: string;
+  } {
+    const email = dto.guestEmail?.trim();
+    const phone = dto.guestPhone?.trim();
+    const firstName = dto.guestFirstName?.trim();
+    const lastName = dto.guestLastName?.trim();
+
+    if (!email || !phone || !firstName || !lastName) {
+      throw new BadRequestException(
+        'Guest checkout requires guestEmail, guestPhone, guestFirstName, and guestLastName.',
+      );
+    }
+
+    return {
+      email: email.toLowerCase(),
+      phone,
+      firstName,
+      lastName,
     };
   }
 }

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, ProductStatus } from '@prisma/client';
 
+import { toNullableNumber } from '../../../common/utils/decimal.util';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateProductVariantDto, UpdateProductVariantDto } from './dto';
 
@@ -222,22 +223,12 @@ export class ProductVariantsService {
     });
   }
 
-  private toVariantResponse(variant: any) {
+  private toVariantResponse(variant: Prisma.ProductVariantGetPayload<object>) {
     return {
       ...variant,
-      price: this.toNullableNumber(variant.price),
-      compareAtPrice: this.toNullableNumber(variant.compareAtPrice),
-      costPrice: this.toNullableNumber(variant.costPrice),
+      price: toNullableNumber(variant.price),
+      compareAtPrice: toNullableNumber(variant.compareAtPrice),
+      costPrice: toNullableNumber(variant.costPrice),
     };
-  }
-
-  private toNullableNumber(
-    value: Prisma.Decimal | number | string | null | undefined,
-  ) {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    return Number(value);
   }
 }

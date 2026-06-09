@@ -5,8 +5,43 @@ import {
 } from '@nestjs/common';
 import { Prisma, ProductStatus } from '@prisma/client';
 
+import { toNullableNumber, toNumber } from '../../../common/utils/decimal.util';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateAdminProductDto, UpdateAdminProductDto } from './dto';
+
+const adminProductInclude = {
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+  brand: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+  images: {
+    orderBy: {
+      position: Prisma.SortOrder.asc,
+    },
+  },
+  variants: {
+    orderBy: {
+      createdAt: Prisma.SortOrder.asc,
+    },
+  },
+} satisfies Prisma.ProductInclude;
+
+type AdminProductWithRelations = Prisma.ProductGetPayload<{
+  include: typeof adminProductInclude;
+}>;
+
+type AdminProductVariantWithMoney =
+  AdminProductWithRelations['variants'][number];
 
 @Injectable()
 export class AdminProductsService {
@@ -352,65 +387,32 @@ export class AdminProductsService {
       .replace(/^-+|-+$/g, '');
   }
 
-  private getProductInclude(): Prisma.ProductInclude {
-    return {
-      category: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      },
-      brand: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      },
-      images: {
-        orderBy: {
-          position: Prisma.SortOrder.asc,
-        },
-      },
-      variants: {
-        orderBy: {
-          createdAt: Prisma.SortOrder.asc,
-        },
-      },
-    };
+  private getProductInclude(): typeof adminProductInclude {
+    return adminProductInclude;
   }
 
-  private toProductResponse(product: any) {
+  private toProductResponse(product: AdminProductWithRelations) {
     return {
       ...product,
-      price: this.toNumber(product.price),
-      compareAtPrice: this.toNullableNumber(product.compareAtPrice),
-      costPrice: this.toNullableNumber(product.costPrice),
-      weight: this.toNullableNumber(product.weight),
-      length: this.toNullableNumber(product.length),
-      width: this.toNullableNumber(product.width),
-      height: this.toNullableNumber(product.height),
-      variants:
-        product.variants?.map((variant: any) => ({
-          ...variant,
-          price: this.toNullableNumber(variant.price),
-          compareAtPrice: this.toNullableNumber(variant.compareAtPrice),
-        })) ?? [],
+      price: toNumber(product.price),
+      compareAtPrice: toNullableNumber(product.compareAtPrice),
+      costPrice: toNullableNumber(product.costPrice),
+      weight: toNullableNumber(product.weight),
+      length: toNullableNumber(product.length),
+      width: toNullableNumber(product.width),
+      height: toNullableNumber(product.height),
+      variants: product.variants.map((variant) =>
+        this.toProductVariantResponse(variant),
+      ),
     };
   }
 
-  private toNumber(value: Prisma.Decimal | number | string) {
-    return Number(value);
-  }
-
-  private toNullableNumber(
-    value: Prisma.Decimal | number | string | null | undefined,
-  ) {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    return Number(value);
+  private toProductVariantResponse(variant: AdminProductVariantWithMoney) {
+    return {
+      ...variant,
+      price: toNullableNumber(variant.price),
+      compareAtPrice: toNullableNumber(variant.compareAtPrice),
+      costPrice: toNullableNumber(variant.costPrice),
+    };
   }
 }

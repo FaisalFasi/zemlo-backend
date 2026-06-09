@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { AddressType } from '@prisma/client';
+import { AddressType, Prisma } from '@prisma/client';
+import type { PrismaTransactionClient } from '../../../common/types/prisma-transaction.type';
 import { CheckoutAddressDto } from '../dto';
 import { CreateAddressParams } from '../types/checkout.types';
 
 @Injectable()
 export class CheckoutAddressService {
-  async createCheckoutAddresses(tx: any, params: CreateAddressParams) {
+  async createCheckoutAddresses(
+    tx: PrismaTransactionClient,
+    params: CreateAddressParams,
+  ) {
     const { shippingAddress, billingAddress, userId, isGuest } = params;
 
     if (!billingAddress) {
@@ -53,7 +57,7 @@ export class CheckoutAddressService {
     userId?: string;
     isGuest: boolean;
     type: AddressType;
-  }) {
+  }): Prisma.AddressUncheckedCreateInput {
     const { address, userId, isGuest, type } = params;
 
     return {

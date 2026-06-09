@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { PaymentMethod } from '@prisma/client';
 import { CheckoutAddressDto, CheckoutItemDto } from '../dto';
 
@@ -7,6 +8,13 @@ export type CheckoutDtoBase = {
   billingAddress?: CheckoutAddressDto;
   paymentMethod: PaymentMethod;
   customerNote?: string;
+};
+
+export type CheckoutCustomerDetails = CheckoutDtoBase & {
+  guestEmail?: string;
+  guestPhone?: string;
+  guestFirstName?: string;
+  guestLastName?: string;
 };
 
 export type NormalizedCheckoutItem = {
@@ -26,7 +34,7 @@ export type CheckoutLine = {
   totalPrice: number;
   trackInventory: boolean;
   allowBackorder: boolean;
-  productSnapshot: Record<string, unknown>;
+  productSnapshot: Prisma.InputJsonObject;
 };
 
 export type CheckoutTotals = {
@@ -38,7 +46,7 @@ export type CheckoutTotals = {
 };
 
 export type CreateCheckoutParams = {
-  dto: CheckoutDtoBase;
+  dto: CheckoutCustomerDetails;
   userId?: string;
   isGuest: boolean;
 };
@@ -49,3 +57,13 @@ export type CreateAddressParams = {
   userId?: string;
   isGuest: boolean;
 };
+
+export type CheckoutProductWithRelations = Prisma.ProductGetPayload<{
+  include: {
+    variants: true;
+    images: true;
+  };
+}>;
+
+export type CheckoutPlatformSettings =
+  Prisma.PlatformSettingsGetPayload<object> | null;

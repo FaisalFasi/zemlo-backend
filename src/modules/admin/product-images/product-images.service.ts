@@ -1,10 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ProductStatus } from '@prisma/client';
 
+import type { PrismaTransactionClient } from '../../../common/types/prisma-transaction.type';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateProductImageDto, UpdateProductImageDto } from './dto';
 
@@ -183,7 +180,10 @@ export class ProductImagesService {
     return image;
   }
 
-  private async ensureProductHasDefaultImage(tx: any, productId: string) {
+  private async ensureProductHasDefaultImage(
+    tx: PrismaTransactionClient,
+    productId: string,
+  ) {
     const defaultImage = await tx.productImage.findFirst({
       where: {
         productId,

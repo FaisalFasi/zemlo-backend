@@ -481,7 +481,7 @@ export class CartService {
   }
 
   private toPublicProduct(product: CartProduct) {
-    const { status, category, brand, ...safeProduct } = product;
+    const { category, brand, ...safeProduct } = product;
 
     return {
       ...safeProduct,
@@ -508,7 +508,7 @@ export class CartService {
       return null;
     }
 
-    const { isActive, ...safeVariant } = variant;
+    const safeVariant = variant;
 
     return {
       ...safeVariant,
