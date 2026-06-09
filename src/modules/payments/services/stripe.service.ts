@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
@@ -8,21 +8,42 @@ type StripePaymentIntentResult = {
   status: string;
 };
 
-type StripeWebhookEvent = {
+export type StripeWebhookPaymentIntent = {
   id: string;
-  type: string;
-  data: {
-    object: any;
-  };
+  object: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paymentMethod: string | null;
+  latestCharge: string | null;
+  metadata: Record<string, string>;
 };
+
+export type StripePaymentIntentWebhookEvent = {
+  kind: 'paymentIntent';
+  type: 'payment_intent.succeeded' | 'payment_intent.payment_failed';
+  paymentIntent: StripeWebhookPaymentIntent;
+};
+
+export type StripeIgnoredWebhookEvent = {
+  kind: 'ignored';
+  type: string;
+  paymentIntent: null;
+};
+
+export type StripeWebhookEvent =
+  | StripePaymentIntentWebhookEvent
+  | StripeIgnoredWebhookEvent;
 
 @Injectable()
 export class StripeService {
   private readonly stripeClient: InstanceType<typeof Stripe> | null;
 
-  constructor(private readonly configService: ConfigService) {
-    const secretKey = process.env.secretKey;
-    // const secretKey = this.configService.get<string>('stripe.secretKey');
+  constructor(
+    @Inject(ConfigService)
+    private readonly configService: ConfigService,
+  ) {
+    const secretKey = this.configService.get<string>('stripe.secretKey');
 
     this.stripeClient = secretKey ? new Stripe(secretKey) : null;
   }
@@ -81,11 +102,28 @@ export class StripeService {
       );
     }
 
-    return stripeClient.webhooks.constructEvent(
+    const event = stripeClient.webhooks.constructEvent(
       params.rawBody,
       params.signature,
       webhookSecret,
     );
+
+    if (
+      this.isPaymentIntentEventType(event.type) &&
+      this.isStripePaymentIntent(event.data.object)
+    ) {
+      return {
+        kind: 'paymentIntent',
+        type: event.type,
+        paymentIntent: this.toWebhookPaymentIntent(event.data.object),
+      };
+    }
+
+    return {
+      kind: 'ignored',
+      type: event.type,
+      paymentIntent: null,
+    };
   }
 
   private getStripeClient(): InstanceType<typeof Stripe> {
@@ -98,7 +136,89 @@ export class StripeService {
     return this.stripeClient;
   }
 
-  private toStripeAmount(amount: number) {
+  private toStripeAmount(amount: number): number {
     return Math.round(amount * 100);
+  }
+
+  private isPaymentIntentEventType(
+    eventType: string,
+  ): eventType is StripePaymentIntentWebhookEvent['type'] {
+    return (
+      eventType === 'payment_intent.succeeded' ||
+      eventType === 'payment_intent.payment_failed'
+    );
+  }
+
+  private isStripePaymentIntent(value: unknown): value is Record<
+    string,
+    unknown
+  > & {
+    id: string;
+    object: string;
+    amount: number;
+    currency: string;
+    status: string;
+    metadata: Record<string, string>;
+  } {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    return (
+      typeof value.id === 'string' &&
+      typeof value.object === 'string' &&
+      typeof value.amount === 'number' &&
+      typeof value.currency === 'string' &&
+      typeof value.status === 'string' &&
+      this.isStringRecord(value.metadata)
+    );
+  }
+
+  private toWebhookPaymentIntent(
+    paymentIntent: Record<string, unknown> & {
+      id: string;
+      object: string;
+      amount: number;
+      currency: string;
+      status: string;
+      metadata: Record<string, string>;
+    },
+  ): StripeWebhookPaymentIntent {
+    return {
+      id: paymentIntent.id,
+      object: paymentIntent.object,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+      status: paymentIntent.status,
+      paymentMethod: this.toNullableStripeReference(
+        paymentIntent.payment_method,
+      ),
+      latestCharge: this.toNullableStripeReference(paymentIntent.latest_charge),
+      metadata: paymentIntent.metadata,
+    };
+  }
+
+  private toNullableStripeReference(value: unknown): string | null {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (this.isRecord(value) && typeof value.id === 'string') {
+      return value.id;
+    }
+
+    return null;
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  private isStringRecord(value: unknown): value is Record<string, string> {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    return Object.values(value).every((item) => typeof item === 'string');
   }
 }

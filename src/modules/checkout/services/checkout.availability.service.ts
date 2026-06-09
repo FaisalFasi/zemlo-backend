@@ -1,9 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import type { PrismaTransactionClient } from '../../../common/types/prisma-transaction.type';
 import { CheckoutAddressDto } from '../dto';
 
 @Injectable()
 export class CheckoutAvailabilityService {
-  async validateShippingCountry(tx: any, shippingAddress: CheckoutAddressDto) {
+  async validateShippingCountry(
+    tx: PrismaTransactionClient,
+    shippingAddress: CheckoutAddressDto,
+  ) {
     const countryCode = shippingAddress.country?.trim().toUpperCase();
 
     if (!countryCode) {

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PaymentMethod, Prisma } from '@prisma/client';
 
+import { toNullableNumber } from '../../../common/utils/decimal.util';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpdatePaymentMethodSettingDto } from './dto';
 
@@ -80,21 +81,13 @@ export class PaymentSettingsService {
     return data;
   }
 
-  private toPaymentMethodResponse(setting: any) {
+  private toPaymentMethodResponse(
+    setting: Prisma.PaymentMethodSettingGetPayload<object>,
+  ) {
     return {
       ...setting,
-      minAmount: this.toNullableNumber(setting.minAmount),
-      maxAmount: this.toNullableNumber(setting.maxAmount),
+      minAmount: toNullableNumber(setting.minAmount),
+      maxAmount: toNullableNumber(setting.maxAmount),
     };
-  }
-
-  private toNullableNumber(
-    value: Prisma.Decimal | number | string | null | undefined,
-  ) {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    return Number(value);
   }
 }

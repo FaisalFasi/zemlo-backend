@@ -3,11 +3,19 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { OrderStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  Prisma,
+} from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateStripePaymentIntentDto } from './dto';
-import { StripeService } from './services/stripe.service';
+import {
+  StripeService,
+  type StripeWebhookPaymentIntent,
+} from './services/stripe.service';
 
 @Injectable()
 export class PaymentsService {
@@ -86,7 +94,7 @@ export class PaymentsService {
       },
       data: {
         paymentIntentId: paymentIntent.id,
-        gatewayResponse: paymentIntent as any,
+        gatewayResponse: paymentIntent,
         metadata: {
           source: 'stripe',
           stripePaymentIntentId: paymentIntent.id,
@@ -111,12 +119,14 @@ export class PaymentsService {
   async handleStripeWebhook(params: { rawBody: Buffer; signature: string }) {
     const event = this.stripeService.constructWebhookEvent(params);
 
-    if (event.type === 'payment_intent.succeeded') {
-      return this.handlePaymentIntentSucceeded(event.data.object);
-    }
+    if (event.kind === 'paymentIntent') {
+      if (event.type === 'payment_intent.succeeded') {
+        return this.handlePaymentIntentSucceeded(event.paymentIntent);
+      }
 
-    if (event.type === 'payment_intent.payment_failed') {
-      return this.handlePaymentIntentFailed(event.data.object);
+      if (event.type === 'payment_intent.payment_failed') {
+        return this.handlePaymentIntentFailed(event.paymentIntent);
+      }
     }
 
     return {
@@ -126,7 +136,9 @@ export class PaymentsService {
     };
   }
 
-  private async handlePaymentIntentSucceeded(paymentIntent: any) {
+  private async handlePaymentIntentSucceeded(
+    paymentIntent: StripeWebhookPaymentIntent,
+  ) {
     const payment = await this.prisma.payment.findUnique({
       where: {
         paymentIntentId: paymentIntent.id,
@@ -157,7 +169,7 @@ export class PaymentsService {
         },
         data: {
           status: PaymentStatus.PAID,
-          gatewayResponse: paymentIntent,
+          gatewayResponse: this.toStripePaymentIntentSnapshot(paymentIntent),
           paidAt: new Date(),
         },
       });
@@ -188,7 +200,9 @@ export class PaymentsService {
     };
   }
 
-  private async handlePaymentIntentFailed(paymentIntent: any) {
+  private async handlePaymentIntentFailed(
+    paymentIntent: StripeWebhookPaymentIntent,
+  ) {
     const payment = await this.prisma.payment.findUnique({
       where: {
         paymentIntentId: paymentIntent.id,
@@ -212,7 +226,7 @@ export class PaymentsService {
         },
         data: {
           status: PaymentStatus.FAILED,
-          gatewayResponse: paymentIntent,
+          gatewayResponse: this.toStripePaymentIntentSnapshot(paymentIntent),
         },
       });
 
@@ -237,6 +251,21 @@ export class PaymentsService {
     return {
       received: true,
       paymentStatus: PaymentStatus.FAILED,
+    };
+  }
+
+  private toStripePaymentIntentSnapshot(
+    paymentIntent: StripeWebhookPaymentIntent,
+  ): Prisma.InputJsonObject {
+    return {
+      id: paymentIntent.id,
+      object: paymentIntent.object,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+      status: paymentIntent.status,
+      paymentMethod: paymentIntent.paymentMethod,
+      latestCharge: paymentIntent.latestCharge,
+      metadata: paymentIntent.metadata,
     };
   }
 }
