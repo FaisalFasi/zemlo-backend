@@ -85,7 +85,7 @@ export class StripeService {
       params.rawBody,
       params.signature,
       webhookSecret,
-    ) as StripeWebhookEvent;
+    );
   }
 
   private getStripeClient(): InstanceType<typeof Stripe> {

@@ -88,6 +88,20 @@ export class CheckoutPaymentResponseDto {
 
   @ApiProperty({ type: String })
   currency: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'Stripe PaymentIntent id or provider payment intent id.',
+  })
+  paymentIntentId?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'Stripe client secret used by the frontend PaymentElement.',
+  })
+  clientSecret?: string | null;
 }
 
 export class CheckoutResponseDto {

@@ -233,6 +233,13 @@ export class CheckoutService {
         status: payment.status,
         amount: totals.total,
         currency: payment.currency,
+        paymentIntentId:
+          payment.paymentIntentId ??
+          payment.stripePaymentIntentId ??
+          payment.providerPaymentIntentId ??
+          null,
+        clientSecret:
+          payment.clientSecret ?? payment.stripeClientSecret ?? null,
       },
       nextStep:
         dto.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
