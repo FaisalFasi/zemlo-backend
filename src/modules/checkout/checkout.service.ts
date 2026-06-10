@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import {
   AuthCheckoutDto,
   CheckoutItemDto,
+  CheckoutResponseDto,
   FromCartCheckoutDto,
   GuestCheckoutDto,
 } from './dto';
@@ -37,14 +38,17 @@ export class CheckoutService {
     private readonly availabilityService: CheckoutAvailabilityService,
   ) {}
 
-  async guestCheckout(dto: GuestCheckoutDto) {
+  async guestCheckout(dto: GuestCheckoutDto): Promise<CheckoutResponseDto> {
     return this.createCheckout({
       dto,
       isGuest: true,
     });
   }
 
-  async authCheckout(userId: string, dto: AuthCheckoutDto) {
+  async authCheckout(
+    userId: string,
+    dto: AuthCheckoutDto,
+  ): Promise<CheckoutResponseDto> {
     return this.createCheckout({
       dto,
       userId,
@@ -56,7 +60,7 @@ export class CheckoutService {
     userId: string | undefined,
     guestId: string | undefined,
     dto: FromCartCheckoutDto,
-  ) {
+  ): Promise<CheckoutResponseDto> {
     const normalizedUserId = userId?.trim() || undefined;
     const normalizedGuestId = guestId?.trim() || undefined;
     const isGuest = !normalizedUserId;
@@ -130,7 +134,9 @@ export class CheckoutService {
     });
   }
 
-  private async createCheckout(params: CreateCheckoutParams) {
+  private async createCheckout(
+    params: CreateCheckoutParams,
+  ): Promise<CheckoutResponseDto> {
     return this.prisma.$transaction((tx) =>
       this.createCheckoutWithTransaction(tx, params),
     );
@@ -139,7 +145,7 @@ export class CheckoutService {
   private async createCheckoutWithTransaction(
     tx: PrismaTransactionClient,
     params: CreateCheckoutParams,
-  ) {
+  ): Promise<CheckoutResponseDto> {
     const { dto, userId, isGuest } = params;
 
     const settings = await tx.platformSettings.findFirst();
@@ -221,7 +227,7 @@ export class CheckoutService {
         items: lines.map((line) => ({
           productId: line.productId,
           variantId: line.variantId ?? null,
-          name: line.name,
+          productName: line.name,
           variantName: line.variantName ?? null,
           sku: line.sku ?? null,
           quantity: line.quantity,

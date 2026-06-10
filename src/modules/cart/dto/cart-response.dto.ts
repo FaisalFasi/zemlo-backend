@@ -76,13 +76,13 @@ class CartProductResponseDto {
   @ApiProperty({ type: Boolean })
   hasVariants: boolean;
 
-  @ApiProperty({ type: CartCategoryResponseDto })
+  @ApiProperty({ type: () => CartCategoryResponseDto })
   category: CartCategoryResponseDto;
 
-  @ApiProperty({ type: CartBrandResponseDto, nullable: true })
+  @ApiProperty({ type: () => CartBrandResponseDto, nullable: true })
   brand: CartBrandResponseDto | null;
 
-  @ApiProperty({ type: [CartImageResponseDto] })
+  @ApiProperty({ type: () => [CartImageResponseDto] })
   images: CartImageResponseDto[];
 }
 
@@ -114,10 +114,7 @@ class CartVariantResponseDto {
   @ApiProperty({ type: String, nullable: true })
   image: string | null;
 
-  @ApiProperty({
-    type: Object,
-    additionalProperties: true,
-  })
+  @ApiProperty({ type: Object })
   options: Record<string, unknown>;
 }
 
@@ -152,10 +149,10 @@ class CartItemResponseDto {
   @ApiProperty({ type: Number })
   lineTotal: number;
 
-  @ApiProperty({ type: CartProductResponseDto })
+  @ApiProperty({ type: () => CartProductResponseDto })
   product: CartProductResponseDto;
 
-  @ApiProperty({ type: CartVariantResponseDto, nullable: true })
+  @ApiProperty({ type: () => CartVariantResponseDto, nullable: true })
   variant: CartVariantResponseDto | null;
 }
 
@@ -175,7 +172,7 @@ export class CartResponseDto {
   @ApiProperty({ type: Date })
   updatedAt: Date;
 
-  @ApiProperty({ type: [CartItemResponseDto] })
+  @ApiProperty({ type: () => [CartItemResponseDto] })
   items: CartItemResponseDto[];
 
   @ApiProperty({ type: Number })

@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   FulfillmentStatus,
   OrderStatus,
@@ -8,21 +8,18 @@ import {
 
 export class CheckoutOrderItemResponseDto {
   @ApiProperty({ type: String })
-  id: string;
-
-  @ApiProperty({ type: String })
   productId: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   variantId: string | null;
 
   @ApiProperty({ type: String })
   productName: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   variantName: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   sku: string | null;
 
   @ApiProperty({ type: Number })
@@ -33,9 +30,6 @@ export class CheckoutOrderItemResponseDto {
 
   @ApiProperty({ type: Number })
   totalPrice: number;
-
-  @ApiPropertyOptional({ type: Object, nullable: true })
-  productSnapshot: Record<string, unknown> | null;
 }
 
 export class CheckoutOrderResponseDto {
@@ -89,19 +83,19 @@ export class CheckoutPaymentResponseDto {
   @ApiProperty({ type: String })
   currency: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: String,
     nullable: true,
     description: 'Stripe PaymentIntent id or provider payment intent id.',
   })
-  paymentIntentId?: string | null;
+  paymentIntentId: string | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: String,
     nullable: true,
     description: 'Stripe client secret used by the frontend PaymentElement.',
   })
-  clientSecret?: string | null;
+  clientSecret: string | null;
 }
 
 export class CheckoutResponseDto {
