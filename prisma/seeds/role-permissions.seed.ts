@@ -1,62 +1,72 @@
 import { PrismaClient, UserRole } from '@prisma/client';
+
+import {
+  PERMISSIONS,
+  type PermissionName,
+} from '../../src/common/constants/permissions';
 import { permissionsData } from './permissions.seed';
+
+export const allPermissionNames = permissionsData.map(
+  (permission) => permission.name,
+);
+
+export const rolePermissionsMap = {
+  [UserRole.CUSTOMER]: [PERMISSIONS.PRODUCTS_VIEW, PERMISSIONS.ORDERS_VIEW_OWN],
+
+  [UserRole.STAFF]: [
+    PERMISSIONS.PRODUCTS_VIEW,
+    PERMISSIONS.CATEGORIES_VIEW,
+    PERMISSIONS.BRANDS_VIEW,
+    PERMISSIONS.ORDERS_VIEW_ALL,
+    PERMISSIONS.CUSTOMERS_VIEW,
+  ],
+
+  [UserRole.ADMIN]: [
+    PERMISSIONS.PRODUCTS_VIEW,
+    PERMISSIONS.PRODUCTS_CREATE,
+    PERMISSIONS.PRODUCTS_UPDATE,
+    PERMISSIONS.PRODUCTS_DELETE,
+
+    PERMISSIONS.CATEGORIES_VIEW,
+    PERMISSIONS.CATEGORIES_CREATE,
+    PERMISSIONS.CATEGORIES_UPDATE,
+    PERMISSIONS.CATEGORIES_DELETE,
+
+    PERMISSIONS.BRANDS_VIEW,
+    PERMISSIONS.BRANDS_CREATE,
+    PERMISSIONS.BRANDS_UPDATE,
+    PERMISSIONS.BRANDS_DELETE,
+
+    PERMISSIONS.ORDERS_VIEW_OWN,
+    PERMISSIONS.ORDERS_VIEW_ALL,
+    PERMISSIONS.ORDERS_UPDATE,
+    PERMISSIONS.ORDERS_CANCEL,
+
+    PERMISSIONS.CUSTOMERS_VIEW,
+    PERMISSIONS.CUSTOMERS_UPDATE,
+    PERMISSIONS.CUSTOMERS_DISABLE,
+
+    PERMISSIONS.STAFF_VIEW,
+    PERMISSIONS.STAFF_CREATE,
+    PERMISSIONS.STAFF_UPDATE,
+    PERMISSIONS.STAFF_DISABLE,
+
+    PERMISSIONS.SETTINGS_VIEW,
+    PERMISSIONS.ANALYTICS_VIEW,
+  ],
+
+  [UserRole.SUPER_ADMIN]: allPermissionNames,
+} satisfies Record<UserRole, readonly PermissionName[]>;
 
 export async function seedRolePermissions(prisma: PrismaClient) {
   console.log('🔗 Assigning default permissions to roles...');
 
-  const allPermissionNames = permissionsData.map(
-    (permission) => permission.name,
-  );
+  const rolePermissionEntries = Object.entries(rolePermissionsMap) as [
+    UserRole,
+    readonly PermissionName[],
+  ][];
 
-  const rolePermissionsMap: Record<UserRole, string[]> = {
-    CUSTOMER: ['products.view', 'orders.view_own'],
-
-    STAFF: [
-      'products.view',
-      'categories.view',
-      'brands.view',
-      'orders.view_all',
-      'customers.view',
-    ],
-
-    ADMIN: [
-      'products.view',
-      'products.create',
-      'products.update',
-      'products.delete',
-
-      'categories.view',
-      'categories.create',
-      'categories.update',
-      'categories.delete',
-
-      'brands.view',
-      'brands.create',
-      'brands.update',
-      'brands.delete',
-
-      'orders.view_own',
-      'orders.view_all',
-      'orders.update',
-      'orders.cancel',
-
-      'customers.view',
-      'customers.update',
-      'customers.disable',
-
-      'staff.view',
-      'staff.create',
-      'staff.update',
-      'staff.disable',
-
-      'settings.view',
-      'analytics.view',
-    ],
-
-    SUPER_ADMIN: allPermissionNames,
-  };
-
-  for (const [role, permissionNames] of Object.entries(rolePermissionsMap)) {
+  for (const [role, permissionNames] of rolePermissionEntries) {
     for (const permissionName of permissionNames) {
       const permission = await prisma.permission.findUnique({
         where: { name: permissionName },
@@ -72,13 +82,13 @@ export async function seedRolePermissions(prisma: PrismaClient) {
       await prisma.rolePermission.upsert({
         where: {
           role_permissionId: {
-            role: role as UserRole,
+            role,
             permissionId: permission.id,
           },
         },
         update: {},
         create: {
-          role: role as UserRole,
+          role,
           permissionId: permission.id,
         },
       });
