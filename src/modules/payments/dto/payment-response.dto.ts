@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class StripePaymentIntentResponseDto {
   @ApiProperty({ type: String })
@@ -13,7 +13,7 @@ export class StripePaymentIntentResponseDto {
   @ApiProperty({ type: String, example: 'pi_3TaczuBlX6tkIsTB36Pkwqlc' })
   paymentIntentId: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: String,
     nullable: true,
     example: 'pi_3TaczuBlX6tkIsTB36Pkwqlc_secret_xxx',
@@ -34,18 +34,18 @@ export class StripeWebhookResponseDto {
   @ApiProperty({ type: Boolean })
   received: boolean;
 
-  @ApiPropertyOptional({ type: Boolean })
+  @ApiProperty({ type: Boolean })
   ignored?: boolean;
 
-  @ApiPropertyOptional({ type: String })
+  @ApiProperty({ type: String })
   eventType?: string;
 
-  @ApiPropertyOptional({ type: String })
+  @ApiProperty({ type: String })
   message?: string;
 
-  @ApiPropertyOptional({ type: String })
+  @ApiProperty({ type: String })
   paymentStatus?: string;
 
-  @ApiPropertyOptional({ type: String })
+  @ApiProperty({ type: String })
   orderStatus?: string;
 }

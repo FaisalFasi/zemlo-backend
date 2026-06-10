@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 import {
   PublicBrandSummaryResponseDto,
@@ -8,10 +8,10 @@ import {
 } from './catalog-common-response.dto';
 
 export class PublicBrandDetailResponseDto extends PublicBrandSummaryResponseDto {
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   website: string | null;
 }
 
@@ -25,13 +25,13 @@ export class PublicProductListItemResponseDto {
   @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   shortDescription: string | null;
 
   @ApiProperty({ type: Number })
   price: number;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
   @ApiProperty({ type: Number })
@@ -52,16 +52,16 @@ export class PublicProductListItemResponseDto {
   @ApiProperty({ type: [String] })
   keywords: string[];
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   metaTitle: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   metaDescription: string | null;
 
   @ApiProperty({ type: PublicCategorySummaryResponseDto })
   category: PublicCategorySummaryResponseDto;
 
-  @ApiPropertyOptional({ type: PublicBrandSummaryResponseDto, nullable: true })
+  @ApiProperty({ type: PublicBrandSummaryResponseDto, nullable: true })
   brand: PublicBrandSummaryResponseDto | null;
 
   @ApiProperty({ type: [PublicProductImageResponseDto] })
@@ -81,19 +81,19 @@ export class PublicProductDetailResponseDto {
   @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   shortDescription: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   sku: string | null;
 
   @ApiProperty({ type: Number })
   price: number;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
   @ApiProperty({ type: Number })
@@ -111,31 +111,31 @@ export class PublicProductDetailResponseDto {
   @ApiProperty({ type: Boolean })
   isFeatured: boolean;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   weight: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   length: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   width: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   height: number | null;
 
   @ApiProperty({ type: [String] })
   keywords: string[];
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   metaTitle: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   metaDescription: string | null;
 
   @ApiProperty({ type: PublicCategorySummaryResponseDto })
   category: PublicCategorySummaryResponseDto;
 
-  @ApiPropertyOptional({ type: PublicBrandDetailResponseDto, nullable: true })
+  @ApiProperty({ type: PublicBrandDetailResponseDto, nullable: true })
   brand: PublicBrandDetailResponseDto | null;
 
   @ApiProperty({ type: [PublicProductImageResponseDto] })

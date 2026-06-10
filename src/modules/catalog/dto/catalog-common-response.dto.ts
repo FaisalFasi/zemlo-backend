@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class PublicCategorySummaryResponseDto {
   @ApiProperty({ type: String })
@@ -21,7 +21,7 @@ export class PublicBrandSummaryResponseDto {
   @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   logo: string | null;
 }
 
@@ -32,7 +32,7 @@ export class PublicProductImageResponseDto {
   @ApiProperty({ type: String })
   url: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   altText: string | null;
 
   @ApiProperty({ type: Number })
@@ -49,13 +49,13 @@ export class PublicProductVariantResponseDto {
   @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   price: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
   @ApiProperty({ type: Number })
@@ -67,7 +67,7 @@ export class PublicProductVariantResponseDto {
   @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   image: string | null;
 
   @ApiProperty({
