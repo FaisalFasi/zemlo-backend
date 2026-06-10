@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
+import type { PermissionName } from '../constants/permissions';
 import { REQUIRED_PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
 import type { AuthenticatedRequest } from '../types/authenticated-request.type';
 
@@ -15,10 +16,10 @@ export class PermissionsGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const requiredPermissions =
-      this.reflector.getAllAndOverride<string[]>(REQUIRED_PERMISSIONS_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]) ?? [];
+      this.reflector.getAllAndOverride<PermissionName[]>(
+        REQUIRED_PERMISSIONS_KEY,
+        [context.getHandler(), context.getClass()],
+      ) ?? [];
 
     if (requiredPermissions.length === 0) {
       return true;
@@ -31,7 +32,7 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('Authenticated user not found');
     }
 
-    const userPermissions = new Set(user.permissions ?? []);
+    const userPermissions = new Set<PermissionName>(user.permissions);
 
     const hasAllPermissions = requiredPermissions.every((permission) =>
       userPermissions.has(permission),

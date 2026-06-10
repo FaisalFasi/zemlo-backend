@@ -1,5 +1,7 @@
 import { UserRole } from '@prisma/client';
 
+import type { PermissionName } from '../constants/permissions';
+
 export interface AuthenticatedUser {
   id: string;
   email: string;
@@ -7,5 +9,5 @@ export interface AuthenticatedUser {
   lastName: string;
   role: UserRole;
   sessionId: string;
-  permissions: string[];
+  permissions: PermissionName[];
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
-
+import type { PermissionName } from '../../../common/constants/permissions';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class PermissionResolverService {
   async getUserPermissions(params: {
     userId: string;
     role: UserRole;
-  }): Promise<string[]> {
+  }): Promise<PermissionName[]> {
     const now = new Date();
 
     const [rolePermissions, userPermissions] = await Promise.all([
@@ -51,6 +51,6 @@ export class PermissionResolverService {
       ),
     ];
 
-    return [...new Set(permissions)];
+    return [...new Set(permissions)] as PermissionName[];
   }
 }
