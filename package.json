@@ -17,6 +17,8 @@
     "api:contract:check": "npm run api:contract:audit && npm run openapi:export",
     "openapi:export": "tsx scripts/export-openapi.ts",
     "swagger:dto:audit": "node scripts/audit-swagger-dtos.cjs",
+    "rbac:audit": "tsx scripts/audit-rbac.ts",
+    "verify": "npm run lint && npm run build && npm run rbac:audit && npm run swagger:dto:audit && npm run api:contract:audit && npm run openapi:export",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start src/main",
     "start:dev": "nest start src/main --watch",

@@ -1,27 +1,39 @@
 import { PermissionCategory, PrismaClient } from '@prisma/client';
 
+import {
+  PERMISSIONS,
+  type PermissionName,
+} from '../../src/common/constants/permissions';
+
+type PermissionSeed = {
+  name: PermissionName;
+  displayName: string;
+  description: string;
+  category: PermissionCategory;
+};
+
 export const permissionsData = [
   // PRODUCTS
   {
-    name: 'products.view',
+    name: PERMISSIONS.PRODUCTS_VIEW,
     displayName: 'View Products',
     description: 'Can view products',
     category: PermissionCategory.PRODUCTS,
   },
   {
-    name: 'products.create',
+    name: PERMISSIONS.PRODUCTS_CREATE,
     displayName: 'Create Products',
     description: 'Can create products',
     category: PermissionCategory.PRODUCTS,
   },
   {
-    name: 'products.update',
+    name: PERMISSIONS.PRODUCTS_UPDATE,
     displayName: 'Update Products',
     description: 'Can update products',
     category: PermissionCategory.PRODUCTS,
   },
   {
-    name: 'products.delete',
+    name: PERMISSIONS.PRODUCTS_DELETE,
     displayName: 'Delete Products',
     description: 'Can delete or archive products',
     category: PermissionCategory.PRODUCTS,
@@ -29,25 +41,25 @@ export const permissionsData = [
 
   // CATEGORIES
   {
-    name: 'categories.view',
+    name: PERMISSIONS.CATEGORIES_VIEW,
     displayName: 'View Categories',
     description: 'Can view categories',
     category: PermissionCategory.CATEGORIES,
   },
   {
-    name: 'categories.create',
+    name: PERMISSIONS.CATEGORIES_CREATE,
     displayName: 'Create Categories',
     description: 'Can create categories',
     category: PermissionCategory.CATEGORIES,
   },
   {
-    name: 'categories.update',
+    name: PERMISSIONS.CATEGORIES_UPDATE,
     displayName: 'Update Categories',
     description: 'Can update categories',
     category: PermissionCategory.CATEGORIES,
   },
   {
-    name: 'categories.delete',
+    name: PERMISSIONS.CATEGORIES_DELETE,
     displayName: 'Delete Categories',
     description: 'Can delete categories',
     category: PermissionCategory.CATEGORIES,
@@ -55,25 +67,25 @@ export const permissionsData = [
 
   // BRANDS
   {
-    name: 'brands.view',
+    name: PERMISSIONS.BRANDS_VIEW,
     displayName: 'View Brands',
     description: 'Can view brands',
     category: PermissionCategory.BRANDS,
   },
   {
-    name: 'brands.create',
+    name: PERMISSIONS.BRANDS_CREATE,
     displayName: 'Create Brands',
     description: 'Can create brands',
     category: PermissionCategory.BRANDS,
   },
   {
-    name: 'brands.update',
+    name: PERMISSIONS.BRANDS_UPDATE,
     displayName: 'Update Brands',
     description: 'Can update brands',
     category: PermissionCategory.BRANDS,
   },
   {
-    name: 'brands.delete',
+    name: PERMISSIONS.BRANDS_DELETE,
     displayName: 'Delete Brands',
     description: 'Can delete brands',
     category: PermissionCategory.BRANDS,
@@ -81,25 +93,25 @@ export const permissionsData = [
 
   // ORDERS
   {
-    name: 'orders.view_own',
+    name: PERMISSIONS.ORDERS_VIEW_OWN,
     displayName: 'View Own Orders',
     description: 'Customers can view their own orders',
     category: PermissionCategory.ORDERS,
   },
   {
-    name: 'orders.view_all',
+    name: PERMISSIONS.ORDERS_VIEW_ALL,
     displayName: 'View All Orders',
     description: 'Can view all customer orders',
     category: PermissionCategory.ORDERS,
   },
   {
-    name: 'orders.update',
+    name: PERMISSIONS.ORDERS_UPDATE,
     displayName: 'Update Orders',
     description: 'Can update order status and details',
     category: PermissionCategory.ORDERS,
   },
   {
-    name: 'orders.cancel',
+    name: PERMISSIONS.ORDERS_CANCEL,
     displayName: 'Cancel Orders',
     description: 'Can cancel orders',
     category: PermissionCategory.ORDERS,
@@ -107,19 +119,19 @@ export const permissionsData = [
 
   // CUSTOMERS
   {
-    name: 'customers.view',
+    name: PERMISSIONS.CUSTOMERS_VIEW,
     displayName: 'View Customers',
     description: 'Can view customer accounts',
     category: PermissionCategory.CUSTOMERS,
   },
   {
-    name: 'customers.update',
+    name: PERMISSIONS.CUSTOMERS_UPDATE,
     displayName: 'Update Customers',
     description: 'Can update customer details',
     category: PermissionCategory.CUSTOMERS,
   },
   {
-    name: 'customers.disable',
+    name: PERMISSIONS.CUSTOMERS_DISABLE,
     displayName: 'Disable Customers',
     description: 'Can disable customer accounts',
     category: PermissionCategory.CUSTOMERS,
@@ -127,31 +139,31 @@ export const permissionsData = [
 
   // STAFF
   {
-    name: 'staff.view',
+    name: PERMISSIONS.STAFF_VIEW,
     displayName: 'View Staff',
     description: 'Can view staff accounts',
     category: PermissionCategory.STAFF,
   },
   {
-    name: 'staff.create',
+    name: PERMISSIONS.STAFF_CREATE,
     displayName: 'Create Staff',
     description: 'Can create staff accounts',
     category: PermissionCategory.STAFF,
   },
   {
-    name: 'staff.update',
+    name: PERMISSIONS.STAFF_UPDATE,
     displayName: 'Update Staff',
     description: 'Can update staff accounts',
     category: PermissionCategory.STAFF,
   },
   {
-    name: 'staff.disable',
+    name: PERMISSIONS.STAFF_DISABLE,
     displayName: 'Disable Staff',
     description: 'Can disable staff accounts',
     category: PermissionCategory.STAFF,
   },
   {
-    name: 'staff.permissions',
+    name: PERMISSIONS.STAFF_PERMISSIONS,
     displayName: 'Manage Staff Permissions',
     description: 'Can assign or remove staff permissions',
     category: PermissionCategory.STAFF,
@@ -159,13 +171,13 @@ export const permissionsData = [
 
   // SETTINGS
   {
-    name: 'settings.view',
+    name: PERMISSIONS.SETTINGS_VIEW,
     displayName: 'View Settings',
     description: 'Can view platform settings',
     category: PermissionCategory.SETTINGS,
   },
   {
-    name: 'settings.update',
+    name: PERMISSIONS.SETTINGS_UPDATE,
     displayName: 'Update Settings',
     description: 'Can update platform settings',
     category: PermissionCategory.SETTINGS,
@@ -173,12 +185,12 @@ export const permissionsData = [
 
   // ANALYTICS
   {
-    name: 'analytics.view',
+    name: PERMISSIONS.ANALYTICS_VIEW,
     displayName: 'View Analytics',
     description: 'Can view dashboard analytics',
     category: PermissionCategory.ANALYTICS,
   },
-];
+] satisfies PermissionSeed[];
 
 export async function seedPermissions(prisma: PrismaClient) {
   console.log('📝 Creating permissions...');
@@ -186,8 +198,7 @@ export async function seedPermissions(prisma: PrismaClient) {
   for (const permission of permissionsData) {
     await prisma.permission.upsert({
       where: { name: permission.name },
-      update: {      
-         
+      update: {
         displayName: permission.displayName,
         description: permission.description,
         category: permission.category,
