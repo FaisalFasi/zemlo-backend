@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
 
 export class AdminBrandProductSummaryResponseDto {
@@ -30,22 +30,22 @@ export class AdminBrandResponseDto {
   @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   logo: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   website: string | null;
 
   @ApiProperty({ type: Boolean })
   isActive: boolean;
 
-  @ApiPropertyOptional({ type: [AdminBrandProductSummaryResponseDto] })
+  @ApiProperty({ type: [AdminBrandProductSummaryResponseDto] })
   products?: AdminBrandProductSummaryResponseDto[];
 
-  @ApiPropertyOptional({ type: AdminBrandCountResponseDto })
+  @ApiProperty({ type: AdminBrandCountResponseDto })
   _count?: AdminBrandCountResponseDto;
 
   @ApiProperty({ type: Date })

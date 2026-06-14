@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ProductVariantResponseDto {
   @ApiProperty({ type: String })
@@ -10,16 +10,16 @@ export class ProductVariantResponseDto {
   @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   price: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   costPrice: number | null;
 
   @ApiProperty({ type: Number })
@@ -34,7 +34,7 @@ export class ProductVariantResponseDto {
   @ApiProperty({ type: Boolean })
   isActive: boolean;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   image: string | null;
 
   @ApiProperty({

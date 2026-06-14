@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
 
 export class AdminCategoryParentResponseDto {
@@ -58,10 +58,10 @@ export class AdminCategoryResponseDto {
   @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   image: string | null;
 
   @ApiProperty({ type: Boolean })
@@ -70,19 +70,19 @@ export class AdminCategoryResponseDto {
   @ApiProperty({ type: Number })
   position: number;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   parentId: string | null;
 
-  @ApiPropertyOptional({ type: AdminCategoryParentResponseDto, nullable: true })
+  @ApiProperty({ type: AdminCategoryParentResponseDto, nullable: true })
   parent?: AdminCategoryParentResponseDto | null;
 
   @ApiProperty({ type: [AdminCategoryChildResponseDto] })
   children?: AdminCategoryChildResponseDto[];
 
-  @ApiPropertyOptional({ type: [AdminCategoryProductSummaryResponseDto] })
+  @ApiProperty({ type: [AdminCategoryProductSummaryResponseDto] })
   products?: AdminCategoryProductSummaryResponseDto[];
 
-  @ApiPropertyOptional({ type: AdminCategoryCountResponseDto })
+  @ApiProperty({ type: AdminCategoryCountResponseDto })
   _count?: AdminCategoryCountResponseDto;
 
   @ApiProperty({ type: Date })

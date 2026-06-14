@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class PlatformSettingsResponseDto {
   @ApiProperty({ type: String })
@@ -7,19 +7,19 @@ export class PlatformSettingsResponseDto {
   @ApiProperty({ type: String })
   storeName: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   storeEmail: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   storeLogoUrl: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   storeFaviconUrl: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   supportPhone: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   supportWhatsapp: string | null;
 
   @ApiProperty({ type: String })
@@ -31,7 +31,7 @@ export class PlatformSettingsResponseDto {
   @ApiProperty({ type: Boolean })
   announcementEnabled: boolean;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   announcementText: string | null;
 
   @ApiProperty({ type: Boolean })
@@ -64,28 +64,28 @@ export class PlatformSettingsResponseDto {
   @ApiProperty({ type: Number })
   defaultShippingCost: number;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   freeShippingOver: number | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   instagramUrl: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   facebookUrl: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   tiktokUrl: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   youtubeUrl: string | null;
 
   @ApiProperty({ type: Boolean })
   maintenanceMode: boolean;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   maintenanceMessage: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   updatedBy: string | null;
 
   @ApiProperty({ type: Date })

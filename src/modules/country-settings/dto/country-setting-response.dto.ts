@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CountrySettingResponseDto {
   @ApiProperty({ type: String })
@@ -10,13 +10,13 @@ export class CountrySettingResponseDto {
   @ApiProperty({ type: String })
   iso2: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   iso3: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   currency: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   phoneCode: string | null;
 
   @ApiProperty({ type: Boolean })
