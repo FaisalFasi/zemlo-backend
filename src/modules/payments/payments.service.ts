@@ -12,8 +12,6 @@ import {
 } from '@prisma/client';
 import { OrderInventoryLifecycleService } from '../orders/services/order-inventory-lifecycle.service';
 
-import { CheckoutInventoryService } from '../checkout/services/checkout-inventory.service';
-
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateStripePaymentIntentDto } from './dto';
 import {
@@ -129,11 +127,11 @@ export class PaymentsService {
         return this.handlePaymentIntentSucceeded(event.paymentIntent);
       }
 
-      if (event.type === 'payment_intent.canceled') {
-        return this.handlePaymentIntentCanceled(event.paymentIntent);
-      }
       if (event.type === 'payment_intent.payment_failed') {
         return this.handlePaymentIntentFailed(event.paymentIntent);
+      }
+      if (event.type === 'payment_intent.canceled') {
+        return this.handlePaymentIntentCanceled(event.paymentIntent);
       }
     }
 
@@ -326,21 +324,6 @@ export class PaymentsService {
       paymentStatus: PaymentStatus.FAILED,
     };
   }
-
-  private toStripePaymentIntentSnapshot(
-    paymentIntent: StripeWebhookPaymentIntent,
-  ): Prisma.InputJsonObject {
-    return {
-      id: paymentIntent.id,
-      object: paymentIntent.object,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      status: paymentIntent.status,
-      paymentMethod: paymentIntent.paymentMethod,
-      latestCharge: paymentIntent.latestCharge,
-      metadata: paymentIntent.metadata,
-    };
-  }
   private async handlePaymentIntentCanceled(
     paymentIntent: StripeWebhookPaymentIntent,
   ) {
@@ -409,6 +392,21 @@ export class PaymentsService {
       received: true,
       paymentStatus: PaymentStatus.CANCELLED,
       orderStatus: OrderStatus.CANCELLED,
+    };
+  }
+
+  private toStripePaymentIntentSnapshot(
+    paymentIntent: StripeWebhookPaymentIntent,
+  ): Prisma.InputJsonObject {
+    return {
+      id: paymentIntent.id,
+      object: paymentIntent.object,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+      status: paymentIntent.status,
+      paymentMethod: paymentIntent.paymentMethod,
+      latestCharge: paymentIntent.latestCharge,
+      metadata: paymentIntent.metadata,
     };
   }
 }

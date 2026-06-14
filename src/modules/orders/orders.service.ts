@@ -12,8 +12,6 @@ import {
 } from '@prisma/client';
 import { OrderInventoryLifecycleService } from './services/order-inventory-lifecycle.service';
 
-import { CheckoutInventoryService } from '../checkout/services/checkout-inventory.service';
-
 import { toNumber } from '../../common/utils/decimal.util';
 import { PrismaService } from '../../prisma/prisma.service';
 import {

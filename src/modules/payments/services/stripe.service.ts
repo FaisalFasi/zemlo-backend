@@ -89,6 +89,25 @@ export class StripeService {
     };
   }
 
+  async cancelPaymentIntent(
+    paymentIntentId: string,
+  ): Promise<StripePaymentIntentResult> {
+    const stripeClient = this.getStripeClient();
+
+    const paymentIntent = await stripeClient.paymentIntents.cancel(
+      paymentIntentId,
+      {
+        cancellation_reason: 'abandoned',
+      },
+    );
+
+    return {
+      id: paymentIntent.id,
+      clientSecret: paymentIntent.client_secret,
+      status: paymentIntent.status,
+    };
+  }
+
   constructWebhookEvent(params: {
     rawBody: Buffer;
     signature: string;
@@ -224,19 +243,5 @@ export class StripeService {
     }
 
     return Object.values(value).every((item) => typeof item === 'string');
-  }
-
-  async cancelPaymentIntent(
-    paymentIntentId: string,
-  ): Promise<StripePaymentIntentResult> {
-    const stripeClient = this.getStripeClient();
-    const paymentIntent =
-      await stripeClient.paymentIntents.cancel(paymentIntentId);
-
-    return {
-      id: paymentIntent.id,
-      clientSecret: paymentIntent.client_secret,
-      status: paymentIntent.status,
-    };
   }
 }
