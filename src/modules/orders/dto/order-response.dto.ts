@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   AddressType,
   FulfillmentStatus,
+  OrderInventoryStatus,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
@@ -244,6 +245,21 @@ export class OrderSummaryResponseDto {
 
   @ApiProperty({ enum: FulfillmentStatus })
   fulfillmentStatus: FulfillmentStatus;
+
+  @ApiProperty({ enum: OrderInventoryStatus, enumName: 'OrderInventoryStatus' })
+  inventoryStatus: OrderInventoryStatus;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryReservedAt: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryCommittedAt: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryReleasedAt: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryExpiresAt: Date | null;
 
   @ApiProperty({ type: Number })
   subtotal: number;

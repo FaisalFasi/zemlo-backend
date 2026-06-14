@@ -1,5 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { FulfillmentStatus, OrderStatus, PaymentStatus } from '@prisma/client';
+import {
+  FulfillmentStatus,
+  OrderInventoryStatus,
+  OrderStatus,
+  PaymentStatus,
+} from '@prisma/client';
 import type { PrismaTransactionClient } from '../../../common/types/prisma-transaction.type';
 import { generateOrderNumber } from '../helpers/checkout-order.helper';
 import {
@@ -36,6 +41,9 @@ export class CheckoutOrderService {
 
     const guestDetails = isGuest ? this.getGuestDetails(dto) : null;
 
+    const now = new Date();
+    const inventoryExpiresAt = new Date(now.getTime() + 60 * 60 * 1000);
+
     const order = await tx.order.create({
       data: {
         orderNumber: generateOrderNumber(),
@@ -56,6 +64,10 @@ export class CheckoutOrderService {
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.PENDING,
         fulfillmentStatus: FulfillmentStatus.UNFULFILLED,
+
+        inventoryStatus: OrderInventoryStatus.RESERVED,
+        inventoryReservedAt: now,
+        inventoryExpiresAt,
 
         shippingAddressId,
         billingAddressId,

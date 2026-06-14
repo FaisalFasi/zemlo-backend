@@ -4,11 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  OrderInventoryStatus,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
   Prisma,
 } from '@prisma/client';
+import { CheckoutInventoryService } from '../checkout/services/checkout-inventory.service';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateStripePaymentIntentDto } from './dto';
@@ -22,6 +24,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripeService: StripeService,
+    private readonly checkoutInventoryService: CheckoutInventoryService,
   ) {}
 
   async createStripePaymentIntent(dto: CreateStripePaymentIntentDto) {
@@ -161,6 +164,11 @@ export class PaymentsService {
         message: 'Payment already marked as paid',
       };
     }
+    if (payment.order.inventoryStatus === OrderInventoryStatus.RELEASED) {
+      throw new BadRequestException(
+        'Cannot mark payment as paid because order inventory was already released',
+      );
+    }
 
     await this.prisma.$transaction(async (tx) => {
       await tx.payment.update({
@@ -181,6 +189,8 @@ export class PaymentsService {
         data: {
           paymentStatus: PaymentStatus.PAID,
           status: OrderStatus.CONFIRMED,
+          inventoryStatus: OrderInventoryStatus.COMMITTED,
+          inventoryCommittedAt: new Date(),
         },
       });
 
@@ -227,23 +237,47 @@ export class PaymentsService {
         data: {
           status: PaymentStatus.FAILED,
           gatewayResponse: this.toStripePaymentIntentSnapshot(paymentIntent),
+          failedAt: new Date(),
         },
       });
 
-      await tx.order.update({
+      const releaseMarker = await tx.order.updateMany({
         where: {
           id: payment.orderId,
+          inventoryStatus: OrderInventoryStatus.RESERVED,
         },
         data: {
           paymentStatus: PaymentStatus.FAILED,
+          status: OrderStatus.CANCELLED,
+          inventoryStatus: OrderInventoryStatus.RELEASED,
+          inventoryReleasedAt: new Date(),
         },
       });
+
+      if (releaseMarker.count > 0) {
+        await this.checkoutInventoryService.releaseOrderStock(
+          tx,
+          payment.orderId,
+        );
+      } else {
+        await tx.order.update({
+          where: {
+            id: payment.orderId,
+          },
+          data: {
+            paymentStatus: PaymentStatus.FAILED,
+          },
+        });
+      }
 
       await tx.orderStatusHistory.create({
         data: {
           orderId: payment.orderId,
-          status: payment.order.status,
-          note: 'Payment failed via Stripe',
+          status: OrderStatus.CANCELLED,
+          note:
+            releaseMarker.count > 0
+              ? 'Payment failed via Stripe. Reserved stock was released.'
+              : 'Payment failed via Stripe.',
         },
       });
     });

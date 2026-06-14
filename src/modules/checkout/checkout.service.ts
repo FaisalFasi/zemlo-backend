@@ -194,7 +194,7 @@ export class CheckoutService {
       });
 
     for (const line of lines) {
-      await this.inventoryService.decreaseStock(tx, line);
+      await this.inventoryService.reserveStock(tx, line);
     }
 
     const { order, payment } =
@@ -219,6 +219,13 @@ export class CheckoutService {
         status: order.status,
         paymentStatus: order.paymentStatus,
         fulfillmentStatus: order.fulfillmentStatus,
+
+        inventoryStatus: order.inventoryStatus,
+        inventoryReservedAt: order.inventoryReservedAt,
+        inventoryCommittedAt: order.inventoryCommittedAt,
+        inventoryReleasedAt: order.inventoryReleasedAt,
+        inventoryExpiresAt: order.inventoryExpiresAt,
+
         subtotal: totals.subtotal,
         tax: totals.tax,
         shippingCost: totals.shippingCost,

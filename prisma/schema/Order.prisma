@@ -14,6 +14,12 @@ model Order {
   paymentStatus     PaymentStatus     @default(PENDING)
   fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
 
+  inventoryStatus      OrderInventoryStatus @default(RESERVED)
+  inventoryReservedAt  DateTime?
+  inventoryCommittedAt DateTime?
+  inventoryReleasedAt  DateTime?
+  inventoryExpiresAt   DateTime?
+
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -100,6 +106,12 @@ model OrderStatusHistory {
   @@index([orderId])
   @@index([status])
   @@map("order_status_history")
+}
+
+enum OrderInventoryStatus {
+  RESERVED
+  COMMITTED
+  RELEASED
 }
 
 enum OrderStatus {

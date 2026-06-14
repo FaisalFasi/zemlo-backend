@@ -5,9 +5,10 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { StripeService } from './services/stripe.service';
+import { CheckoutModule } from '../checkout/checkout.module';
 
 @Module({
-  imports: [ConfigModule, PrismaModule],
+  imports: [ConfigModule, PrismaModule, CheckoutModule],
   controllers: [PaymentsController],
   providers: [PaymentsService, StripeService],
   exports: [PaymentsService],

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   FulfillmentStatus,
+  OrderInventoryStatus,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
@@ -65,6 +66,21 @@ export class CheckoutOrderResponseDto {
 
   @ApiProperty({ type: () => [CheckoutOrderItemResponseDto] })
   items: CheckoutOrderItemResponseDto[];
+
+  @ApiProperty({ enum: OrderInventoryStatus, enumName: 'OrderInventoryStatus' })
+  inventoryStatus: OrderInventoryStatus;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryReservedAt: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryCommittedAt: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryReleasedAt: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  inventoryExpiresAt: Date | null;
 }
 
 export class CheckoutPaymentResponseDto {

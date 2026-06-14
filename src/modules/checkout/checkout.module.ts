@@ -21,6 +21,6 @@ import { CheckoutAvailabilityService } from './services/checkout.availability.se
     CheckoutOrderService,
     CheckoutAvailabilityService,
   ],
-  exports: [CheckoutService],
+  exports: [CheckoutService, CheckoutInventoryService],
 })
 export class CheckoutModule {}

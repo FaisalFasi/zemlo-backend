@@ -1846,6 +1846,14 @@
           "totalPrice"
         ]
       },
+      "OrderInventoryStatus": {
+        "type": "string",
+        "enum": [
+          "RESERVED",
+          "COMMITTED",
+          "RELEASED"
+        ]
+      },
       "CheckoutOrderResponseDto": {
         "type": "object",
         "properties": {
@@ -1896,6 +1904,33 @@
             "items": {
               "$ref": "#/components/schemas/CheckoutOrderItemResponseDto"
             }
+          },
+          "inventoryStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderInventoryStatus"
+              }
+            ]
+          },
+          "inventoryReservedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryCommittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryReleasedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryExpiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -1909,7 +1944,12 @@
           "shippingCost",
           "discount",
           "total",
-          "items"
+          "items",
+          "inventoryStatus",
+          "inventoryReservedAt",
+          "inventoryCommittedAt",
+          "inventoryReleasedAt",
+          "inventoryExpiresAt"
         ]
       },
       "PaymentMethod": {
@@ -3274,6 +3314,33 @@
               "FULFILLED"
             ]
           },
+          "inventoryStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderInventoryStatus"
+              }
+            ]
+          },
+          "inventoryReservedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryCommittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryReleasedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryExpiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
           "subtotal": {
             "type": "number"
           },
@@ -3369,6 +3436,11 @@
           "status",
           "paymentStatus",
           "fulfillmentStatus",
+          "inventoryStatus",
+          "inventoryReservedAt",
+          "inventoryCommittedAt",
+          "inventoryReleasedAt",
+          "inventoryExpiresAt",
           "subtotal",
           "tax",
           "shippingCost",
@@ -3601,6 +3673,33 @@
               "FULFILLED"
             ]
           },
+          "inventoryStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderInventoryStatus"
+              }
+            ]
+          },
+          "inventoryReservedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryCommittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryReleasedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryExpiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
           "subtotal": {
             "type": "number"
           },
@@ -3729,6 +3828,11 @@
           "status",
           "paymentStatus",
           "fulfillmentStatus",
+          "inventoryStatus",
+          "inventoryReservedAt",
+          "inventoryCommittedAt",
+          "inventoryReleasedAt",
+          "inventoryExpiresAt",
           "subtotal",
           "tax",
           "shippingCost",

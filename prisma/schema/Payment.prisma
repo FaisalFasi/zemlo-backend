@@ -19,6 +19,9 @@ model Payment {
   updatedAt DateTime  @updatedAt
   paidAt    DateTime?
 
+  failedAt   DateTime?
+  refundedAt DateTime?
+
   @@index([orderId])
   @@index([transactionId])
   @@index([paymentIntentId])

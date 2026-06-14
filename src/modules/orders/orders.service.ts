@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import {
   FulfillmentStatus,
+  OrderInventoryStatus,
   OrderStatus,
   PaymentStatus,
   Prisma,
 } from '@prisma/client';
+import { CheckoutInventoryService } from '../checkout/services/checkout-inventory.service';
 
 import { toNumber } from '../../common/utils/decimal.util';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -30,8 +32,10 @@ type PaymentResponseSource = NonNullable<OrderResponseSource['payment']>;
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
-
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly checkoutInventoryService: CheckoutInventoryService,
+  ) {}
   async findMyOrders(userId: string) {
     const orders = await this.prisma.order.findMany({
       where: {
@@ -148,6 +152,9 @@ export class OrdersService {
         status?: OrderStatus;
         paymentStatus?: PaymentStatus;
         fulfillmentStatus?: FulfillmentStatus;
+        inventoryStatus?: OrderInventoryStatus;
+        inventoryReleasedAt?: Date;
+        inventoryCommittedAt?: Date;
         paidAt?: Date | null;
         cancelledAt?: Date;
         completedAt?: Date;
@@ -173,6 +180,8 @@ export class OrdersService {
         if (dto.paymentStatus === PaymentStatus.PAID) {
           const now = new Date();
           updateData.paidAt = now;
+          updateData.inventoryStatus = OrderInventoryStatus.COMMITTED;
+          updateData.inventoryCommittedAt = now;
           paymentPaidAt = now;
         }
 
@@ -190,12 +199,35 @@ export class OrdersService {
         updateData.fulfillmentStatus = dto.fulfillmentStatus;
       }
 
-      await tx.order.update({
-        where: {
-          id,
-        },
-        data: updateData,
-      });
+      const shouldReleaseReservedInventory =
+        dto.status === OrderStatus.CANCELLED &&
+        existingOrder.inventoryStatus === OrderInventoryStatus.RESERVED;
+
+      if (shouldReleaseReservedInventory) {
+        const releaseMarker = await tx.order.updateMany({
+          where: {
+            id,
+            inventoryStatus: OrderInventoryStatus.RESERVED,
+          },
+          data: {
+            ...updateData,
+            inventoryStatus: OrderInventoryStatus.RELEASED,
+            inventoryReleasedAt: new Date(),
+            cancelledAt: updateData.cancelledAt ?? new Date(),
+          },
+        });
+
+        if (releaseMarker.count > 0) {
+          await this.checkoutInventoryService.releaseOrderStock(tx, id);
+        }
+      } else {
+        await tx.order.update({
+          where: {
+            id,
+          },
+          data: updateData,
+        });
+      }
 
       if (dto.paymentStatus !== undefined) {
         await tx.payment.updateMany({
