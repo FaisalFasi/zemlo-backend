@@ -1617,28 +1617,6 @@
           "Payments"
         ]
       }
-    },
-    "/payments/stripe/webhook": {
-      "post": {
-        "operationId": "PaymentsController_handleStripeWebhook",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Stripe webhook event processed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeWebhookResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Stripe webhook endpoint",
-        "tags": [
-          "Payments"
-        ]
-      }
     }
   },
   "info": {
@@ -1829,9 +1807,6 @@
       "CheckoutOrderItemResponseDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
           "productId": {
             "type": "string"
           },
@@ -1858,16 +1833,14 @@
           },
           "totalPrice": {
             "type": "number"
-          },
-          "productSnapshot": {
-            "type": "object",
-            "nullable": true
           }
         },
         "required": [
-          "id",
           "productId",
+          "variantId",
           "productName",
+          "variantName",
+          "sku",
           "quantity",
           "unitPrice",
           "totalPrice"
@@ -1993,7 +1966,9 @@
           "method",
           "status",
           "amount",
-          "currency"
+          "currency",
+          "paymentIntentId",
+          "clientSecret"
         ]
       },
       "CheckoutResponseDto": {
@@ -2136,9 +2111,15 @@
         "required": [
           "id",
           "storeName",
+          "storeEmail",
+          "storeLogoUrl",
+          "storeFaviconUrl",
+          "supportPhone",
+          "supportWhatsapp",
           "homepageTitle",
           "homepageDescription",
           "announcementEnabled",
+          "announcementText",
           "allowGuestCheckout",
           "allowAccountRegistration",
           "requireEmailVerification",
@@ -2149,7 +2130,14 @@
           "currency",
           "taxRate",
           "defaultShippingCost",
+          "freeShippingOver",
+          "instagramUrl",
+          "facebookUrl",
+          "tiktokUrl",
+          "youtubeUrl",
           "maintenanceMode",
+          "maintenanceMessage",
+          "updatedBy",
           "createdAt",
           "updatedAt"
         ]
@@ -2209,6 +2197,9 @@
           "id",
           "name",
           "iso2",
+          "iso3",
+          "currency",
+          "phoneCode",
           "isActive",
           "allowWebsiteAccess",
           "allowCheckout",
@@ -2285,9 +2276,13 @@
           "id",
           "method",
           "label",
+          "description",
           "isEnabled",
           "isOnline",
+          "minAmount",
+          "maxAmount",
           "sortOrder",
+          "metadata",
           "createdAt",
           "updatedAt"
         ]
@@ -2365,6 +2360,7 @@
           "id",
           "productId",
           "url",
+          "altText",
           "position",
           "isDefault",
           "createdAt",
@@ -2427,9 +2423,13 @@
           "id",
           "productId",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
+          "image",
           "options",
           "isActive",
           "createdAt",
@@ -2574,7 +2574,12 @@
           "id",
           "name",
           "slug",
+          "description",
+          "shortDescription",
+          "sku",
           "price",
+          "compareAtPrice",
+          "costPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
@@ -2582,8 +2587,17 @@
           "status",
           "isFeatured",
           "categoryId",
+          "brandId",
+          "weight",
+          "length",
+          "width",
+          "height",
           "keywords",
+          "metaTitle",
+          "metaDescription",
+          "publishedAt",
           "category",
+          "brand",
           "images",
           "variants",
           "createdAt",
@@ -2625,6 +2639,7 @@
           "id",
           "productId",
           "url",
+          "altText",
           "position",
           "isDefault",
           "createdAt",
@@ -2692,10 +2707,15 @@
           "id",
           "productId",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
+          "costPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "isActive",
+          "image",
           "options",
           "createdAt",
           "updatedAt"
@@ -2854,9 +2874,15 @@
           "id",
           "name",
           "slug",
+          "description",
+          "image",
           "isActive",
           "position",
+          "parentId",
+          "parent",
           "children",
+          "products",
+          "_count",
           "createdAt",
           "updatedAt"
         ]
@@ -2950,7 +2976,12 @@
           "id",
           "name",
           "slug",
+          "description",
+          "logo",
+          "website",
           "isActive",
+          "products",
+          "_count",
           "createdAt",
           "updatedAt"
         ]
@@ -2975,7 +3006,8 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "sku"
         ]
       },
       "OrderVariantSummaryResponseDto": {
@@ -2994,7 +3026,8 @@
         },
         "required": [
           "id",
-          "name"
+          "name",
+          "sku"
         ]
       },
       "OrderItemResponseDto": {
@@ -3068,10 +3101,16 @@
           "id",
           "orderId",
           "productId",
+          "variantId",
           "productName",
+          "variantName",
+          "sku",
           "quantity",
           "unitPrice",
           "totalPrice",
+          "productSnapshot",
+          "product",
+          "variant",
           "createdAt",
           "updatedAt"
         ]
@@ -3164,6 +3203,14 @@
           "status",
           "amount",
           "currency",
+          "transactionId",
+          "paymentIntentId",
+          "paidAt",
+          "failedAt",
+          "refundedAt",
+          "failureReason",
+          "gatewayResponse",
+          "metadata",
           "createdAt",
           "updatedAt"
         ]
@@ -3314,6 +3361,11 @@
         "required": [
           "id",
           "orderNumber",
+          "userId",
+          "guestEmail",
+          "guestPhone",
+          "guestFirstName",
+          "guestLastName",
           "status",
           "paymentStatus",
           "fulfillmentStatus",
@@ -3322,7 +3374,18 @@
           "shippingCost",
           "discount",
           "total",
+          "customerNote",
+          "shippingMethod",
+          "shippingCarrier",
+          "trackingNumber",
+          "trackingUrl",
+          "paidAt",
+          "cancelledAt",
+          "completedAt",
+          "estimatedDelivery",
+          "actualDelivery",
           "items",
+          "payment",
           "createdAt",
           "updatedAt"
         ]
@@ -3361,6 +3424,7 @@
           "email",
           "firstName",
           "lastName",
+          "phone",
           "role"
         ]
       },
@@ -3426,6 +3490,7 @@
           "lastName",
           "phone",
           "street",
+          "apartment",
           "city",
           "state",
           "zipCode",
@@ -3472,6 +3537,8 @@
           "id",
           "orderId",
           "status",
+          "note",
+          "changedBy",
           "createdAt"
         ]
       },
@@ -3654,6 +3721,11 @@
         "required": [
           "id",
           "orderNumber",
+          "userId",
+          "guestEmail",
+          "guestPhone",
+          "guestFirstName",
+          "guestLastName",
           "status",
           "paymentStatus",
           "fulfillmentStatus",
@@ -3662,9 +3734,23 @@
           "shippingCost",
           "discount",
           "total",
+          "customerNote",
+          "shippingMethod",
+          "shippingCarrier",
+          "trackingNumber",
+          "trackingUrl",
+          "paidAt",
+          "cancelledAt",
+          "completedAt",
+          "estimatedDelivery",
+          "actualDelivery",
           "items",
+          "payment",
           "createdAt",
           "updatedAt",
+          "user",
+          "shippingAddress",
+          "billingAddress",
           "statusHistory"
         ]
       },
@@ -3707,7 +3793,8 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "logo"
         ]
       },
       "PublicProductImageResponseDto": {
@@ -3733,6 +3820,7 @@
         "required": [
           "id",
           "url",
+          "altText",
           "position",
           "isDefault"
         ]
@@ -3779,9 +3867,13 @@
         "required": [
           "id",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
+          "image",
           "options"
         ]
       },
@@ -3866,14 +3958,19 @@
           "id",
           "name",
           "slug",
+          "shortDescription",
           "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "hasVariants",
           "isFeatured",
           "keywords",
+          "metaTitle",
+          "metaDescription",
           "category",
+          "brand",
           "images",
           "variants"
         ]
@@ -3906,7 +4003,10 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "logo",
+          "description",
+          "website"
         ]
       },
       "PublicProductDetailResponseDto": {
@@ -4014,14 +4114,25 @@
           "id",
           "name",
           "slug",
+          "description",
+          "shortDescription",
+          "sku",
           "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "hasVariants",
           "isFeatured",
+          "weight",
+          "length",
+          "width",
+          "height",
           "keywords",
+          "metaTitle",
+          "metaDescription",
           "category",
+          "brand",
           "images",
           "variants"
         ]
@@ -4054,7 +4165,10 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "description",
+          "image",
+          "parentId"
         ]
       },
       "PublicCategoryResponseDto": {
@@ -4092,6 +4206,9 @@
           "id",
           "name",
           "slug",
+          "description",
+          "image",
+          "parentId",
           "children"
         ]
       },
@@ -4123,7 +4240,10 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "description",
+          "logo",
+          "website"
         ]
       },
       "PublicStoreResponseDto": {
@@ -4154,7 +4274,12 @@
           }
         },
         "required": [
-          "name"
+          "name",
+          "email",
+          "logoUrl",
+          "faviconUrl",
+          "supportPhone",
+          "supportWhatsapp"
         ]
       },
       "PublicHomepageResponseDto": {
@@ -4184,7 +4309,8 @@
           }
         },
         "required": [
-          "enabled"
+          "enabled",
+          "text"
         ]
       },
       "PublicFeaturesResponseDto": {
@@ -4238,7 +4364,8 @@
         "required": [
           "currency",
           "taxRate",
-          "defaultShippingCost"
+          "defaultShippingCost",
+          "freeShippingOver"
         ]
       },
       "PublicCountryResponseDto": {
@@ -4321,7 +4448,10 @@
         "required": [
           "method",
           "label",
-          "isOnline"
+          "description",
+          "isOnline",
+          "minAmount",
+          "maxAmount"
         ]
       },
       "PublicSocialResponseDto": {
@@ -4343,7 +4473,13 @@
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "instagramUrl",
+          "facebookUrl",
+          "tiktokUrl",
+          "youtubeUrl"
+        ]
       },
       "PublicSettingsResponseDto": {
         "type": "object",
@@ -4433,7 +4569,8 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "logo"
         ]
       },
       "CartImageResponseDto": {
@@ -4459,6 +4596,7 @@
         "required": [
           "id",
           "url",
+          "altText",
           "position",
           "isDefault"
         ]
@@ -4525,12 +4663,16 @@
           "id",
           "name",
           "slug",
+          "shortDescription",
+          "sku",
           "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "hasVariants",
           "category",
+          "brand",
           "images"
         ]
       },
@@ -4575,9 +4717,13 @@
         "required": [
           "id",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
+          "image",
           "options"
         ]
       },
@@ -4635,12 +4781,14 @@
           "quantity",
           "cartId",
           "productId",
+          "variantId",
           "variantKey",
           "addedAt",
           "updatedAt",
           "unitPrice",
           "lineTotal",
-          "product"
+          "product",
+          "variant"
         ]
       },
       "CartResponseDto": {
@@ -4683,6 +4831,8 @@
         },
         "required": [
           "id",
+          "userId",
+          "guestId",
           "createdAt",
           "updatedAt",
           "items",
@@ -4729,35 +4879,10 @@
           "orderNumber",
           "paymentId",
           "paymentIntentId",
+          "clientSecret",
           "amount",
           "currency",
           "status"
-        ]
-      },
-      "StripeWebhookResponseDto": {
-        "type": "object",
-        "properties": {
-          "received": {
-            "type": "boolean"
-          },
-          "ignored": {
-            "type": "boolean"
-          },
-          "eventType": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "paymentStatus": {
-            "type": "string"
-          },
-          "orderStatus": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "received"
         ]
       }
     }

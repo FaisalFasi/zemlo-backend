@@ -25,16 +25,6 @@ type OpenApiDocument = {
   };
 };
 
-const openapiPath = join(process.cwd(), 'openapi.json');
-const document = JSON.parse(
-  readFileSync(openapiPath, 'utf8'),
-) as OpenApiDocument;
-
-const blockers: string[] = [];
-const warnings: string[] = [];
-
-const allowedNoJsonResponseMethods = new Set(['delete']);
-
 const requiredFrontendSchemas = [
   'AuthSessionResponseDto',
   'CurrentUserResponseDto',
@@ -46,6 +36,27 @@ const requiredFrontendSchemas = [
   'PublicProductDetailResponseDto',
   'AdminProductResponseDto',
 ];
+
+const allowedLooseObjectFields = new Set([
+  'PaymentMethodSettingResponseDto.metadata',
+  'AdminProductVariantResponseDto.options',
+  'ProductVariantResponseDto.options',
+  'OrderItemResponseDto.productSnapshot',
+  'OrderPaymentResponseDto.gatewayResponse',
+  'OrderPaymentResponseDto.metadata',
+  'PublicProductVariantResponseDto.options',
+  'CartVariantResponseDto.options',
+]);
+
+const openapiPath = join(process.cwd(), 'openapi.json');
+const document = JSON.parse(
+  readFileSync(openapiPath, 'utf8'),
+) as OpenApiDocument;
+
+const blockers: string[] = [];
+const warnings: string[] = [];
+
+const allowedNoJsonResponseMethods = new Set(['delete']);
 
 function hasJsonResponse(operation: OpenApiOperation): boolean {
   const responses = operation.responses ?? {};
@@ -142,6 +153,11 @@ function checkLooseObjectFields() {
         !propertySchema.$ref &&
         !propertySchema.allOf
       ) {
+        const fieldKey = `${schemaName}.${propertyName}`;
+
+        if (allowedLooseObjectFields.has(fieldKey)) {
+          continue;
+        }
         warnings.push(
           `${schemaName}.${propertyName} is a loose object. If it is JSON metadata, keep it intentional; otherwise create a nested DTO.`,
         );
