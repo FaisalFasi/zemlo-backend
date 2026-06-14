@@ -1783,7 +1783,7 @@
           "SHIPPED",
           "DELIVERED",
           "CANCELLED",
-          "REFUNDED"
+          "EXPIRED"
         ]
       },
       "PaymentStatus": {
@@ -1792,8 +1792,9 @@
           "PENDING",
           "PAID",
           "FAILED",
-          "REFUNDED",
-          "PARTIALLY_REFUNDED"
+          "CANCELLED",
+          "EXPIRED",
+          "REFUNDED"
         ]
       },
       "FulfillmentStatus": {
@@ -3182,8 +3183,9 @@
               "PENDING",
               "PAID",
               "FAILED",
-              "REFUNDED",
-              "PARTIALLY_REFUNDED"
+              "CANCELLED",
+              "EXPIRED",
+              "REFUNDED"
             ]
           },
           "amount": {
@@ -3293,7 +3295,7 @@
               "SHIPPED",
               "DELIVERED",
               "CANCELLED",
-              "REFUNDED"
+              "EXPIRED"
             ]
           },
           "paymentStatus": {
@@ -3302,8 +3304,9 @@
               "PENDING",
               "PAID",
               "FAILED",
-              "REFUNDED",
-              "PARTIALLY_REFUNDED"
+              "CANCELLED",
+              "EXPIRED",
+              "REFUNDED"
             ]
           },
           "fulfillmentStatus": {
@@ -3589,7 +3592,7 @@
               "SHIPPED",
               "DELIVERED",
               "CANCELLED",
-              "REFUNDED"
+              "EXPIRED"
             ]
           },
           "note": {
@@ -3652,7 +3655,7 @@
               "SHIPPED",
               "DELIVERED",
               "CANCELLED",
-              "REFUNDED"
+              "EXPIRED"
             ]
           },
           "paymentStatus": {
@@ -3661,8 +3664,9 @@
               "PENDING",
               "PAID",
               "FAILED",
-              "REFUNDED",
-              "PARTIALLY_REFUNDED"
+              "CANCELLED",
+              "EXPIRED",
+              "REFUNDED"
             ]
           },
           "fulfillmentStatus": {

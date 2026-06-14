@@ -44,8 +44,10 @@ model Order {
   customerNote String? @db.Text
   internalNote String? @db.Text
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiredAt DateTime?
+
   paidAt      DateTime?
   cancelledAt DateTime?
   completedAt DateTime?
@@ -60,6 +62,8 @@ model Order {
   @@index([paymentStatus])
   @@index([fulfillmentStatus])
   @@index([createdAt])
+  @@index([inventoryStatus])
+  @@index([inventoryExpiresAt])
   @@map("orders")
 }
 
@@ -121,15 +125,16 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
-  REFUNDED
+  EXPIRED
 }
 
 enum PaymentStatus {
   PENDING
   PAID
   FAILED
+  CANCELLED
+  EXPIRED
   REFUNDED
-  PARTIALLY_REFUNDED
 }
 
 enum FulfillmentStatus {

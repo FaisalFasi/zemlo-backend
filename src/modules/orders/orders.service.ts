@@ -10,6 +10,8 @@ import {
   PaymentStatus,
   Prisma,
 } from '@prisma/client';
+import { OrderInventoryLifecycleService } from './services/order-inventory-lifecycle.service';
+
 import { CheckoutInventoryService } from '../checkout/services/checkout-inventory.service';
 
 import { toNumber } from '../../common/utils/decimal.util';
@@ -34,7 +36,7 @@ type PaymentResponseSource = NonNullable<OrderResponseSource['payment']>;
 export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly checkoutInventoryService: CheckoutInventoryService,
+    private readonly orderInventoryLifecycleService: OrderInventoryLifecycleService,
   ) {}
   async findMyOrders(userId: string) {
     const orders = await this.prisma.order.findMany({
@@ -155,9 +157,11 @@ export class OrdersService {
         inventoryStatus?: OrderInventoryStatus;
         inventoryReleasedAt?: Date;
         inventoryCommittedAt?: Date;
+        inventoryExpiresAt?: Date | null;
         paidAt?: Date | null;
         cancelledAt?: Date;
         completedAt?: Date;
+        expiredAt?: Date;
       } = {};
 
       if (dto.status !== undefined) {
@@ -167,27 +171,54 @@ export class OrdersService {
           updateData.cancelledAt = new Date();
         }
 
+        if (dto.status === OrderStatus.EXPIRED) {
+          updateData.expiredAt = new Date();
+        }
+
         if (dto.status === OrderStatus.DELIVERED) {
           updateData.completedAt = new Date();
         }
       }
 
       let paymentPaidAt: Date | null | undefined = undefined;
+      let paymentCancelledAt: Date | undefined = undefined;
+      let paymentExpiredAt: Date | undefined = undefined;
+      let paymentFailedAt: Date | undefined = undefined;
 
       if (dto.paymentStatus !== undefined) {
         updateData.paymentStatus = dto.paymentStatus;
 
         if (dto.paymentStatus === PaymentStatus.PAID) {
           const now = new Date();
+
           updateData.paidAt = now;
           updateData.inventoryStatus = OrderInventoryStatus.COMMITTED;
           updateData.inventoryCommittedAt = now;
+          updateData.inventoryExpiresAt = null;
+
           paymentPaidAt = now;
+        }
+
+        if (dto.paymentStatus === PaymentStatus.FAILED) {
+          updateData.paidAt = null;
+          paymentPaidAt = null;
+          paymentFailedAt = new Date();
+        }
+
+        if (dto.paymentStatus === PaymentStatus.CANCELLED) {
+          updateData.paidAt = null;
+          paymentPaidAt = null;
+          paymentCancelledAt = new Date();
+        }
+
+        if (dto.paymentStatus === PaymentStatus.EXPIRED) {
+          updateData.paidAt = null;
+          paymentPaidAt = null;
+          paymentExpiredAt = new Date();
         }
 
         if (
           dto.paymentStatus === PaymentStatus.PENDING ||
-          dto.paymentStatus === PaymentStatus.FAILED ||
           dto.paymentStatus === PaymentStatus.REFUNDED
         ) {
           updateData.paidAt = null;
@@ -204,21 +235,47 @@ export class OrdersService {
         existingOrder.inventoryStatus === OrderInventoryStatus.RESERVED;
 
       if (shouldReleaseReservedInventory) {
-        const releaseMarker = await tx.order.updateMany({
-          where: {
-            id,
-            inventoryStatus: OrderInventoryStatus.RESERVED,
-          },
-          data: {
-            ...updateData,
-            inventoryStatus: OrderInventoryStatus.RELEASED,
-            inventoryReleasedAt: new Date(),
-            cancelledAt: updateData.cancelledAt ?? new Date(),
-          },
-        });
+        const releasePaymentStatus =
+          existingOrder.paymentStatus === PaymentStatus.PENDING
+            ? PaymentStatus.CANCELLED
+            : undefined;
 
-        if (releaseMarker.count > 0) {
-          await this.checkoutInventoryService.releaseOrderStock(tx, id);
+        const released =
+          await this.orderInventoryLifecycleService.releaseReservedInventory(
+            tx,
+            {
+              orderId: id,
+              orderStatus: OrderStatus.CANCELLED,
+              paymentStatus: releasePaymentStatus,
+              note:
+                dto.note?.trim() ||
+                'Order cancelled by admin. Reserved stock was released.',
+              changedBy: adminUserId,
+              releasedAt: new Date(),
+            },
+          );
+
+        if (!released) {
+          await tx.order.update({
+            where: {
+              id,
+            },
+            data: updateData,
+          });
+        }
+
+        if (released && releasePaymentStatus) {
+          await tx.payment.updateMany({
+            where: {
+              orderId: id,
+              status: PaymentStatus.PENDING,
+            },
+            data: {
+              status: releasePaymentStatus,
+              paidAt: null,
+              cancelledAt: new Date(),
+            },
+          });
         }
       } else {
         await tx.order.update({
@@ -237,11 +294,26 @@ export class OrdersService {
           data: {
             status: dto.paymentStatus,
             paidAt: paymentPaidAt,
+            ...(paymentFailedAt
+              ? {
+                  failedAt: paymentFailedAt,
+                }
+              : {}),
+            ...(paymentCancelledAt
+              ? {
+                  cancelledAt: paymentCancelledAt,
+                }
+              : {}),
+            ...(paymentExpiredAt
+              ? {
+                  expiredAt: paymentExpiredAt,
+                }
+              : {}),
           },
         });
       }
 
-      if (dto.status !== undefined) {
+      if (dto.status !== undefined && !shouldReleaseReservedInventory) {
         await tx.orderStatusHistory.create({
           data: {
             orderId: id,
@@ -249,6 +321,16 @@ export class OrdersService {
             note: dto.note?.trim() || 'Order status updated by admin',
             changedBy: adminUserId,
           },
+        });
+      }
+
+      if (
+        dto.paymentStatus === PaymentStatus.PAID &&
+        existingOrder.inventoryStatus === OrderInventoryStatus.RESERVED
+      ) {
+        await this.orderInventoryLifecycleService.commitReservedInventory(tx, {
+          orderId: id,
+          committedAt: updateData.inventoryCommittedAt ?? new Date(),
         });
       }
 

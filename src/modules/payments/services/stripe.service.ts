@@ -21,7 +21,10 @@ export type StripeWebhookPaymentIntent = {
 
 export type StripePaymentIntentWebhookEvent = {
   kind: 'paymentIntent';
-  type: 'payment_intent.succeeded' | 'payment_intent.payment_failed';
+  type:
+    | 'payment_intent.succeeded'
+    | 'payment_intent.payment_failed'
+    | 'payment_intent.canceled';
   paymentIntent: StripeWebhookPaymentIntent;
 };
 
@@ -145,7 +148,8 @@ export class StripeService {
   ): eventType is StripePaymentIntentWebhookEvent['type'] {
     return (
       eventType === 'payment_intent.succeeded' ||
-      eventType === 'payment_intent.payment_failed'
+      eventType === 'payment_intent.payment_failed' ||
+      eventType === 'payment_intent.canceled'
     );
   }
 
@@ -220,5 +224,19 @@ export class StripeService {
     }
 
     return Object.values(value).every((item) => typeof item === 'string');
+  }
+
+  async cancelPaymentIntent(
+    paymentIntentId: string,
+  ): Promise<StripePaymentIntentResult> {
+    const stripeClient = this.getStripeClient();
+    const paymentIntent =
+      await stripeClient.paymentIntents.cancel(paymentIntentId);
+
+    return {
+      id: paymentIntent.id,
+      clientSecret: paymentIntent.client_secret,
+      status: paymentIntent.status,
+    };
   }
 }
