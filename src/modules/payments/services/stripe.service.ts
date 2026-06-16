@@ -64,6 +64,7 @@ export class StripeService {
       metadata: params.metadata,
       automatic_payment_methods: {
         enabled: true,
+        allow_redirects: 'never',
       },
     });
 
