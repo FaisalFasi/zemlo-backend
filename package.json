@@ -20,6 +20,7 @@
     "swagger:dto:audit": "node scripts/audit-swagger-dtos.cjs",
     "rbac:audit": "tsx scripts/audit-rbac.ts",
     "dto:contract:audit": "tsx scripts/audit-dto-contract.ts",
+    "inventory:audit": "tsx scripts/audit-inventory-lifecycle.ts",
     "inventory:release-expired": "tsx scripts/release-expired-inventory-reservations.ts",
     "verify": "npm run lint && npm run build && npm run rbac:audit && npm run dto:contract:audit && npm run swagger:dto:audit && npm run api:contract:audit && npm run openapi:export && npm run openapi:quality",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
