@@ -167,15 +167,16 @@ export class PaymentsService {
         message: 'Payment already marked as paid',
       };
     }
+
     if (payment.order.inventoryStatus === OrderInventoryStatus.RELEASED) {
       throw new BadRequestException(
         'Cannot mark payment as paid because order inventory was already released',
       );
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      const now = new Date();
+    const now = new Date();
 
+    await this.prisma.$transaction(async (tx) => {
       await tx.payment.update({
         where: {
           id: payment.id,
@@ -193,42 +194,6 @@ export class PaymentsService {
           committedAt: now,
         });
 
-      if (payment.order.inventoryStatus === OrderInventoryStatus.RELEASED) {
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: payment.orderId,
-            status: payment.order.status,
-            note: 'Stripe payment succeeded after reserved inventory was already released. Manual review required.',
-          },
-        });
-      } else {
-        await tx.order.update({
-          where: {
-            id: payment.orderId,
-          },
-          data: {
-            paymentStatus: PaymentStatus.PAID,
-            status: OrderStatus.CONFIRMED,
-            paidAt: now,
-            ...(committed
-              ? {}
-              : {
-                  inventoryStatus: OrderInventoryStatus.COMMITTED,
-                  inventoryCommittedAt: now,
-                  inventoryExpiresAt: null,
-                }),
-          },
-        });
-
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: payment.orderId,
-            status: OrderStatus.CONFIRMED,
-            note: 'Payment succeeded via Stripe',
-          },
-        });
-      }
-
       await tx.order.update({
         where: {
           id: payment.orderId,
@@ -236,8 +201,14 @@ export class PaymentsService {
         data: {
           paymentStatus: PaymentStatus.PAID,
           status: OrderStatus.CONFIRMED,
-          inventoryStatus: OrderInventoryStatus.COMMITTED,
-          inventoryCommittedAt: new Date(),
+          paidAt: now,
+          ...(committed
+            ? {}
+            : {
+                inventoryStatus: OrderInventoryStatus.COMMITTED,
+                inventoryCommittedAt: now,
+                inventoryExpiresAt: null,
+              }),
         },
       });
 

@@ -209,6 +209,11 @@ export class CheckoutService {
         currency: this.settingsService.getCurrency(settings),
       });
 
+    const nextStep =
+      dto.paymentMethod === PaymentMethod.STRIPE
+        ? 'Create Stripe PaymentIntent and complete payment'
+        : 'Order is pending manual payment confirmation';
+
     return {
       message: isGuest
         ? 'Guest checkout created successfully'
@@ -251,10 +256,7 @@ export class CheckoutService {
         paymentIntentId: payment.paymentIntentId ?? null,
         clientSecret: null,
       },
-      nextStep:
-        dto.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
-          ? 'Order is pending confirmation for cash on delivery'
-          : 'Order is pending manual payment confirmation',
+      nextStep,
     };
   }
 
