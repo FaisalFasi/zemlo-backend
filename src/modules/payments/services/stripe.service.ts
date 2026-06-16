@@ -21,6 +21,7 @@ export type StripeWebhookPaymentIntent = {
 
 export type StripePaymentIntentWebhookEvent = {
   kind: 'paymentIntent';
+  id: string;
   type:
     | 'payment_intent.succeeded'
     | 'payment_intent.payment_failed'
@@ -30,6 +31,7 @@ export type StripePaymentIntentWebhookEvent = {
 
 export type StripeIgnoredWebhookEvent = {
   kind: 'ignored';
+  id: string;
   type: string;
   paymentIntent: null;
 };
@@ -137,6 +139,7 @@ export class StripeService {
     ) {
       return {
         kind: 'paymentIntent',
+        id: event.id,
         type: event.type,
         paymentIntent: this.toWebhookPaymentIntent(event.data.object),
       };
@@ -144,6 +147,7 @@ export class StripeService {
 
     return {
       kind: 'ignored',
+      id: event.id,
       type: event.type,
       paymentIntent: null,
     };

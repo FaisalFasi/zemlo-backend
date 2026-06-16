@@ -9,6 +9,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   Prisma,
+  StripeWebhookEventStatus,
 } from '@prisma/client';
 import { OrderInventoryLifecycleService } from '../orders/services/order-inventory-lifecycle.service';
 
@@ -122,24 +123,107 @@ export class PaymentsService {
   async handleStripeWebhook(params: { rawBody: Buffer; signature: string }) {
     const event = this.stripeService.constructWebhookEvent(params);
 
-    if (event.kind === 'paymentIntent') {
-      if (event.type === 'payment_intent.succeeded') {
-        return this.handlePaymentIntentSucceeded(event.paymentIntent);
-      }
+    const existingEvent = await this.prisma.stripeWebhookEvent.findUnique({
+      where: {
+        stripeEventId: event.id,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
 
-      if (event.type === 'payment_intent.payment_failed') {
-        return this.handlePaymentIntentFailed(event.paymentIntent);
-      }
-      if (event.type === 'payment_intent.canceled') {
-        return this.handlePaymentIntentCanceled(event.paymentIntent);
-      }
+    if (existingEvent?.status === StripeWebhookEventStatus.PROCESSED) {
+      return {
+        received: true,
+        duplicate: true,
+        eventType: event.type,
+      };
     }
 
-    return {
-      received: true,
-      ignored: true,
-      eventType: event.type,
-    };
+    if (existingEvent?.status === StripeWebhookEventStatus.PROCESSING) {
+      return {
+        received: true,
+        duplicate: true,
+        processing: true,
+        eventType: event.type,
+      };
+    }
+
+    const eventRecord = existingEvent
+      ? await this.prisma.stripeWebhookEvent.update({
+          where: {
+            stripeEventId: event.id,
+          },
+          data: {
+            status: StripeWebhookEventStatus.PROCESSING,
+            failureReason: null,
+          },
+        })
+      : await this.prisma.stripeWebhookEvent.create({
+          data: {
+            stripeEventId: event.id,
+            eventType: event.type,
+            objectId: event.paymentIntent?.id ?? null,
+            paymentIntentId: event.paymentIntent?.id ?? null,
+            status: StripeWebhookEventStatus.PROCESSING,
+            payload: this.toStripeWebhookEventPayload(event),
+          },
+        });
+
+    try {
+      let result: Record<string, unknown>;
+
+      if (event.kind === 'paymentIntent') {
+        if (event.type === 'payment_intent.succeeded') {
+          result = await this.handlePaymentIntentSucceeded(event.paymentIntent);
+        } else if (event.type === 'payment_intent.payment_failed') {
+          result = await this.handlePaymentIntentFailed(event.paymentIntent);
+        } else if (event.type === 'payment_intent.canceled') {
+          result = await this.handlePaymentIntentCanceled(event.paymentIntent);
+        } else {
+          result = {
+            received: true,
+            ignored: true,
+            eventType: event.type,
+          };
+        }
+      } else {
+        result = {
+          received: true,
+          ignored: true,
+          eventType: event.type,
+        };
+      }
+
+      await this.prisma.stripeWebhookEvent.update({
+        where: {
+          id: eventRecord.id,
+        },
+        data: {
+          status:
+            result['ignored'] === true
+              ? StripeWebhookEventStatus.IGNORED
+              : StripeWebhookEventStatus.PROCESSED,
+          processedAt: new Date(),
+        },
+      });
+
+      return result;
+    } catch (error) {
+      await this.prisma.stripeWebhookEvent.update({
+        where: {
+          id: eventRecord.id,
+        },
+        data: {
+          status: StripeWebhookEventStatus.FAILED,
+          failureReason:
+            error instanceof Error ? error.message : 'Unknown webhook error',
+        },
+      });
+
+      throw error;
+    }
   }
 
   private async handlePaymentIntentSucceeded(
@@ -363,6 +447,17 @@ export class PaymentsService {
       received: true,
       paymentStatus: PaymentStatus.CANCELLED,
       orderStatus: OrderStatus.CANCELLED,
+    };
+  }
+  private toStripeWebhookEventPayload(
+    event: ReturnType<StripeService['constructWebhookEvent']>,
+  ): Prisma.InputJsonObject {
+    return {
+      id: event.id,
+      type: event.type,
+      kind: event.kind,
+      paymentIntentId: event.paymentIntent?.id ?? null,
+      paymentIntentStatus: event.paymentIntent?.status ?? null,
     };
   }
 
