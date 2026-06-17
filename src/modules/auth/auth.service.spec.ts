@@ -1,8 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserRole } from '@prisma/client';
+import { type User, UserRole } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthService } from './auth.service';
@@ -13,9 +12,7 @@ jest.mock('../../common/utils/hash.util', () => ({
   comparePassword: jest.fn(),
 }));
 
-describe('AuthService security rules', () => {
-  let service: AuthService;
-
+describe('AuthService registration security', () => {
   const prismaMock = {
     user: {
       findUnique: jest.fn(),
@@ -30,11 +27,64 @@ describe('AuthService security rules', () => {
   };
 
   const jwtServiceMock = {
-    signAsync: jest.fn().mockResolvedValue('access-token'),
+    signAsync: jest.fn(),
   };
 
   const configServiceMock = {
-    get: jest.fn((key: string) => {
+    get: jest.fn(),
+  };
+
+  const permissionResolverMock = {
+    getUserPermissions: jest.fn(),
+  };
+
+  let service: AuthService;
+
+  const createdUser: User = {
+    id: 'user-1',
+    email: 'customer@example.com',
+    password: 'hashed-password',
+    firstName: 'Faisal',
+    lastName: 'Rehman',
+    phone: null,
+    avatar: null,
+    role: UserRole.CUSTOMER,
+    isActive: true,
+    isVerified: true,
+    verificationToken: null,
+    resetPasswordToken: null,
+    resetPasswordExpires: null,
+    lastLogin: null,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    service = new AuthService(
+      prismaMock as unknown as PrismaService,
+      jwtServiceMock as unknown as JwtService,
+      configServiceMock as unknown as ConfigService,
+      permissionResolverMock as unknown as PermissionResolverService,
+    );
+
+    prismaMock.user.findUnique.mockResolvedValue(null);
+
+    prismaMock.platformSettings.findUnique.mockResolvedValue({
+      allowAccountRegistration: true,
+      requireEmailVerification: false,
+    });
+
+    prismaMock.user.create.mockResolvedValue(createdUser);
+
+    prismaMock.session.create.mockResolvedValue({
+      sessionId: 'session-1',
+    });
+
+    jwtServiceMock.signAsync.mockResolvedValue('access-token');
+
+    configServiceMock.get.mockImplementation((key: string) => {
       if (key === 'SESSION_EXPIRES_DAYS') {
         return 7;
       }
@@ -44,78 +94,14 @@ describe('AuthService security rules', () => {
       }
 
       return undefined;
-    }),
-  };
-
-  const permissionResolverMock = {
-    getUserPermissions: jest.fn().mockResolvedValue([]),
-  };
-
-  const createdAt = new Date('2026-01-01T00:00:00.000Z');
-  const updatedAt = new Date('2026-01-01T00:00:00.000Z');
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthService,
-        {
-          provide: PrismaService,
-          useValue: prismaMock,
-        },
-        {
-          provide: JwtService,
-          useValue: jwtServiceMock,
-        },
-        {
-          provide: ConfigService,
-          useValue: configServiceMock,
-        },
-        {
-          provide: PermissionResolverService,
-          useValue: permissionResolverMock,
-        },
-      ],
-    }).compile();
-
-    service = module.get(AuthService);
-
-    prismaMock.user.findUnique.mockResolvedValue(null);
-    prismaMock.platformSettings.findUnique.mockResolvedValue({
-      allowAccountRegistration: true,
-      requireEmailVerification: false,
     });
 
-    prismaMock.session.create.mockResolvedValue({
-      sessionId: 'session-1',
-    });
-
-    prismaMock.user.create.mockImplementation(
-      ({ data }: { data: Record<string, unknown> }) => ({
-        id: 'user-1',
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: null,
-        avatar: null,
-        role: data.role,
-        isActive: true,
-        isVerified: data.isVerified,
-        verificationToken: null,
-        resetPasswordToken: null,
-        resetPasswordExpires: null,
-        lastLogin: null,
-        createdAt,
-        updatedAt,
-      }),
-    );
+    permissionResolverMock.getUserPermissions.mockResolvedValue([]);
   });
 
-  it('always creates public registrations as CUSTOMER', async () => {
+  it('always creates a public registration as CUSTOMER', async () => {
     const result = await service.register({
-      email: '  Customer@Example.com ',
+      email: ' Customer@Example.com ',
       password: 'Password123!',
       firstName: ' Faisal ',
       lastName: ' Rehman ',
@@ -133,7 +119,7 @@ describe('AuthService security rules', () => {
     });
 
     expect(result.user.role).toBe(UserRole.CUSTOMER);
-    expect(result.message).toBe('Account created successfully');
+    expect(result.accessToken).toBe('access-token');
   });
 
   it('blocks registration when account registration is disabled', async () => {
@@ -152,5 +138,6 @@ describe('AuthService security rules', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
 
     expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(prismaMock.session.create).not.toHaveBeenCalled();
   });
 });
