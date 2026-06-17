@@ -38,7 +38,9 @@ export class AuthService {
     const email = dto.email.toLowerCase().trim();
 
     const existingUser = await this.prisma.user.findUnique({
-      where: { email },
+      where: {
+        email,
+      },
     });
 
     if (existingUser) {
@@ -46,18 +48,16 @@ export class AuthService {
     }
 
     const settings = await this.prisma.platformSettings.findUnique({
-      where: { id: 'default' },
+      where: {
+        id: 'default',
+      },
     });
 
-    const usersCount = await this.prisma.user.count();
-    const isFirstUser = usersCount === 0;
-
-    if (!isFirstUser && settings && !settings.allowAccountRegistration) {
+    if (settings && !settings.allowAccountRegistration) {
       throw new ForbiddenException('Account registration is disabled');
     }
 
     const hashedPassword = await hashPassword(dto.password);
-    const role = isFirstUser ? UserRole.SUPER_ADMIN : UserRole.CUSTOMER;
 
     const user = await this.prisma.user.create({
       data: {
@@ -65,8 +65,8 @@ export class AuthService {
         password: hashedPassword,
         firstName: dto.firstName.trim(),
         lastName: dto.lastName.trim(),
-        role,
-        isVerified: isFirstUser || !settings?.requireEmailVerification,
+        role: UserRole.CUSTOMER,
+        isVerified: !settings?.requireEmailVerification,
       },
     });
 
@@ -78,9 +78,7 @@ export class AuthService {
     });
 
     return {
-      message: isFirstUser
-        ? 'Super admin account created successfully'
-        : 'Account created successfully',
+      message: 'Account created successfully',
       user: this.buildUserResponse(user, sessionId, permissions),
       accessToken,
     };
