@@ -33,7 +33,7 @@
     "check:rbac": "tsx scripts/audit-rbac.ts",
     "check:swagger-dto": "node scripts/audit-swagger-dtos.cjs",
     "fix:swagger-dto": "node scripts/fix-swagger-dto-types.cjs",
-    "check:quick": "npm run lint && npm run build",
+    "check:quick": "npm run lint && npm test -- --runInBand && npm run build",
     "check:full": "npm run check:quick && npm run check:rbac && npm run check:dto-contract && npm run check:swagger-dto && npm run check:api-contract && npm run openapi:export && npm run check:openapi && npm run check:inventory",
     "verify": "npm run check:full"
   },
@@ -51,6 +51,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.4",
+    "helmet": "^8.2.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.17.2",
@@ -106,6 +107,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFiles": [
+      "reflect-metadata"
+    ]
   }
 }

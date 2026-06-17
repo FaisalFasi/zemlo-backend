@@ -1,48 +1,106 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+import { AppModule } from './app.module';
+
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
+    bufferLogs: true,
   });
 
-  // ============================================
-  // ENABLE GLOBAL VALIDATION
-  // ============================================
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // Remove extra fields
-      forbidNonWhitelisted: true, // Throw error on extra fields
-      transform: true, // Auto-transform to DTO class
+  const configService = app.get(ConfigService);
+
+  const port = configService.get<number>('http.port', 3000);
+
+  const corsOrigins = configService.get<string[]>('http.corsOrigins') ?? [];
+
+  const trustProxyHops = configService.get<number>('http.trustProxyHops', 0);
+
+  const swaggerEnabled = configService.get<boolean>('swagger.enabled', false);
+
+  if (trustProxyHops > 0) {
+    app.set('trust proxy', trustProxyHops);
+  }
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
     }),
   );
 
-  // ============================================
-  // Swagger config ------->  http://localhost:3000/api
-  // ============================================
-  const config = new DocumentBuilder()
-    .setTitle('Zemlo Api')
-    .setDescription('The Zemlo API description')
-    .setVersion('1.0')
-    .addTag('Zemlo')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description: 'Enter JWT token',
-      },
-      'access-token',
-    )
-    .build();
+  app.enableCors({
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+      callback(null, corsOrigins.includes(origin));
+    },
+    credentials: false,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Accept',
+      'Content-Type',
+      'Authorization',
+      'x-guest-id',
+      'stripe-signature',
+    ],
+    exposedHeaders: ['Retry-After'],
+    maxAge: 86_400,
+  });
 
-  await app.listen(process.env.PORT ?? 3000);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-  console.log('🚀 Application is running on: http://localhost:3000');
+  if (swaggerEnabled) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Zemlo API')
+      .setDescription('Zemlo backend API documentation')
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Enter JWT access token',
+        },
+        'access-token',
+      )
+      .build();
+
+    const documentFactory = () =>
+      SwaggerModule.createDocument(app, swaggerConfig);
+
+    SwaggerModule.setup('api', app, documentFactory);
+  }
+
+  app.enableShutdownHooks();
+
+  await app.listen(port, '0.0.0.0');
+
+  Logger.log(`API running on http://localhost:${port}`, 'Bootstrap');
+
+  if (swaggerEnabled) {
+    Logger.log(
+      `Swagger available on http://localhost:${port}/api`,
+      'Bootstrap',
+    );
+  }
 }
+
 void bootstrap();
