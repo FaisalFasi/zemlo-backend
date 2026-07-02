@@ -10,6 +10,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { PublicSettingsModule } from './modules/public-settings/public-settings.module';
 import { CartModule } from './modules/cart/cart.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { HealthModule } from './modules/health/health.module';
 
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -46,6 +47,7 @@ import { validate } from './config/env.config'; // ✅ Yaha se import
     PublicSettingsModule,
     CartModule,
     PaymentsModule,
+    HealthModule,
   ], // ConfigModule.forRoot() loads env variables
   providers: [
     {
