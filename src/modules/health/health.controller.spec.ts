@@ -1,7 +1,8 @@
-import { HealthCheckResult, HealthCheckService } from '@nestjs/terminus';
+import type { HealthCheckResult, HealthCheckService } from '@nestjs/terminus';
 
 import { HealthController } from './health.controller';
-import { DatabaseHealthIndicator } from './indicators/database-health.indicator';
+import type { ReadinessResponseDto } from './dto/health-response.dto';
+import type { DatabaseHealthIndicator } from './indicators/database-health.indicator';
 
 describe('HealthController', () => {
   const healthCheckServiceMock = {
@@ -32,7 +33,22 @@ describe('HealthController', () => {
   });
 
   it('checks database readiness', async () => {
-    const expectedResult: HealthCheckResult = {
+    const healthCheckResult: HealthCheckResult = {
+      status: 'ok',
+      info: {
+        database: {
+          status: 'up',
+        },
+      },
+      error: {},
+      details: {
+        database: {
+          status: 'up',
+        },
+      },
+    };
+
+    const expectedResult: ReadinessResponseDto = {
       status: 'ok',
       info: {
         database: {
@@ -56,12 +72,38 @@ describe('HealthController', () => {
     healthCheckServiceMock.check.mockImplementation(
       async (checks: Array<() => Promise<unknown>>) => {
         await checks[0]();
-        return expectedResult;
+
+        return healthCheckResult;
       },
     );
 
     await expect(controller.ready()).resolves.toEqual(expectedResult);
 
+    expect(healthCheckServiceMock.check).toHaveBeenCalledTimes(1);
     expect(databaseHealthIndicatorMock.isHealthy).toHaveBeenCalledTimes(1);
+  });
+
+  it('normalizes missing readiness fields to null', async () => {
+    const healthCheckResult = {
+      status: 'ok',
+      details: {
+        database: {
+          status: 'up',
+        },
+      },
+    } as HealthCheckResult;
+
+    healthCheckServiceMock.check.mockResolvedValue(healthCheckResult);
+
+    await expect(controller.ready()).resolves.toEqual({
+      status: 'ok',
+      info: null,
+      error: null,
+      details: {
+        database: {
+          status: 'up',
+        },
+      },
+    });
   });
 });

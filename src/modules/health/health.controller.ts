@@ -1,15 +1,19 @@
 import { Controller, Get } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
+import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import {
-  HealthCheck,
-  HealthCheckResult,
-  HealthCheckService,
-} from '@nestjs/terminus';
-import { ApiExcludeController } from '@nestjs/swagger';
+  ApiOkResponse,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+import {
+  LivenessResponseDto,
+  ReadinessResponseDto,
+} from './dto/health-response.dto';
 import { DatabaseHealthIndicator } from './indicators/database-health.indicator';
 
-@ApiExcludeController()
+@ApiTags('Health')
 @SkipThrottle()
 @Controller('health')
 export class HealthController {
@@ -19,11 +23,11 @@ export class HealthController {
   ) {}
 
   @Get('live')
-  live(): {
-    status: 'ok';
-    timestamp: string;
-    uptimeSeconds: number;
-  } {
+  @ApiOkResponse({
+    description: 'Application process is running',
+    type: LivenessResponseDto,
+  })
+  live(): LivenessResponseDto {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -33,9 +37,24 @@ export class HealthController {
 
   @Get('ready')
   @HealthCheck()
-  ready(): Promise<HealthCheckResult> {
-    return this.healthCheckService.check([
+  @ApiOkResponse({
+    description: 'Application and database are ready',
+    type: ReadinessResponseDto,
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Application dependency is unavailable',
+    type: ReadinessResponseDto,
+  })
+  async ready(): Promise<ReadinessResponseDto> {
+    const result = await this.healthCheckService.check([
       () => this.databaseHealthIndicator.isHealthy(),
     ]);
+
+    return {
+      status: result.status,
+      info: result.info ?? null,
+      error: result.error ?? null,
+      details: result.details,
+    };
   }
 }
