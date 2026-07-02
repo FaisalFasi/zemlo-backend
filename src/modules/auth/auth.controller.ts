@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { minutes, Throttle } from '@nestjs/throttler';
 
 import { MessageResponseDto } from '../../common/dto/message-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -32,6 +33,12 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: minutes(60),
+    },
+  })
   @Post('register')
   @ApiOperation({ summary: 'Register new user' })
   @ApiCreatedResponse({ type: AuthSessionResponseDto })
@@ -39,6 +46,12 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  @Throttle({
+    default: {
+      limit: 10,
+      ttl: minutes(10),
+    },
+  })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })

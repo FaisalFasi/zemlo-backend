@@ -21,12 +21,17 @@ export type StripeWebhookPaymentIntent = {
 
 export type StripePaymentIntentWebhookEvent = {
   kind: 'paymentIntent';
-  type: 'payment_intent.succeeded' | 'payment_intent.payment_failed';
+  id: string;
+  type:
+    | 'payment_intent.succeeded'
+    | 'payment_intent.payment_failed'
+    | 'payment_intent.canceled';
   paymentIntent: StripeWebhookPaymentIntent;
 };
 
 export type StripeIgnoredWebhookEvent = {
   kind: 'ignored';
+  id: string;
   type: string;
   paymentIntent: null;
 };
@@ -61,6 +66,7 @@ export class StripeService {
       metadata: params.metadata,
       automatic_payment_methods: {
         enabled: true,
+        allow_redirects: 'never',
       },
     });
 
@@ -78,6 +84,25 @@ export class StripeService {
 
     const paymentIntent =
       await stripeClient.paymentIntents.retrieve(paymentIntentId);
+
+    return {
+      id: paymentIntent.id,
+      clientSecret: paymentIntent.client_secret,
+      status: paymentIntent.status,
+    };
+  }
+
+  async cancelPaymentIntent(
+    paymentIntentId: string,
+  ): Promise<StripePaymentIntentResult> {
+    const stripeClient = this.getStripeClient();
+
+    const paymentIntent = await stripeClient.paymentIntents.cancel(
+      paymentIntentId,
+      {
+        cancellation_reason: 'abandoned',
+      },
+    );
 
     return {
       id: paymentIntent.id,
@@ -114,6 +139,7 @@ export class StripeService {
     ) {
       return {
         kind: 'paymentIntent',
+        id: event.id,
         type: event.type,
         paymentIntent: this.toWebhookPaymentIntent(event.data.object),
       };
@@ -121,6 +147,7 @@ export class StripeService {
 
     return {
       kind: 'ignored',
+      id: event.id,
       type: event.type,
       paymentIntent: null,
     };
@@ -145,7 +172,8 @@ export class StripeService {
   ): eventType is StripePaymentIntentWebhookEvent['type'] {
     return (
       eventType === 'payment_intent.succeeded' ||
-      eventType === 'payment_intent.payment_failed'
+      eventType === 'payment_intent.payment_failed' ||
+      eventType === 'payment_intent.canceled'
     );
   }
 

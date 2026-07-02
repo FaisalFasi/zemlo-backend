@@ -1,5 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+
+import type { PermissionName } from '../../../common/constants/permissions';
 
 export class AuthUserResponseDto {
   @ApiProperty({
@@ -26,14 +28,14 @@ export class AuthUserResponseDto {
   })
   lastName: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: String,
     nullable: true,
     example: '+13001234567',
   })
   phone: string | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: String,
     nullable: true,
     example: 'https://res.cloudinary.com/zemlo/avatar.png',
@@ -69,7 +71,7 @@ export class AuthUserResponseDto {
     type: [String],
     example: ['products.view', 'orders.view_own'],
   })
-  permissions: string[];
+  permissions: PermissionName[];
 
   @ApiProperty({
     type: String,

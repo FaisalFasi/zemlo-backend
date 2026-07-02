@@ -23,5 +23,6 @@ import { AdminBrandsModule } from './brands/admin-brands.module';
   ],
   providers: [AdminService],
   controllers: [AdminController],
+  exports: [AdminService],
 })
 export class AdminModule {}

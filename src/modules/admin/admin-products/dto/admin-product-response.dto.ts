@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
 
 export class AdminProductCategoryResponseDto {
@@ -33,7 +33,7 @@ export class AdminProductImageResponseDto {
   @ApiProperty({ type: String })
   url: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   altText: string | null;
 
   @ApiProperty({ type: Number })
@@ -59,13 +59,13 @@ export class AdminProductVariantResponseDto {
   @ApiProperty({ type: String })
   name: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   sku: string | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   price: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
   @ApiProperty({ type: Number })
@@ -77,7 +77,7 @@ export class AdminProductVariantResponseDto {
   @ApiProperty({ type: Boolean })
   allowBackorder: boolean;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   image: string | null;
 
   @ApiProperty({ type: Object })
@@ -103,22 +103,22 @@ export class AdminProductResponseDto {
   @ApiProperty({ type: String })
   slug: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   description: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   shortDescription: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   sku: string | null;
 
   @ApiProperty({ type: Number })
   price: number;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   compareAtPrice: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   costPrice: number | null;
 
   @ApiProperty({ type: Number })
@@ -142,37 +142,37 @@ export class AdminProductResponseDto {
   @ApiProperty({ type: String })
   categoryId: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   brandId: string | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   weight: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   length: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   width: number | null;
 
-  @ApiPropertyOptional({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   height: number | null;
 
   @ApiProperty({ type: [String] })
   keywords: string[];
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   metaTitle: string | null;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   metaDescription: string | null;
 
-  @ApiPropertyOptional({ type: Date, nullable: true })
+  @ApiProperty({ type: Date, nullable: true })
   publishedAt: Date | null;
 
   @ApiProperty({ type: AdminProductCategoryResponseDto })
   category: AdminProductCategoryResponseDto;
 
-  @ApiPropertyOptional({ type: AdminProductBrandResponseDto, nullable: true })
+  @ApiProperty({ type: AdminProductBrandResponseDto, nullable: true })
   brand: AdminProductBrandResponseDto | null;
 
   @ApiProperty({ type: [AdminProductImageResponseDto] })

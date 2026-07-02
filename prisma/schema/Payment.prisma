@@ -15,9 +15,14 @@ model Payment {
 
   metadata Json?
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  paidAt    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  paidAt     DateTime?
+  failedAt   DateTime?
+  refundedAt DateTime?
+
+  cancelledAt DateTime?
+  expiredAt   DateTime?
 
   @@index([orderId])
   @@index([transactionId])
@@ -34,4 +39,32 @@ enum PaymentMethod {
   BANK_TRANSFER
   CASH_ON_DELIVERY
   MANUAL
+}
+
+model StripeWebhookEvent {
+  id              String                   @id @default(uuid())
+  stripeEventId   String                   @unique
+  eventType       String
+  objectId        String?
+  paymentIntentId String?
+  status          StripeWebhookEventStatus @default(PROCESSING)
+  payload         Json?
+  failureReason   String?                  @db.Text
+  processedAt     DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([eventType])
+  @@index([objectId])
+  @@index([paymentIntentId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("stripe_webhook_events")
+}
+
+enum StripeWebhookEventStatus {
+  PROCESSING
+  PROCESSED
+  FAILED
+  IGNORED
 }

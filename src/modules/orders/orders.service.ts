@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import {
   FulfillmentStatus,
+  OrderInventoryStatus,
   OrderStatus,
   PaymentStatus,
   Prisma,
 } from '@prisma/client';
+import { OrderInventoryLifecycleService } from './services/order-inventory-lifecycle.service';
 
 import { toNumber } from '../../common/utils/decimal.util';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -30,8 +32,10 @@ type PaymentResponseSource = NonNullable<OrderResponseSource['payment']>;
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
-
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly orderInventoryLifecycleService: OrderInventoryLifecycleService,
+  ) {}
   async findMyOrders(userId: string) {
     const orders = await this.prisma.order.findMany({
       where: {
@@ -137,52 +141,101 @@ export class OrdersService {
       where: {
         id,
       },
+      include: {
+        payment: true,
+      },
     });
 
     if (!existingOrder) {
       throw new NotFoundException('Order not found');
     }
 
+    this.validateAdminOrderStatusUpdate(existingOrder, dto);
+
     const order = await this.prisma.$transaction(async (tx) => {
+      const now = new Date();
+
       const updateData: {
         status?: OrderStatus;
         paymentStatus?: PaymentStatus;
         fulfillmentStatus?: FulfillmentStatus;
         paidAt?: Date | null;
-        cancelledAt?: Date;
-        completedAt?: Date;
+        cancelledAt?: Date | null;
+        completedAt?: Date | null;
+        expiredAt?: Date | null;
+        inventoryStatus?: OrderInventoryStatus;
+        inventoryCommittedAt?: Date | null;
+        inventoryExpiresAt?: Date | null;
+      } = {};
+
+      const paymentUpdateData: {
+        status?: PaymentStatus;
+        paidAt?: Date | null;
+        failedAt?: Date | null;
+        cancelledAt?: Date | null;
+        expiredAt?: Date | null;
+        refundedAt?: Date | null;
       } = {};
 
       if (dto.status !== undefined) {
         updateData.status = dto.status;
 
         if (dto.status === OrderStatus.CANCELLED) {
-          updateData.cancelledAt = new Date();
+          updateData.cancelledAt = now;
+        }
+
+        if (dto.status === OrderStatus.EXPIRED) {
+          updateData.expiredAt = now;
         }
 
         if (dto.status === OrderStatus.DELIVERED) {
-          updateData.completedAt = new Date();
+          updateData.completedAt = now;
         }
       }
 
-      let paymentPaidAt: Date | null | undefined = undefined;
-
       if (dto.paymentStatus !== undefined) {
         updateData.paymentStatus = dto.paymentStatus;
+        paymentUpdateData.status = dto.paymentStatus;
 
         if (dto.paymentStatus === PaymentStatus.PAID) {
-          const now = new Date();
           updateData.paidAt = now;
-          paymentPaidAt = now;
+          paymentUpdateData.paidAt = now;
+
+          if (existingOrder.inventoryStatus === OrderInventoryStatus.RESERVED) {
+            updateData.inventoryStatus = OrderInventoryStatus.COMMITTED;
+            updateData.inventoryCommittedAt = now;
+            updateData.inventoryExpiresAt = null;
+          }
         }
 
-        if (
-          dto.paymentStatus === PaymentStatus.PENDING ||
-          dto.paymentStatus === PaymentStatus.FAILED ||
-          dto.paymentStatus === PaymentStatus.REFUNDED
-        ) {
+        if (dto.paymentStatus === PaymentStatus.FAILED) {
           updateData.paidAt = null;
-          paymentPaidAt = null;
+          paymentUpdateData.paidAt = null;
+          paymentUpdateData.failedAt = now;
+        }
+
+        if (dto.paymentStatus === PaymentStatus.CANCELLED) {
+          updateData.paidAt = null;
+          paymentUpdateData.paidAt = null;
+          paymentUpdateData.cancelledAt = now;
+        }
+
+        if (dto.paymentStatus === PaymentStatus.EXPIRED) {
+          updateData.paidAt = null;
+          updateData.expiredAt = now;
+          paymentUpdateData.paidAt = null;
+          paymentUpdateData.expiredAt = now;
+        }
+
+        if (dto.paymentStatus === PaymentStatus.REFUNDED) {
+          updateData.paidAt = null;
+          paymentUpdateData.paidAt = null;
+          paymentUpdateData.refundedAt = now;
+        }
+
+        if (dto.paymentStatus === PaymentStatus.PENDING) {
+          updateData.paidAt = null;
+          paymentUpdateData.paidAt = null;
         }
       }
 
@@ -190,34 +243,95 @@ export class OrdersService {
         updateData.fulfillmentStatus = dto.fulfillmentStatus;
       }
 
-      await tx.order.update({
-        where: {
-          id,
-        },
-        data: updateData,
-      });
+      const shouldReleaseReservedInventory =
+        existingOrder.inventoryStatus === OrderInventoryStatus.RESERVED &&
+        dto.status === OrderStatus.CANCELLED &&
+        existingOrder.paymentStatus !== PaymentStatus.PAID;
 
-      if (dto.paymentStatus !== undefined) {
+      if (shouldReleaseReservedInventory) {
+        const released =
+          await this.orderInventoryLifecycleService.releaseReservedInventory(
+            tx,
+            {
+              orderId: id,
+              orderStatus: OrderStatus.CANCELLED,
+              paymentStatus:
+                dto.paymentStatus === undefined
+                  ? PaymentStatus.CANCELLED
+                  : dto.paymentStatus,
+              note:
+                dto.note?.trim() ||
+                'Order cancelled by admin. Reserved inventory was released.',
+              changedBy: adminUserId,
+              releasedAt: now,
+            },
+          );
+
+        if (!released) {
+          await tx.order.update({
+            where: {
+              id,
+            },
+            data: updateData,
+          });
+        }
+
         await tx.payment.updateMany({
           where: {
             orderId: id,
           },
           data: {
-            status: dto.paymentStatus,
-            paidAt: paymentPaidAt,
+            ...paymentUpdateData,
+            status:
+              dto.paymentStatus === undefined
+                ? PaymentStatus.CANCELLED
+                : dto.paymentStatus,
+            cancelledAt:
+              dto.paymentStatus === undefined
+                ? now
+                : paymentUpdateData.cancelledAt,
           },
         });
-      }
+      } else {
+        await tx.order.update({
+          where: {
+            id,
+          },
+          data: updateData,
+        });
 
-      if (dto.status !== undefined) {
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: id,
-            status: dto.status,
-            note: dto.note?.trim() || 'Order status updated by admin',
-            changedBy: adminUserId,
-          },
-        });
+        if (
+          dto.paymentStatus === PaymentStatus.PAID &&
+          existingOrder.inventoryStatus === OrderInventoryStatus.RESERVED
+        ) {
+          await this.orderInventoryLifecycleService.commitReservedInventory(
+            tx,
+            {
+              orderId: id,
+              committedAt: now,
+            },
+          );
+        }
+
+        if (dto.paymentStatus !== undefined) {
+          await tx.payment.updateMany({
+            where: {
+              orderId: id,
+            },
+            data: paymentUpdateData,
+          });
+        }
+
+        if (dto.status !== undefined) {
+          await tx.orderStatusHistory.create({
+            data: {
+              orderId: id,
+              status: dto.status,
+              note: dto.note?.trim() || 'Order status updated by admin',
+              changedBy: adminUserId,
+            },
+          });
+        }
       }
 
       return tx.order.findUnique({
@@ -232,7 +346,81 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    return this.toOrderResponse(order);
+    return order;
+  }
+  private validateAdminOrderStatusUpdate(
+    order: {
+      status: OrderStatus;
+      paymentStatus: PaymentStatus;
+      fulfillmentStatus: FulfillmentStatus;
+      inventoryStatus: OrderInventoryStatus;
+    },
+    dto: UpdateAdminOrderStatusDto,
+  ): void {
+    if (
+      order.status === OrderStatus.DELIVERED &&
+      dto.status === OrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException('Delivered orders cannot be cancelled');
+    }
+
+    if (
+      order.status === OrderStatus.CANCELLED &&
+      dto.status !== undefined &&
+      dto.status !== OrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        'Cancelled orders cannot be moved to another status',
+      );
+    }
+
+    if (
+      order.status === OrderStatus.EXPIRED &&
+      dto.status !== undefined &&
+      dto.status !== OrderStatus.EXPIRED
+    ) {
+      throw new BadRequestException(
+        'Expired orders cannot be moved to another status',
+      );
+    }
+
+    if (
+      order.paymentStatus === PaymentStatus.PAID &&
+      dto.paymentStatus !== undefined &&
+      dto.paymentStatus !== PaymentStatus.PAID &&
+      dto.paymentStatus !== PaymentStatus.REFUNDED
+    ) {
+      throw new BadRequestException(
+        'Paid orders cannot be moved back to pending, failed, cancelled, or expired payment status',
+      );
+    }
+
+    if (
+      dto.paymentStatus === PaymentStatus.REFUNDED &&
+      order.paymentStatus !== PaymentStatus.PAID
+    ) {
+      throw new BadRequestException(
+        'Only paid orders can be marked as refunded',
+      );
+    }
+
+    if (
+      dto.fulfillmentStatus === FulfillmentStatus.FULFILLED &&
+      order.paymentStatus !== PaymentStatus.PAID
+    ) {
+      throw new BadRequestException(
+        'Unpaid orders cannot be marked as fulfilled',
+      );
+    }
+
+    if (
+      dto.status === OrderStatus.DELIVERED &&
+      order.paymentStatus !== PaymentStatus.PAID
+    ) {
+      throw new BadRequestException(
+        'Unpaid orders cannot be marked as delivered',
+      );
+    }
   }
 
   async updateAdminOrderShipping(

@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ProductImageResponseDto {
   @ApiProperty({ type: String })
@@ -10,7 +10,7 @@ export class ProductImageResponseDto {
   @ApiProperty({ type: String })
   url: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   altText: string | null;
 
   @ApiProperty({ type: Number })

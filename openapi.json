@@ -1618,25 +1618,192 @@
         ]
       }
     },
-    "/payments/stripe/webhook": {
-      "post": {
-        "operationId": "PaymentsController_handleStripeWebhook",
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Stripe webhook event processed",
+            "description": "Application process is running",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/StripeWebhookResponseDto"
+                  "$ref": "#/components/schemas/LivenessResponseDto"
                 }
               }
             }
           }
         },
-        "summary": "Stripe webhook endpoint",
         "tags": [
-          "Payments"
+          "Health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Application and database are ready\n\nThe Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Application dependency is unavailable\n\nThe Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Health"
         ]
       }
     }
@@ -1741,6 +1908,8 @@
           "email",
           "firstName",
           "lastName",
+          "phone",
+          "avatar",
           "role",
           "isActive",
           "isVerified",
@@ -1803,7 +1972,7 @@
           "SHIPPED",
           "DELIVERED",
           "CANCELLED",
-          "REFUNDED"
+          "EXPIRED"
         ]
       },
       "PaymentStatus": {
@@ -1812,8 +1981,9 @@
           "PENDING",
           "PAID",
           "FAILED",
-          "REFUNDED",
-          "PARTIALLY_REFUNDED"
+          "CANCELLED",
+          "EXPIRED",
+          "REFUNDED"
         ]
       },
       "FulfillmentStatus": {
@@ -1827,9 +1997,6 @@
       "CheckoutOrderItemResponseDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
           "productId": {
             "type": "string"
           },
@@ -1856,19 +2023,25 @@
           },
           "totalPrice": {
             "type": "number"
-          },
-          "productSnapshot": {
-            "type": "object",
-            "nullable": true
           }
         },
         "required": [
-          "id",
           "productId",
+          "variantId",
           "productName",
+          "variantName",
+          "sku",
           "quantity",
           "unitPrice",
           "totalPrice"
+        ]
+      },
+      "OrderInventoryStatus": {
+        "type": "string",
+        "enum": [
+          "RESERVED",
+          "COMMITTED",
+          "RELEASED"
         ]
       },
       "CheckoutOrderResponseDto": {
@@ -1921,6 +2094,33 @@
             "items": {
               "$ref": "#/components/schemas/CheckoutOrderItemResponseDto"
             }
+          },
+          "inventoryStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderInventoryStatus"
+              }
+            ]
+          },
+          "inventoryReservedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryCommittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryReleasedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryExpiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -1934,7 +2134,12 @@
           "shippingCost",
           "discount",
           "total",
-          "items"
+          "items",
+          "inventoryStatus",
+          "inventoryReservedAt",
+          "inventoryCommittedAt",
+          "inventoryReleasedAt",
+          "inventoryExpiresAt"
         ]
       },
       "PaymentMethod": {
@@ -1991,7 +2196,9 @@
           "method",
           "status",
           "amount",
-          "currency"
+          "currency",
+          "paymentIntentId",
+          "clientSecret"
         ]
       },
       "CheckoutResponseDto": {
@@ -2134,9 +2341,15 @@
         "required": [
           "id",
           "storeName",
+          "storeEmail",
+          "storeLogoUrl",
+          "storeFaviconUrl",
+          "supportPhone",
+          "supportWhatsapp",
           "homepageTitle",
           "homepageDescription",
           "announcementEnabled",
+          "announcementText",
           "allowGuestCheckout",
           "allowAccountRegistration",
           "requireEmailVerification",
@@ -2147,7 +2360,14 @@
           "currency",
           "taxRate",
           "defaultShippingCost",
+          "freeShippingOver",
+          "instagramUrl",
+          "facebookUrl",
+          "tiktokUrl",
+          "youtubeUrl",
           "maintenanceMode",
+          "maintenanceMessage",
+          "updatedBy",
           "createdAt",
           "updatedAt"
         ]
@@ -2207,6 +2427,9 @@
           "id",
           "name",
           "iso2",
+          "iso3",
+          "currency",
+          "phoneCode",
           "isActive",
           "allowWebsiteAccess",
           "allowCheckout",
@@ -2283,9 +2506,13 @@
           "id",
           "method",
           "label",
+          "description",
           "isEnabled",
           "isOnline",
+          "minAmount",
+          "maxAmount",
           "sortOrder",
+          "metadata",
           "createdAt",
           "updatedAt"
         ]
@@ -2363,6 +2590,7 @@
           "id",
           "productId",
           "url",
+          "altText",
           "position",
           "isDefault",
           "createdAt",
@@ -2425,9 +2653,13 @@
           "id",
           "productId",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
+          "image",
           "options",
           "isActive",
           "createdAt",
@@ -2572,7 +2804,12 @@
           "id",
           "name",
           "slug",
+          "description",
+          "shortDescription",
+          "sku",
           "price",
+          "compareAtPrice",
+          "costPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
@@ -2580,8 +2817,17 @@
           "status",
           "isFeatured",
           "categoryId",
+          "brandId",
+          "weight",
+          "length",
+          "width",
+          "height",
           "keywords",
+          "metaTitle",
+          "metaDescription",
+          "publishedAt",
           "category",
+          "brand",
           "images",
           "variants",
           "createdAt",
@@ -2623,6 +2869,7 @@
           "id",
           "productId",
           "url",
+          "altText",
           "position",
           "isDefault",
           "createdAt",
@@ -2690,10 +2937,15 @@
           "id",
           "productId",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
+          "costPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "isActive",
+          "image",
           "options",
           "createdAt",
           "updatedAt"
@@ -2852,9 +3104,15 @@
           "id",
           "name",
           "slug",
+          "description",
+          "image",
           "isActive",
           "position",
+          "parentId",
+          "parent",
           "children",
+          "products",
+          "_count",
           "createdAt",
           "updatedAt"
         ]
@@ -2948,7 +3206,12 @@
           "id",
           "name",
           "slug",
+          "description",
+          "logo",
+          "website",
           "isActive",
+          "products",
+          "_count",
           "createdAt",
           "updatedAt"
         ]
@@ -2973,7 +3236,8 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "sku"
         ]
       },
       "OrderVariantSummaryResponseDto": {
@@ -2992,7 +3256,8 @@
         },
         "required": [
           "id",
-          "name"
+          "name",
+          "sku"
         ]
       },
       "OrderItemResponseDto": {
@@ -3066,10 +3331,16 @@
           "id",
           "orderId",
           "productId",
+          "variantId",
           "productName",
+          "variantName",
+          "sku",
           "quantity",
           "unitPrice",
           "totalPrice",
+          "productSnapshot",
+          "product",
+          "variant",
           "createdAt",
           "updatedAt"
         ]
@@ -3101,8 +3372,9 @@
               "PENDING",
               "PAID",
               "FAILED",
-              "REFUNDED",
-              "PARTIALLY_REFUNDED"
+              "CANCELLED",
+              "EXPIRED",
+              "REFUNDED"
             ]
           },
           "amount": {
@@ -3162,6 +3434,14 @@
           "status",
           "amount",
           "currency",
+          "transactionId",
+          "paymentIntentId",
+          "paidAt",
+          "failedAt",
+          "refundedAt",
+          "failureReason",
+          "gatewayResponse",
+          "metadata",
           "createdAt",
           "updatedAt"
         ]
@@ -3204,7 +3484,7 @@
               "SHIPPED",
               "DELIVERED",
               "CANCELLED",
-              "REFUNDED"
+              "EXPIRED"
             ]
           },
           "paymentStatus": {
@@ -3213,8 +3493,9 @@
               "PENDING",
               "PAID",
               "FAILED",
-              "REFUNDED",
-              "PARTIALLY_REFUNDED"
+              "CANCELLED",
+              "EXPIRED",
+              "REFUNDED"
             ]
           },
           "fulfillmentStatus": {
@@ -3224,6 +3505,33 @@
               "PARTIALLY_FULFILLED",
               "FULFILLED"
             ]
+          },
+          "inventoryStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderInventoryStatus"
+              }
+            ]
+          },
+          "inventoryReservedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryCommittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryReleasedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryExpiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
           },
           "subtotal": {
             "type": "number"
@@ -3312,15 +3620,36 @@
         "required": [
           "id",
           "orderNumber",
+          "userId",
+          "guestEmail",
+          "guestPhone",
+          "guestFirstName",
+          "guestLastName",
           "status",
           "paymentStatus",
           "fulfillmentStatus",
+          "inventoryStatus",
+          "inventoryReservedAt",
+          "inventoryCommittedAt",
+          "inventoryReleasedAt",
+          "inventoryExpiresAt",
           "subtotal",
           "tax",
           "shippingCost",
           "discount",
           "total",
+          "customerNote",
+          "shippingMethod",
+          "shippingCarrier",
+          "trackingNumber",
+          "trackingUrl",
+          "paidAt",
+          "cancelledAt",
+          "completedAt",
+          "estimatedDelivery",
+          "actualDelivery",
           "items",
+          "payment",
           "createdAt",
           "updatedAt"
         ]
@@ -3359,6 +3688,7 @@
           "email",
           "firstName",
           "lastName",
+          "phone",
           "role"
         ]
       },
@@ -3424,6 +3754,7 @@
           "lastName",
           "phone",
           "street",
+          "apartment",
           "city",
           "state",
           "zipCode",
@@ -3450,7 +3781,7 @@
               "SHIPPED",
               "DELIVERED",
               "CANCELLED",
-              "REFUNDED"
+              "EXPIRED"
             ]
           },
           "note": {
@@ -3470,6 +3801,8 @@
           "id",
           "orderId",
           "status",
+          "note",
+          "changedBy",
           "createdAt"
         ]
       },
@@ -3511,7 +3844,7 @@
               "SHIPPED",
               "DELIVERED",
               "CANCELLED",
-              "REFUNDED"
+              "EXPIRED"
             ]
           },
           "paymentStatus": {
@@ -3520,8 +3853,9 @@
               "PENDING",
               "PAID",
               "FAILED",
-              "REFUNDED",
-              "PARTIALLY_REFUNDED"
+              "CANCELLED",
+              "EXPIRED",
+              "REFUNDED"
             ]
           },
           "fulfillmentStatus": {
@@ -3531,6 +3865,33 @@
               "PARTIALLY_FULFILLED",
               "FULFILLED"
             ]
+          },
+          "inventoryStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderInventoryStatus"
+              }
+            ]
+          },
+          "inventoryReservedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryCommittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryReleasedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "inventoryExpiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
           },
           "subtotal": {
             "type": "number"
@@ -3652,17 +4013,41 @@
         "required": [
           "id",
           "orderNumber",
+          "userId",
+          "guestEmail",
+          "guestPhone",
+          "guestFirstName",
+          "guestLastName",
           "status",
           "paymentStatus",
           "fulfillmentStatus",
+          "inventoryStatus",
+          "inventoryReservedAt",
+          "inventoryCommittedAt",
+          "inventoryReleasedAt",
+          "inventoryExpiresAt",
           "subtotal",
           "tax",
           "shippingCost",
           "discount",
           "total",
+          "customerNote",
+          "shippingMethod",
+          "shippingCarrier",
+          "trackingNumber",
+          "trackingUrl",
+          "paidAt",
+          "cancelledAt",
+          "completedAt",
+          "estimatedDelivery",
+          "actualDelivery",
           "items",
+          "payment",
           "createdAt",
           "updatedAt",
+          "user",
+          "shippingAddress",
+          "billingAddress",
           "statusHistory"
         ]
       },
@@ -3705,7 +4090,8 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "logo"
         ]
       },
       "PublicProductImageResponseDto": {
@@ -3731,6 +4117,7 @@
         "required": [
           "id",
           "url",
+          "altText",
           "position",
           "isDefault"
         ]
@@ -3777,9 +4164,13 @@
         "required": [
           "id",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
+          "image",
           "options"
         ]
       },
@@ -3864,14 +4255,19 @@
           "id",
           "name",
           "slug",
+          "shortDescription",
           "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "hasVariants",
           "isFeatured",
           "keywords",
+          "metaTitle",
+          "metaDescription",
           "category",
+          "brand",
           "images",
           "variants"
         ]
@@ -3904,7 +4300,10 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "logo",
+          "description",
+          "website"
         ]
       },
       "PublicProductDetailResponseDto": {
@@ -4012,14 +4411,25 @@
           "id",
           "name",
           "slug",
+          "description",
+          "shortDescription",
+          "sku",
           "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "hasVariants",
           "isFeatured",
+          "weight",
+          "length",
+          "width",
+          "height",
           "keywords",
+          "metaTitle",
+          "metaDescription",
           "category",
+          "brand",
           "images",
           "variants"
         ]
@@ -4052,7 +4462,10 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "description",
+          "image",
+          "parentId"
         ]
       },
       "PublicCategoryResponseDto": {
@@ -4090,6 +4503,9 @@
           "id",
           "name",
           "slug",
+          "description",
+          "image",
+          "parentId",
           "children"
         ]
       },
@@ -4121,7 +4537,10 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "description",
+          "logo",
+          "website"
         ]
       },
       "PublicStoreResponseDto": {
@@ -4152,7 +4571,12 @@
           }
         },
         "required": [
-          "name"
+          "name",
+          "email",
+          "logoUrl",
+          "faviconUrl",
+          "supportPhone",
+          "supportWhatsapp"
         ]
       },
       "PublicHomepageResponseDto": {
@@ -4182,7 +4606,8 @@
           }
         },
         "required": [
-          "enabled"
+          "enabled",
+          "text"
         ]
       },
       "PublicFeaturesResponseDto": {
@@ -4236,7 +4661,8 @@
         "required": [
           "currency",
           "taxRate",
-          "defaultShippingCost"
+          "defaultShippingCost",
+          "freeShippingOver"
         ]
       },
       "PublicCountryResponseDto": {
@@ -4319,7 +4745,10 @@
         "required": [
           "method",
           "label",
-          "isOnline"
+          "description",
+          "isOnline",
+          "minAmount",
+          "maxAmount"
         ]
       },
       "PublicSocialResponseDto": {
@@ -4341,7 +4770,13 @@
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "instagramUrl",
+          "facebookUrl",
+          "tiktokUrl",
+          "youtubeUrl"
+        ]
       },
       "PublicSettingsResponseDto": {
         "type": "object",
@@ -4431,7 +4866,8 @@
         "required": [
           "id",
           "name",
-          "slug"
+          "slug",
+          "logo"
         ]
       },
       "CartImageResponseDto": {
@@ -4457,6 +4893,7 @@
         "required": [
           "id",
           "url",
+          "altText",
           "position",
           "isDefault"
         ]
@@ -4523,12 +4960,16 @@
           "id",
           "name",
           "slug",
+          "shortDescription",
+          "sku",
           "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
           "hasVariants",
           "category",
+          "brand",
           "images"
         ]
       },
@@ -4573,9 +5014,13 @@
         "required": [
           "id",
           "name",
+          "sku",
+          "price",
+          "compareAtPrice",
           "stock",
           "trackInventory",
           "allowBackorder",
+          "image",
           "options"
         ]
       },
@@ -4633,12 +5078,14 @@
           "quantity",
           "cartId",
           "productId",
+          "variantId",
           "variantKey",
           "addedAt",
           "updatedAt",
           "unitPrice",
           "lineTotal",
-          "product"
+          "product",
+          "variant"
         ]
       },
       "CartResponseDto": {
@@ -4681,6 +5128,8 @@
         },
         "required": [
           "id",
+          "userId",
+          "guestId",
           "createdAt",
           "updatedAt",
           "items",
@@ -4727,35 +5176,38 @@
           "orderNumber",
           "paymentId",
           "paymentIntentId",
+          "clientSecret",
           "amount",
           "currency",
           "status"
         ]
       },
-      "StripeWebhookResponseDto": {
+      "LivenessResponseDto": {
         "type": "object",
         "properties": {
-          "received": {
-            "type": "boolean"
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "example": "ok"
           },
-          "ignored": {
-            "type": "boolean"
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-06-17T12:00:00.000Z"
           },
-          "eventType": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "paymentStatus": {
-            "type": "string"
-          },
-          "orderStatus": {
-            "type": "string"
+          "uptimeSeconds": {
+            "type": "number",
+            "example": 120,
+            "minimum": 0,
+            "description": "Application uptime in seconds"
           }
         },
         "required": [
-          "received"
+          "status",
+          "timestamp",
+          "uptimeSeconds"
         ]
       }
     }

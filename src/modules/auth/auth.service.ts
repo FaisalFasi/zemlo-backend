@@ -12,10 +12,18 @@ import { User, UserRole } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { LoginDto, RegisterDto } from './dto';
+import {
+  AuthSessionResponseDto,
+  CurrentUserResponseDto,
+  LoginDto,
+  RegisterDto,
+} from './dto';
 import { comparePassword, hashPassword } from '../../common/utils/hash.util';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { PermissionResolverService } from './services/permission-resolver.service';
+
+import { MessageResponseDto } from '../../common/dto/message-response.dto';
+import type { PermissionName } from '../../common/constants/permissions';
 
 @Injectable()
 export class AuthService {
@@ -26,11 +34,13 @@ export class AuthService {
     private readonly permissionResolver: PermissionResolverService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<AuthSessionResponseDto> {
     const email = dto.email.toLowerCase().trim();
 
     const existingUser = await this.prisma.user.findUnique({
-      where: { email },
+      where: {
+        email,
+      },
     });
 
     if (existingUser) {
@@ -38,18 +48,16 @@ export class AuthService {
     }
 
     const settings = await this.prisma.platformSettings.findUnique({
-      where: { id: 'default' },
+      where: {
+        id: 'default',
+      },
     });
 
-    const usersCount = await this.prisma.user.count();
-    const isFirstUser = usersCount === 0;
-
-    if (!isFirstUser && settings && !settings.allowAccountRegistration) {
+    if (settings && !settings.allowAccountRegistration) {
       throw new ForbiddenException('Account registration is disabled');
     }
 
     const hashedPassword = await hashPassword(dto.password);
-    const role = isFirstUser ? UserRole.SUPER_ADMIN : UserRole.CUSTOMER;
 
     const user = await this.prisma.user.create({
       data: {
@@ -57,8 +65,8 @@ export class AuthService {
         password: hashedPassword,
         firstName: dto.firstName.trim(),
         lastName: dto.lastName.trim(),
-        role,
-        isVerified: isFirstUser || !settings?.requireEmailVerification,
+        role: UserRole.CUSTOMER,
+        isVerified: !settings?.requireEmailVerification,
       },
     });
 
@@ -70,15 +78,13 @@ export class AuthService {
     });
 
     return {
-      message: isFirstUser
-        ? 'Super admin account created successfully'
-        : 'Account created successfully',
+      message: 'Account created successfully',
       user: this.buildUserResponse(user, sessionId, permissions),
       accessToken,
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<AuthSessionResponseDto> {
     const email = dto.email.toLowerCase().trim();
 
     const user = await this.prisma.user.findUnique({
@@ -108,8 +114,8 @@ export class AuthService {
       await this.createSessionAndToken(updatedUser);
 
     const permissions = await this.permissionResolver.getUserPermissions({
-      userId: updatedUser.id,
-      role: updatedUser.role,
+      userId: user.id,
+      role: user.role,
     });
 
     return {
@@ -119,7 +125,7 @@ export class AuthService {
     };
   }
 
-  async me(user: AuthenticatedUser) {
+  async me(user: AuthenticatedUser): Promise<CurrentUserResponseDto> {
     const freshUser = await this.prisma.user.findUnique({
       where: { id: user.id },
     });
@@ -129,8 +135,8 @@ export class AuthService {
     }
 
     const permissions = await this.permissionResolver.getUserPermissions({
-      userId: freshUser.id,
-      role: freshUser.role,
+      userId: user.id,
+      role: user.role,
     });
 
     return {
@@ -138,7 +144,7 @@ export class AuthService {
     };
   }
 
-  async logout(user: AuthenticatedUser) {
+  async logout(user: AuthenticatedUser): Promise<MessageResponseDto> {
     await this.prisma.session.updateMany({
       where: {
         sessionId: user.sessionId,
@@ -193,8 +199,8 @@ export class AuthService {
   private buildUserResponse(
     user: User,
     sessionId: string,
-    permissions: string[],
-  ) {
+    permissions: PermissionName[],
+  ): AuthSessionResponseDto['user'] {
     return {
       id: user.id,
       email: user.email,

@@ -1,5 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { FulfillmentStatus, OrderStatus, PaymentStatus } from '@prisma/client';
+import {
+  FulfillmentStatus,
+  OrderInventoryStatus,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '@prisma/client';
 import type { PrismaTransactionClient } from '../../../common/types/prisma-transaction.type';
 import { generateOrderNumber } from '../helpers/checkout-order.helper';
 import {
@@ -35,6 +41,14 @@ export class CheckoutOrderService {
     } = params;
 
     const guestDetails = isGuest ? this.getGuestDetails(dto) : null;
+    const now = new Date();
+    const inventoryExpiresAt = this.getInventoryExpiresAt(
+      dto.paymentMethod,
+      now,
+    );
+
+    // const now = new Date();
+    // const inventoryExpiresAt = new Date(now.getTime() + 60 * 60 * 1000);
 
     const order = await tx.order.create({
       data: {
@@ -56,6 +70,10 @@ export class CheckoutOrderService {
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.PENDING,
         fulfillmentStatus: FulfillmentStatus.UNFULFILLED,
+
+        inventoryStatus: OrderInventoryStatus.RESERVED,
+        inventoryReservedAt: now,
+        inventoryExpiresAt,
 
         shippingAddressId,
         billingAddressId,
@@ -127,5 +145,27 @@ export class CheckoutOrderService {
       firstName,
       lastName,
     };
+  }
+  private getInventoryExpiresAt(
+    paymentMethod: PaymentMethod,
+    now: Date,
+  ): Date | null {
+    const oneHour = 60 * 60 * 1000;
+    const fortyEightHours = 48 * oneHour;
+
+    if (
+      paymentMethod === PaymentMethod.STRIPE ||
+      paymentMethod === PaymentMethod.PAYPAL ||
+      paymentMethod === PaymentMethod.CREDIT_CARD ||
+      paymentMethod === PaymentMethod.DEBIT_CARD
+    ) {
+      return new Date(now.getTime() + oneHour);
+    }
+
+    if (paymentMethod === PaymentMethod.BANK_TRANSFER) {
+      return new Date(now.getTime() + fortyEightHours);
+    }
+
+    return null;
   }
 }

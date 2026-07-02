@@ -4,11 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  OrderInventoryStatus,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
   Prisma,
+  StripeWebhookEventStatus,
 } from '@prisma/client';
+import { OrderInventoryLifecycleService } from '../orders/services/order-inventory-lifecycle.service';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateStripePaymentIntentDto } from './dto';
@@ -22,6 +25,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripeService: StripeService,
+    private readonly orderInventoryLifecycleService: OrderInventoryLifecycleService,
   ) {}
 
   async createStripePaymentIntent(dto: CreateStripePaymentIntentDto) {
@@ -119,21 +123,107 @@ export class PaymentsService {
   async handleStripeWebhook(params: { rawBody: Buffer; signature: string }) {
     const event = this.stripeService.constructWebhookEvent(params);
 
-    if (event.kind === 'paymentIntent') {
-      if (event.type === 'payment_intent.succeeded') {
-        return this.handlePaymentIntentSucceeded(event.paymentIntent);
-      }
+    const existingEvent = await this.prisma.stripeWebhookEvent.findUnique({
+      where: {
+        stripeEventId: event.id,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
 
-      if (event.type === 'payment_intent.payment_failed') {
-        return this.handlePaymentIntentFailed(event.paymentIntent);
-      }
+    if (existingEvent?.status === StripeWebhookEventStatus.PROCESSED) {
+      return {
+        received: true,
+        duplicate: true,
+        eventType: event.type,
+      };
     }
 
-    return {
-      received: true,
-      ignored: true,
-      eventType: event.type,
-    };
+    if (existingEvent?.status === StripeWebhookEventStatus.PROCESSING) {
+      return {
+        received: true,
+        duplicate: true,
+        processing: true,
+        eventType: event.type,
+      };
+    }
+
+    const eventRecord = existingEvent
+      ? await this.prisma.stripeWebhookEvent.update({
+          where: {
+            stripeEventId: event.id,
+          },
+          data: {
+            status: StripeWebhookEventStatus.PROCESSING,
+            failureReason: null,
+          },
+        })
+      : await this.prisma.stripeWebhookEvent.create({
+          data: {
+            stripeEventId: event.id,
+            eventType: event.type,
+            objectId: event.paymentIntent?.id ?? null,
+            paymentIntentId: event.paymentIntent?.id ?? null,
+            status: StripeWebhookEventStatus.PROCESSING,
+            payload: this.toStripeWebhookEventPayload(event),
+          },
+        });
+
+    try {
+      let result: Record<string, unknown>;
+
+      if (event.kind === 'paymentIntent') {
+        if (event.type === 'payment_intent.succeeded') {
+          result = await this.handlePaymentIntentSucceeded(event.paymentIntent);
+        } else if (event.type === 'payment_intent.payment_failed') {
+          result = await this.handlePaymentIntentFailed(event.paymentIntent);
+        } else if (event.type === 'payment_intent.canceled') {
+          result = await this.handlePaymentIntentCanceled(event.paymentIntent);
+        } else {
+          result = {
+            received: true,
+            ignored: true,
+            eventType: event.type,
+          };
+        }
+      } else {
+        result = {
+          received: true,
+          ignored: true,
+          eventType: event.type,
+        };
+      }
+
+      await this.prisma.stripeWebhookEvent.update({
+        where: {
+          id: eventRecord.id,
+        },
+        data: {
+          status:
+            result['ignored'] === true
+              ? StripeWebhookEventStatus.IGNORED
+              : StripeWebhookEventStatus.PROCESSED,
+          processedAt: new Date(),
+        },
+      });
+
+      return result;
+    } catch (error) {
+      await this.prisma.stripeWebhookEvent.update({
+        where: {
+          id: eventRecord.id,
+        },
+        data: {
+          status: StripeWebhookEventStatus.FAILED,
+          failureReason:
+            error instanceof Error ? error.message : 'Unknown webhook error',
+        },
+      });
+
+      throw error;
+    }
   }
 
   private async handlePaymentIntentSucceeded(
@@ -162,6 +252,14 @@ export class PaymentsService {
       };
     }
 
+    if (payment.order.inventoryStatus === OrderInventoryStatus.RELEASED) {
+      throw new BadRequestException(
+        'Cannot mark payment as paid because order inventory was already released',
+      );
+    }
+
+    const now = new Date();
+
     await this.prisma.$transaction(async (tx) => {
       await tx.payment.update({
         where: {
@@ -170,9 +268,15 @@ export class PaymentsService {
         data: {
           status: PaymentStatus.PAID,
           gatewayResponse: this.toStripePaymentIntentSnapshot(paymentIntent),
-          paidAt: new Date(),
+          paidAt: now,
         },
       });
+
+      const committed =
+        await this.orderInventoryLifecycleService.commitReservedInventory(tx, {
+          orderId: payment.orderId,
+          committedAt: now,
+        });
 
       await tx.order.update({
         where: {
@@ -181,6 +285,14 @@ export class PaymentsService {
         data: {
           paymentStatus: PaymentStatus.PAID,
           status: OrderStatus.CONFIRMED,
+          paidAt: now,
+          ...(committed
+            ? {}
+            : {
+                inventoryStatus: OrderInventoryStatus.COMMITTED,
+                inventoryCommittedAt: now,
+                inventoryExpiresAt: null,
+              }),
         },
       });
 
@@ -219,6 +331,8 @@ export class PaymentsService {
       };
     }
 
+    const now = new Date();
+
     await this.prisma.$transaction(async (tx) => {
       await tx.payment.update({
         where: {
@@ -227,30 +341,123 @@ export class PaymentsService {
         data: {
           status: PaymentStatus.FAILED,
           gatewayResponse: this.toStripePaymentIntentSnapshot(paymentIntent),
+          failedAt: now,
         },
       });
 
-      await tx.order.update({
-        where: {
-          id: payment.orderId,
-        },
-        data: {
-          paymentStatus: PaymentStatus.FAILED,
-        },
-      });
-
-      await tx.orderStatusHistory.create({
-        data: {
+      const released =
+        await this.orderInventoryLifecycleService.releaseReservedInventory(tx, {
           orderId: payment.orderId,
-          status: payment.order.status,
-          note: 'Payment failed via Stripe',
-        },
-      });
+          orderStatus: OrderStatus.CANCELLED,
+          paymentStatus: PaymentStatus.FAILED,
+          note: 'Payment failed via Stripe. Reserved stock was released.',
+          releasedAt: now,
+        });
+
+      if (!released) {
+        await tx.order.update({
+          where: {
+            id: payment.orderId,
+          },
+          data: {
+            paymentStatus: PaymentStatus.FAILED,
+          },
+        });
+
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: payment.orderId,
+            status: payment.order.status,
+            note: 'Payment failed via Stripe.',
+          },
+        });
+      }
     });
 
     return {
       received: true,
       paymentStatus: PaymentStatus.FAILED,
+    };
+  }
+  private async handlePaymentIntentCanceled(
+    paymentIntent: StripeWebhookPaymentIntent,
+  ) {
+    const payment = await this.prisma.payment.findUnique({
+      where: {
+        paymentIntentId: paymentIntent.id,
+      },
+      include: {
+        order: true,
+      },
+    });
+
+    if (!payment) {
+      return {
+        received: true,
+        message: 'Payment record not found for PaymentIntent',
+      };
+    }
+
+    if (
+      payment.status === PaymentStatus.CANCELLED ||
+      payment.status === PaymentStatus.EXPIRED
+    ) {
+      return {
+        received: true,
+        message: 'Payment already cancelled or expired',
+      };
+    }
+
+    const now = new Date();
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: {
+          id: payment.id,
+        },
+        data: {
+          status: PaymentStatus.CANCELLED,
+          gatewayResponse: this.toStripePaymentIntentSnapshot(paymentIntent),
+          cancelledAt: now,
+        },
+      });
+
+      const released =
+        await this.orderInventoryLifecycleService.releaseReservedInventory(tx, {
+          orderId: payment.orderId,
+          orderStatus: OrderStatus.CANCELLED,
+          paymentStatus: PaymentStatus.CANCELLED,
+          note: 'Stripe PaymentIntent was cancelled. Reserved stock was released.',
+          releasedAt: now,
+        });
+
+      if (!released) {
+        await tx.order.update({
+          where: {
+            id: payment.orderId,
+          },
+          data: {
+            paymentStatus: PaymentStatus.CANCELLED,
+          },
+        });
+      }
+    });
+
+    return {
+      received: true,
+      paymentStatus: PaymentStatus.CANCELLED,
+      orderStatus: OrderStatus.CANCELLED,
+    };
+  }
+  private toStripeWebhookEventPayload(
+    event: ReturnType<StripeService['constructWebhookEvent']>,
+  ): Prisma.InputJsonObject {
+    return {
+      id: event.id,
+      type: event.type,
+      kind: event.kind,
+      paymentIntentId: event.paymentIntent?.id ?? null,
+      paymentIntentStatus: event.paymentIntent?.status ?? null,
     };
   }
 

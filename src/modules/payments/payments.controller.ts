@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import {
+  ApiExcludeEndpoint,
   ApiOkResponse,
   ApiOperation,
   ApiResponse,
@@ -53,6 +54,7 @@ export class PaymentsController {
     type: StripeWebhookResponseDto,
     description: 'Stripe webhook event processed',
   })
+  @ApiExcludeEndpoint()
   async handleStripeWebhook(
     @Req() request: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature?: string,

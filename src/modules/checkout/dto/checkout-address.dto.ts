@@ -60,5 +60,5 @@ export class CheckoutAddressDto {
   @IsOptional()
   @IsString()
   @Length(2, 2)
-  country: string;
+  country?: string;
 }

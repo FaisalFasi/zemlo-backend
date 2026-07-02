@@ -6,7 +6,7 @@ import {
 import { Prisma, ProductStatus } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { AddCartItemDto, UpdateCartItemDto } from './dto';
+import { AddCartItemDto, CartResponseDto, UpdateCartItemDto } from './dto';
 
 const MAX_CART_ITEM_QUANTITY = 999;
 
@@ -116,7 +116,7 @@ type CartVariant = Prisma.ProductVariantGetPayload<{
 export class CartService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getCart(userId?: string, guestId?: string) {
+  async getCart(userId?: string, guestId?: string): Promise<CartResponseDto> {
     const cart = await this.getOrCreateCart(userId, guestId);
 
     return this.toCartResponse(cart);
@@ -126,7 +126,7 @@ export class CartService {
     userId: string | undefined,
     guestId: string | undefined,
     dto: AddCartItemDto,
-  ) {
+  ): Promise<CartResponseDto> {
     const cart = await this.getOrCreateCart(userId, guestId);
 
     const product = await this.prisma.product.findUnique({
@@ -220,7 +220,7 @@ export class CartService {
     guestId: string | undefined,
     itemId: string,
     dto: UpdateCartItemDto,
-  ) {
+  ): Promise<CartResponseDto> {
     const cart = await this.getOrCreateCart(userId, guestId);
 
     const item = await this.prisma.cartItem.findFirst({
@@ -284,7 +284,7 @@ export class CartService {
     userId: string | undefined,
     guestId: string | undefined,
     itemId: string,
-  ) {
+  ): Promise<CartResponseDto> {
     const cart = await this.getOrCreateCart(userId, guestId);
 
     const item = await this.prisma.cartItem.findFirst({
@@ -312,7 +312,7 @@ export class CartService {
     return this.toCartResponse(updatedCart);
   }
 
-  async clearCart(userId?: string, guestId?: string) {
+  async clearCart(userId?: string, guestId?: string): Promise<CartResponseDto> {
     const cart = await this.getOrCreateCart(userId, guestId);
 
     await this.prisma.cartItem.deleteMany({
@@ -441,7 +441,7 @@ export class CartService {
     }
   }
 
-  private toCartResponse(cart: CartWithItems) {
+  private toCartResponse(cart: CartWithItems): CartResponseDto {
     const items = cart.items.map((item) => {
       const unitPrice = this.getUnitPrice(item.product, item.variant);
       const lineTotal = this.roundMoney(unitPrice * item.quantity);
@@ -480,40 +480,67 @@ export class CartService {
     };
   }
 
-  private toPublicProduct(product: CartProduct) {
-    const { category, brand, ...safeProduct } = product;
-
+  private toPublicProduct(
+    product: CartProduct,
+  ): CartResponseDto['items'][number]['product'] {
     return {
-      ...safeProduct,
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      shortDescription: product.shortDescription,
+      sku: product.sku,
       price: this.toNumber(product.price),
       compareAtPrice: this.toNullableNumber(product.compareAtPrice),
+      stock: product.stock,
+      trackInventory: product.trackInventory,
+      allowBackorder: product.allowBackorder,
+      hasVariants: product.hasVariants,
       category: {
-        id: category.id,
-        name: category.name,
-        slug: category.slug,
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
       },
-      brand: brand
+      brand: product.brand
         ? {
-            id: brand.id,
-            name: brand.name,
-            slug: brand.slug,
-            logo: brand.logo,
+            id: product.brand.id,
+            name: product.brand.name,
+            slug: product.brand.slug,
+            logo: product.brand.logo,
           }
         : null,
+      images: product.images.map((image) => ({
+        id: image.id,
+        url: image.url,
+        altText: image.altText,
+        position: image.position,
+        isDefault: image.isDefault,
+      })),
     };
   }
 
-  private toPublicVariant(variant: CartVariant | null) {
+  private toPublicVariant(
+    variant: CartVariant | null,
+  ): CartResponseDto['items'][number]['variant'] {
     if (!variant) {
       return null;
     }
 
-    const safeVariant = variant;
-
     return {
-      ...safeVariant,
+      id: variant.id,
+      name: variant.name,
+      sku: variant.sku,
       price: this.toNullableNumber(variant.price),
       compareAtPrice: this.toNullableNumber(variant.compareAtPrice),
+      stock: variant.stock,
+      trackInventory: variant.trackInventory,
+      allowBackorder: variant.allowBackorder,
+      image: variant.image,
+      options:
+        typeof variant.options === 'object' &&
+        variant.options !== null &&
+        !Array.isArray(variant.options)
+          ? variant.options
+          : {},
     };
   }
 
