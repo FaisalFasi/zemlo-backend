@@ -42,7 +42,7 @@ jobs:
       NODE_ENV: test
       PORT: 3000
 
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zemlo_ci?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zemlo_ci?schema=public&sslmode=disable
 
       JWT_SECRET: ci-only-jwt-secret-that-is-at-least-thirty-two-characters
       JWT_REFRESH_SECRET: ci-only-refresh-secret-that-is-at-least-thirty-two-characters
