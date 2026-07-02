@@ -76,9 +76,6 @@ jobs:
       - name: Validate Prisma schema
         run: npx prisma validate --schema=prisma/schema
 
-      - name: Generate Prisma client
-        run: npx prisma generate --schema=prisma/schema
-
       - name: Apply migrations to CI database
         run: npx prisma migrate deploy --schema=prisma/schema
 
