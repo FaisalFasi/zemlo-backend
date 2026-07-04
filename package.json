@@ -14,7 +14,7 @@
   "engines": {
     "node": ">=22.23.1 <23"
   },
-  "packageManager": "npm@11.6.1"
+  "packageManager": "npm@11.6.1",
   "scripts": {
     "postinstall": "prisma generate --schema=prisma/schema",
     "build": "prisma generate --schema=prisma/schema && nest build",
