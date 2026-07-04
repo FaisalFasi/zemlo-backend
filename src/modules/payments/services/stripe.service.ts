@@ -37,8 +37,7 @@ export type StripeIgnoredWebhookEvent = {
 };
 
 export type StripeWebhookEvent =
-  | StripePaymentIntentWebhookEvent
-  | StripeIgnoredWebhookEvent;
+  StripePaymentIntentWebhookEvent | StripeIgnoredWebhookEvent;
 
 @Injectable()
 export class StripeService {

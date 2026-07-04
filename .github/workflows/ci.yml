@@ -41,43 +41,46 @@ jobs:
     env:
       NODE_ENV: test
       PORT: 3000
-
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zemlo_ci?schema=public
-
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zemlo_ci?schema=public&sslmode=disable
       JWT_SECRET: ci-only-jwt-secret-that-is-at-least-thirty-two-characters
       JWT_REFRESH_SECRET: ci-only-refresh-secret-that-is-at-least-thirty-two-characters
       JWT_EXPIRES_IN: 15m
       SESSION_EXPIRES_DAYS: 7
-
       CORS_ORIGINS: http://localhost:3000
       SWAGGER_ENABLED: 'true'
       TRUST_PROXY_HOPS: 0
-
       RATE_LIMIT_TTL_MS: 60000
       RATE_LIMIT_MAX: 120
-
       STRIPE_SECRET_KEY: sk_test_ci_placeholder
       STRIPE_PUBLISHABLE_KEY: pk_test_ci_placeholder
       STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
+
+      - name: Use stable npm version
+        run: npm install --global npm@11.6.1
+
+      - name: Show runtime versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Install dependencies
         run: npm ci
 
       - name: Validate Prisma schema
         run: npx prisma validate --schema=prisma/schema
-
-      - name: Generate Prisma client
-        run: npx prisma generate --schema=prisma/schema
 
       - name: Apply migrations to CI database
         run: npx prisma migrate deploy --schema=prisma/schema
@@ -88,5 +91,5 @@ jobs:
       - name: Verify OpenAPI contract is committed
         run: git diff --exit-code -- openapi.json
 
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
