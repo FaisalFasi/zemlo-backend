@@ -21,7 +21,8 @@
     "test": "jest",
     "verify": "tsx scripts/verify.ts",
     "admin": "tsx src/cli/admin.ts",
-    "inventory:release-expired": "tsx scripts/release-expired-inventory-reservations.ts"
+    "inventory:release-expired": "tsx scripts/release-expired-inventory-reservations.ts",
+    "start:prod": "node dist/src/main.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
