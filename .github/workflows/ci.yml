@@ -2,13 +2,7 @@ name: Backend CI
 
 on:
   push:
-    branches:
-      - zemlo-store-v1
-      - main
   pull_request:
-    branches:
-      - zemlo-store-v1
-      - main
 
 concurrency:
   group: backend-ci-${{ github.workflow }}-${{ github.ref }}
