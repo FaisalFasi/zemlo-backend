@@ -1598,6 +1598,7 @@
     },
     "/payments/stripe/create-intent": {
       "post": {
+        "description": "Authenticated customers must provide their access token. Guest customers must provide the same email used during checkout.",
         "operationId": "PaymentsController_createStripePaymentIntent",
         "parameters": [],
         "responses": {
@@ -1612,6 +1613,11 @@
             }
           }
         },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
         "summary": "Create Stripe PaymentIntent for an existing order",
         "tags": [
           "Payments"

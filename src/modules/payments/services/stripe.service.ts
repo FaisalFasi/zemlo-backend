@@ -56,18 +56,24 @@ export class StripeService {
     amount: number;
     currency: string;
     metadata: Record<string, string>;
+    idempotencyKey: string;
   }): Promise<StripePaymentIntentResult> {
     const stripeClient = this.getStripeClient();
 
-    const paymentIntent = await stripeClient.paymentIntents.create({
-      amount: this.toStripeAmount(params.amount),
-      currency: params.currency.toLowerCase(),
-      metadata: params.metadata,
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never',
+    const paymentIntent = await stripeClient.paymentIntents.create(
+      {
+        amount: this.toStripeAmount(params.amount),
+        currency: params.currency.toLowerCase(),
+        metadata: params.metadata,
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never',
+        },
       },
-    });
+      {
+        idempotencyKey: params.idempotencyKey,
+      },
+    );
 
     return {
       id: paymentIntent.id,

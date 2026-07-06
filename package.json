@@ -24,7 +24,9 @@
     "lint": "eslint \"{src,prisma,scripts}/**/*.ts\"",
     "test": "jest",
     "verify": "tsx scripts/verify.ts",
-    "admin": "tsx src/cli/admin.ts",
+    "admin": "npm run build --silent && node dist/src/cli/admin.js",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:test-catalog": "tsx prisma/seed-test-catalog.ts",
     "inventory:release-expired": "tsx scripts/release-expired-inventory-reservations.ts",
     "start:prod": "node dist/src/main.js"
   },

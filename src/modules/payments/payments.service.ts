@@ -28,7 +28,10 @@ export class PaymentsService {
     private readonly orderInventoryLifecycleService: OrderInventoryLifecycleService,
   ) {}
 
-  async createStripePaymentIntent(dto: CreateStripePaymentIntentDto) {
+  async createStripePaymentIntent(
+    dto: CreateStripePaymentIntentDto,
+    requesterUserId?: string,
+  ) {
     const order = await this.prisma.order.findUnique({
       where: {
         id: dto.orderId,
@@ -50,6 +53,8 @@ export class PaymentsService {
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+
+    this.assertOrderPaymentAccess(order, requesterUserId, dto.guestEmail);
 
     if (!order.payment) {
       throw new BadRequestException('Payment record not found for this order');
@@ -83,8 +88,9 @@ export class PaymentsService {
     }
 
     const paymentIntent = await this.stripeService.createPaymentIntent({
-      amount: Number(order.total),
+      amount: Number(order.payment.amount),
       currency: order.payment.currency,
+      idempotencyKey: `zemlo:payment-intent:${order.payment.id}`,
       metadata: {
         orderId: order.id,
         orderNumber: order.orderNumber,
@@ -118,6 +124,34 @@ export class PaymentsService {
       currency: order.payment.currency,
       status: paymentIntent.status,
     };
+  }
+  private assertOrderPaymentAccess(
+    order: {
+      userId: string | null;
+      guestEmail: string | null;
+    },
+    requesterUserId: string | undefined,
+    providedGuestEmail: string | undefined,
+  ): void {
+    if (order.userId) {
+      if (!requesterUserId || requesterUserId !== order.userId) {
+        throw new NotFoundException('Order not found');
+      }
+
+      return;
+    }
+
+    const storedGuestEmail = order.guestEmail?.trim().toLowerCase();
+
+    const normalizedProvidedEmail = providedGuestEmail?.trim().toLowerCase();
+
+    if (
+      !storedGuestEmail ||
+      !normalizedProvidedEmail ||
+      storedGuestEmail !== normalizedProvidedEmail
+    ) {
+      throw new NotFoundException('Order not found');
+    }
   }
 
   async handleStripeWebhook(params: { rawBody: Buffer; signature: string }) {
@@ -251,6 +285,20 @@ export class PaymentsService {
         message: 'Payment already marked as paid',
       };
     }
+    const expectedAmount = Math.round(Number(payment.amount) * 100);
+    const expectedCurrency = payment.currency.trim().toLowerCase();
+
+    const paymentMatchesOrder =
+      paymentIntent.amount === expectedAmount &&
+      paymentIntent.currency.trim().toLowerCase() === expectedCurrency &&
+      paymentIntent.metadata.paymentId === payment.id &&
+      paymentIntent.metadata.orderId === payment.orderId;
+
+    if (!paymentMatchesOrder) {
+      throw new BadRequestException(
+        'Stripe PaymentIntent does not match the stored payment',
+      );
+    }
 
     if (payment.order.inventoryStatus === OrderInventoryStatus.RELEASED) {
       throw new BadRequestException(
@@ -331,6 +379,13 @@ export class PaymentsService {
       };
     }
 
+    if (payment.status === PaymentStatus.PAID) {
+      return {
+        received: true,
+        message: 'Payment is already marked as paid',
+      };
+    }
+
     const now = new Date();
 
     await this.prisma.$transaction(async (tx) => {
@@ -345,38 +400,34 @@ export class PaymentsService {
         },
       });
 
-      const released =
-        await this.orderInventoryLifecycleService.releaseReservedInventory(tx, {
+      await tx.order.update({
+        where: {
+          id: payment.orderId,
+        },
+        data: {
+          /*
+           * The individual payment attempt failed, but the order remains
+           * payable and its inventory reservation remains active.
+           */
+          paymentStatus: PaymentStatus.PENDING,
+        },
+      });
+
+      await tx.orderStatusHistory.create({
+        data: {
           orderId: payment.orderId,
-          orderStatus: OrderStatus.CANCELLED,
-          paymentStatus: PaymentStatus.FAILED,
-          note: 'Payment failed via Stripe. Reserved stock was released.',
-          releasedAt: now,
-        });
-
-      if (!released) {
-        await tx.order.update({
-          where: {
-            id: payment.orderId,
-          },
-          data: {
-            paymentStatus: PaymentStatus.FAILED,
-          },
-        });
-
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: payment.orderId,
-            status: payment.order.status,
-            note: 'Payment failed via Stripe.',
-          },
-        });
-      }
+          status: payment.order.status,
+          note: 'Stripe payment attempt failed. The customer can retry while inventory remains reserved.',
+        },
+      });
     });
 
     return {
       received: true,
       paymentStatus: PaymentStatus.FAILED,
+      orderStatus: payment.order.status,
+      inventoryStatus: payment.order.inventoryStatus,
+      retryable: paymentIntent.status === 'requires_payment_method',
     };
   }
   private async handlePaymentIntentCanceled(
