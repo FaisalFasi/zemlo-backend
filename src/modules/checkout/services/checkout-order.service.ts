@@ -13,9 +13,12 @@ import {
   CheckoutLine,
   CheckoutTotals,
 } from '../types/checkout.types';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CheckoutOrderService {
+  constructor(private readonly configService: ConfigService) {}
+
   async createOrderWithItemsAndPayment(
     tx: PrismaTransactionClient,
     params: {
@@ -46,9 +49,6 @@ export class CheckoutOrderService {
       dto.paymentMethod,
       now,
     );
-
-    // const now = new Date();
-    // const inventoryExpiresAt = new Date(now.getTime() + 60 * 60 * 1000);
 
     const order = await tx.order.create({
       data: {
@@ -150,8 +150,16 @@ export class CheckoutOrderService {
     paymentMethod: PaymentMethod,
     now: Date,
   ): Date | null {
-    const oneHour = 60 * 60 * 1000;
+    const oneMinute = 60 * 1000;
+    const oneHour = 60 * oneMinute;
     const fortyEightHours = 48 * oneHour;
+
+    const paymentReservationMinutes = this.configService.get<number>(
+      'checkout.inventoryReservationMinutes',
+      20,
+    );
+
+    const paymentReservationDuration = paymentReservationMinutes * oneMinute;
 
     if (
       paymentMethod === PaymentMethod.STRIPE ||
@@ -159,7 +167,7 @@ export class CheckoutOrderService {
       paymentMethod === PaymentMethod.CREDIT_CARD ||
       paymentMethod === PaymentMethod.DEBIT_CARD
     ) {
-      return new Date(now.getTime() + oneHour);
+      return new Date(now.getTime() + paymentReservationDuration);
     }
 
     if (paymentMethod === PaymentMethod.BANK_TRANSFER) {

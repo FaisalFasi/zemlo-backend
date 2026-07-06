@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Min,
+  Max,
   MinLength,
   validateSync,
 } from 'class-validator';
@@ -43,6 +44,13 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   SESSION_EXPIRES_DAYS: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(5)
+  @Max(120)
+  INVENTORY_RESERVATION_MINUTES?: number;
 
   @IsString()
   DATABASE_URL: string;
