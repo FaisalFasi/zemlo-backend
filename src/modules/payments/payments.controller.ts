@@ -9,6 +9,7 @@ import {
   type RawBodyRequest,
   Req,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -74,17 +75,11 @@ export class PaymentsController {
     this.logger.log('Stripe webhook received');
 
     if (!signature) {
-      return {
-        received: false,
-        message: 'Missing stripe-signature header',
-      };
+      throw new BadRequestException('Missing stripe-signature header');
     }
 
     if (!request.rawBody) {
-      return {
-        received: false,
-        message: 'Missing raw body',
-      };
+      throw new BadRequestException('Missing raw body');
     }
 
     const result = await this.paymentsService.handleStripeWebhook({
