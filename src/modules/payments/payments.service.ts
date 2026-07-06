@@ -55,6 +55,7 @@ export class PaymentsService {
     }
 
     this.assertOrderPaymentAccess(order, requesterUserId, dto.guestEmail);
+    this.assertOrderCanBePaid(order);
 
     if (!order.payment) {
       throw new BadRequestException('Payment record not found for this order');
@@ -151,6 +152,49 @@ export class PaymentsService {
       storedGuestEmail !== normalizedProvidedEmail
     ) {
       throw new NotFoundException('Order not found');
+    }
+  }
+
+  private assertOrderCanBePaid(order: {
+    status: OrderStatus;
+    inventoryStatus: OrderInventoryStatus;
+    inventoryExpiresAt: Date | null;
+    payment: {
+      status: PaymentStatus;
+    } | null;
+  }): void {
+    if (!order.payment) {
+      throw new BadRequestException('Payment record not found for this order');
+    }
+
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException(
+        'This order is no longer available for payment',
+      );
+    }
+
+    if (order.inventoryStatus !== OrderInventoryStatus.RESERVED) {
+      throw new BadRequestException(
+        'This order no longer has reserved inventory',
+      );
+    }
+
+    if (
+      order.inventoryExpiresAt &&
+      order.inventoryExpiresAt.getTime() <= Date.now()
+    ) {
+      throw new BadRequestException(
+        'The inventory reservation for this order has expired',
+      );
+    }
+
+    if (
+      order.payment.status !== PaymentStatus.PENDING &&
+      order.payment.status !== PaymentStatus.FAILED
+    ) {
+      throw new BadRequestException(
+        'This payment is no longer available for processing',
+      );
     }
   }
 

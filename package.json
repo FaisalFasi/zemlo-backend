@@ -27,6 +27,7 @@
     "admin": "npm run build --silent && node dist/src/cli/admin.js",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:test-catalog": "tsx prisma/seed-test-catalog.ts",
+    "db:archive:test-catalog": "tsx prisma/archive-test-catalog.ts",
     "inventory:release-expired": "tsx scripts/release-expired-inventory-reservations.ts",
     "start:prod": "node dist/src/main.js"
   },
