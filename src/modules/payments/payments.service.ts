@@ -88,8 +88,9 @@ export class PaymentsService {
     }
 
     const paymentIntent = await this.stripeService.createPaymentIntent({
-      amount: Number(order.total),
+      amount: Number(order.payment.amount),
       currency: order.payment.currency,
+      idempotencyKey: `zemlo:payment-intent:${order.payment.id}`,
       metadata: {
         orderId: order.id,
         orderNumber: order.orderNumber,
@@ -283,6 +284,20 @@ export class PaymentsService {
         received: true,
         message: 'Payment already marked as paid',
       };
+    }
+    const expectedAmount = Math.round(Number(payment.amount) * 100);
+    const expectedCurrency = payment.currency.trim().toLowerCase();
+
+    const paymentMatchesOrder =
+      paymentIntent.amount === expectedAmount &&
+      paymentIntent.currency.trim().toLowerCase() === expectedCurrency &&
+      paymentIntent.metadata.paymentId === payment.id &&
+      paymentIntent.metadata.orderId === payment.orderId;
+
+    if (!paymentMatchesOrder) {
+      throw new BadRequestException(
+        'Stripe PaymentIntent does not match the stored payment',
+      );
     }
 
     if (payment.order.inventoryStatus === OrderInventoryStatus.RELEASED) {
