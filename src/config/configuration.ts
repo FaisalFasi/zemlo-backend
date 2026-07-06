@@ -59,6 +59,13 @@ export default () => {
       expiresDays: parseInteger(process.env.SESSION_EXPIRES_DAYS, 7),
     },
 
+    checkout: {
+      inventoryReservationMinutes: parseInteger(
+        process.env.INVENTORY_RESERVATION_MINUTES,
+        20,
+      ),
+    },
+
     database: {
       url: process.env.DATABASE_URL,
     },
