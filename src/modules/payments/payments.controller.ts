@@ -8,8 +8,10 @@ import {
   Post,
   type RawBodyRequest,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiExcludeEndpoint,
   ApiOkResponse,
   ApiOperation,
@@ -18,6 +20,9 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import {
   CreateStripePaymentIntentDto,
   StripePaymentIntentResponseDto,
@@ -33,15 +38,22 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('stripe/create-intent')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: 'Create Stripe PaymentIntent for an existing order',
+    description:
+      'Authenticated customers must provide their access token. Guest customers must provide the same email used during checkout.',
   })
   @ApiOkResponse({
     type: StripePaymentIntentResponseDto,
     description: 'Stripe PaymentIntent created or retrieved',
   })
-  createStripePaymentIntent(@Body() dto: CreateStripePaymentIntentDto) {
-    return this.paymentsService.createStripePaymentIntent(dto);
+  createStripePaymentIntent(
+    @CurrentUser() user: AuthenticatedUser | undefined,
+    @Body() dto: CreateStripePaymentIntentDto,
+  ) {
+    return this.paymentsService.createStripePaymentIntent(dto, user?.id);
   }
 
   @Post('stripe/webhook')
