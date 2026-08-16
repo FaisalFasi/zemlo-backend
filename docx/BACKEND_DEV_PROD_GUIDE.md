@@ -486,6 +486,10 @@ These are often registry/network failures rather than source-code errors. Re-run
 
 ## 10. Prisma commands
 
+> **For which command is safe in which situation (dev vs. production,
+> reset vs. deploy, checking data without risk) see `DATABASE_GUIDE.md` —
+> that's the detailed reference. This section stays to the basics.**
+
 ### Generate Prisma Client
 
 ```bash

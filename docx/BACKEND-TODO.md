@@ -675,3 +675,26 @@ features degrade gracefully without them.
 are genuinely the one place that defines and validates every env var this
 app reads** — no other file should read `process.env.*` directly. Verified
 by re-grepping the whole `src/` tree after these fixes.
+
+---
+
+## 4. Separate the local-dev and production databases ⏳ OPEN (found 2026-08-17 — do this before real customers)
+
+**Not a code change — an infra step only the account owner can do.** Local
+`.env` and production (Render) currently point at the **same** Neon
+database. This nearly caused real data loss tonight: `prisma migrate dev`
+run locally detected drift and asked to reset (delete everything) — see
+`DATABASE_GUIDE.md` §7 for the full account of what happened (no data was
+actually lost, but the setup that made it *possible* is still there).
+
+**Fix — full steps in `DATABASE_GUIDE.md` §5:** create a second Neon
+database (a branch of the current project, or a new project) for
+production, point Render's `DATABASE_URL` at it, run
+`prisma migrate deploy` against it once to build the schema fresh, and
+leave the current database as the local dev one. Current state (only test
+data, no real customers) is exactly the easy window to do this in — it
+gets much harder once real orders exist in the shared database.
+
+**Read `DATABASE_GUIDE.md` in full before running any `prisma migrate`
+command against a database you're not 100% sure is disposable** — it has
+a quick-reference table of which command is safe where.
