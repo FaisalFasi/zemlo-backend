@@ -1,231 +1,134 @@
-# 🗄️ Database Design Documentation
+# Database Design Documentation
 
-## 🎯 KEY FEATURES EXPLAINED
-
-### 1. **Multi-Vendor Support**
-
-- **SellerProfile** with performance metrics (rating, fulfillment rate)
-- Sellers can have multiple warehouses
-- Separate seller reviews vs product reviews
-- Payout system for sellers
-
-### 2. **Advanced Product System**
-
-- **Product Variants**: Different SKUs for size/color combinations
-- **Flexible Attributes**: Each category can have custom attributes
-  - Electronics: Screen Size, RAM, Storage
-  - Clothing: Material, Size, Color
-- **Multi-warehouse Inventory**: Track stock across locations
-- **Product snapshots** in orders (so if product is deleted, order history remains)
-
-### 3. **Comprehensive Order Management**
-
-- Separate statuses for: Order, Payment, Fulfillment
-- Order status history (audit trail)
-- Support for partial refunds
-- Tax calculation fields
-
-### 4. **Shipping & Logistics**
-
-- Multiple shipments per order (items from different warehouses)
-- Tracking integration
-- Estimated vs actual delivery dates
-
-### 5. **Marketing & Sales**
-
-- **Coupons** with complex rules:
-  - Category/product specific
-  - Usage limits
-  - Time-bound validity
-- Wishlist functionality
-- Product Q&A (like Amazon)
-- View history for recommendations
-
-### 6. **Performance & Analytics**
-
-- Search history tracking
-- Product view counts
-- Seller performance metrics
-- User behavior analytics
+> **Rewritten 2026-08-16.** The previous version of this file (schema v0.1,
+> Jan 2026) described a multi-vendor marketplace design — `SellerProfile`,
+> per-seller warehouses, seller payouts, seller reviews. **None of that was
+> ever built**, and on 2026-08-16 the business model was explicitly decided:
+> **single-merchant** (Zemlo sources/stocks products — including from other
+> brands — and sells them directly; brands do not get their own seller
+> accounts or payouts). This file now documents the schema that actually
+> exists. If a multi-vendor marketplace is ever revisited, `Brand` is the
+> natural entity to evolve into a vendor/tenant — see `TECH_STACK.md` §5 for
+> the reasoning.
 
 ---
 
-## 📊 Core Entities Overview
+## 1. Core entities (as implemented today)
 
-### **User Management**
+### User & auth
 
----
+- **User** — `role`: `CUSTOMER | STAFF | ADMIN | SUPER_ADMIN`. One role per
+  user; fine-grained access is layered on top via permissions, not more
+  roles.
+- **Session** — one row per login. `isRevoked` + `expiresAt` are checked on
+  *every* authenticated request (not just at login), so logout actually
+  revokes access server-side instead of just discarding a client token.
+- **Permission / RolePermission / UserPermission** — `Permission` is the
+  catalog of checkable actions (e.g. `products.update`). `RolePermission`
+  defines each role's defaults; `UserPermission` grants/overrides
+  permissions to a specific user (with optional `expiresAt`). A user's
+  effective permission set = role defaults ∪ user-specific grants.
+- **Address** — shared table for both shipping and billing; can belong to a
+  registered `User` or be a standalone guest address (`isGuestAddress`).
 
-## 🔗 Key Relationships
+### Catalog
 
-### **Seller Ecosystem**
+- **Category** (self-referencing via `parentId`) — each category can define
+  its own **CategoryAttribute**s (`AttributeType`: `TEXT | NUMBER | SELECT`,
+  filterable/required flags), which is how "Electronics has RAM/Storage,
+  Clothing has Size/Material" works without a schema change per category.
+- **Brand** — plain taxonomy: name, slug, logo, description. No login, no
+  ownership, no payout — it's a label a product can carry, not a tenant.
+- **Product** — belongs to one `Category`, optionally one `Brand`. Carries
+  its own price/stock/SEO fields. `hasVariants` flags whether stock is
+  tracked on the product itself or delegated to `ProductVariant`.
+- **ProductVariant** — SKU-level stock (size/color combinations), variant-
+  specific price override, `options: Json` for the variant's attribute
+  values.
+- **ProductAttribute** — the actual value a product has for one of its
+  category's `CategoryAttribute`s (e.g. this product's "Color" = "Red").
+- **ProductImage** — ordered images per product.
 
-- One **User** can have one **SellerProfile**
-- One **Seller** can have multiple **Warehouses**
-- **SellerReviews** are separate from **ProductReviews**
-- **Payouts** track seller earnings and payments
+### Cart & Wishlist
 
-### **Product Hierarchy**
+- **Cart / CartItem** — supports both a logged-in `userId` and an anonymous
+  `guestId` (never both). `variantKey` defaults to `"default"` when a
+  product has no variant, so the unique constraint
+  `(cartId, productId, variantKey)` doesn't collide across variant-less
+  products.
+- **Wishlist / WishlistItem** — one wishlist per registered user.
 
-- **Product** has multiple **Variants** (SKUs)
-- **Variants** have inventory across **Warehouses**
-- **Categories** define **Attributes** (dynamic schema)
-- **Product** snapshots preserved in **OrderItems**
+### Orders, inventory & payments
 
-### **Order Processing**
+- **Order** — one shipping `Address`, one billing `Address`, one `Payment`.
+  Three independent status axes tracked separately (this is deliberate, not
+  redundant):
+  - `status: OrderStatus` (`PENDING → CONFIRMED → PROCESSING → SHIPPED → DELIVERED`, or `CANCELLED`/`EXPIRED`)
+  - `paymentStatus: PaymentStatus` (`PENDING → PAID`, or `FAILED`/`CANCELLED`/`EXPIRED`/`REFUNDED`)
+  - `fulfillmentStatus: FulfillmentStatus` (`UNFULFILLED → PARTIALLY_FULFILLED → FULFILLED`)
+  - Plus `inventoryStatus: OrderInventoryStatus` (`RESERVED → COMMITTED`, or `RELEASED`) — tracks whether stock decremented at checkout has been permanently committed (payment succeeded) or given back (payment failed/expired).
+- **OrderItem** — snapshots product/variant data at time of purchase
+  (`productSnapshot`), so editing or deleting a product later doesn't change
+  historical order records.
+- **OrderStatusHistory** — append-only audit trail of every status
+  transition, with an optional `changedBy` and a human-readable note.
+- **Payment** — one-to-one with `Order`. `method: PaymentMethod` enum lists
+  `STRIPE | PAYPAL | CREDIT_CARD | DEBIT_CARD | BANK_TRANSFER | CASH_ON_DELIVERY | MANUAL`,
+  but **only `STRIPE` has a real integration today** — the others are schema
+  placeholders, not working payment paths.
+- **StripeWebhookEvent** — logs every processed Stripe webhook by
+  `stripeEventId` (unique), so a retried/duplicate webhook delivery is a
+  no-op instead of double-processing a payment.
 
-- **Order** contains multiple **OrderItems**
-- **OrderItems** reference **Product** snapshots
-- Multiple **Shipments** per order (multi-warehouse)
-- **OrderStatus** history for auditing
+### Platform configuration
 
-### **User Experience**
-
-- **User** has **Wishlist**, **Cart**, **SearchHistory**, **ViewHistory**
-- **ProductQuestions** and **ProductAnswers** for community
-- **Notifications** for order updates, promotions
-- **Coupons** with business rules engine
-
----
-
-## ⚡ Performance Optimizations
-
-### **Indexes**
-
-- User: `email`, `role`, `createdAt`
-- Product: `categoryId`, `sellerId`, `rating`, `price`
-- Order: `userId`, `status`, `createdAt`
-- SellerProfile: `rating`, `totalSales`
-
-### **Caching Strategy**
-
-- Product details (frequently viewed)
-- User sessions and carts
-- Category hierarchies
-- Seller ratings
-
-### **Analytics Tracking**
-
-- Real-time view counts
-- Search query analytics
-- Conversion funnel tracking
-- Seller performance metrics
-
----
-
-## 🔒 Security & Compliance
-
-### **Data Protection**
-
-- Encrypted payment information
-- Secure API keys for shipping integration
-- GDPR-compliant data handling
-- Audit trails for all transactions
-
-### **Business Rules**
-
-- Tax calculation per region
-- Commission structures for sellers
-- Refund policies enforcement
-- Coupon validity checks
+- **PlatformSettings**, **PaymentMethodSetting**, **CountrySetting** — admin-
+  editable store-wide config (which payment methods are enabled, per-country
+  shipping/tax rules, etc.), not per-tenant — there's one of each, store-wide.
 
 ---
 
-## 📈 Scalability Considerations
+## 2. What this schema deliberately does NOT have (and why that's correct for today)
 
-### **Horizontal Scaling**
+- **No `SellerProfile` / `Vendor` model** — there is exactly one merchant
+  (Zemlo itself). `Brand` is metadata on a product, not an account.
+- **No `Warehouse` / multi-location inventory** — `stock` lives directly on
+  `Product`/`ProductVariant`. One stock number, one location (or one
+  logical pool), not tracked per-warehouse.
+- **No `Shipment` model / multi-package orders** — `Order` carries a single
+  `trackingNumber`/`shippingCarrier` pair. One order ships as one shipment.
+- **No seller payout/commission tables** — nothing to pay out; all revenue
+  is the merchant's own.
 
-- Database sharding by region/seller
-- Microservices for: Orders, Products, Users, Payments
-- CDN for product images
-- Message queue for async operations
-
-### **Data Retention**
-
-- Active orders: Real-time access
-- Completed orders: Archived after X days
-- User activity: Aggregated analytics
-- Product views: Real-time counter with periodic aggregation
-
----
-
-## 🛠️ Integration Points
-
-### **External Services**
-
-- **Payment Gateways**: Stripe, PayPal, etc.
-- **Shipping Carriers**: FedEx, UPS, DHL APIs
-- **Email/SMS Services**: Transactional notifications
-- **Analytics Platforms**: Google Analytics, Mixpanel
-
-### **Internal Services**
-
-- **Recommendation Engine**: Based on view/search history
-- **Inventory Management**: Real-time stock updates
-- **Payout System**: Automated seller payments
-- **Notification Service**: Real-time user updates
+None of this is a gap to fix — it's the correct shape for a single-merchant
+store. Adding these tables today, before there's a concrete need, would be
+speculative schema complexity with nothing depending on it. If the business
+model ever changes to multi-vendor (see the note at the top of this file),
+this section is exactly where that redesign starts.
 
 ---
 
-## 📋 Database Schema Highlights
+## 3. Indexes in place today
 
-### **Core Models**
+```text
+User:            email, role
+Session:         sessionId, userId, expiresAt, isRevoked
+Category:        slug, parentId, isActive
+Brand:            slug, isActive
+Product:         slug, sku, categoryId, brandId, status, isFeatured
+ProductVariant:  productId, sku, isActive
+Cart:            userId, guestId
+CartItem:        cartId, productId, variantId
+Order:           userId, orderNumber, status, paymentStatus,
+                 fulfillmentStatus, createdAt, inventoryStatus,
+                 inventoryExpiresAt
+Payment:         orderId, transactionId, paymentIntentId, status
+Permission:      category
+UserPermission:  userId, permissionId
+RolePermission:  role
+```
 
-- `User` (Customers & Sellers)
-- `Product` (with Variants system)
-- `Order` (with Snapshots and History)
-- `SellerProfile` (Performance tracking)
-- `Category` (Flexible attributes system)
-
-### **Supporting Models**
-
-- `Warehouse` (Multi-location inventory)
-- `Shipment` (Multi-package orders)
-- `Coupon` (Complex rule engine)
-- `Review` (Product & Seller separate)
-- `Notification` (User communication)
-
-### **Analytics Models**
-
-- `SearchHistory` (Query tracking)
-- `ViewHistory` (Product views)
-- `Analytics` (Aggregated metrics)
-- `Performance` (Seller KPIs)
-
----
-
-## ✅ Success Metrics Tracked
-
-### **Business Metrics**
-
-- Total Sales & Revenue
-- Average Order Value (AOV)
-- Conversion Rate
-- Customer Lifetime Value (CLV)
-
-### **Seller Metrics**
-
-- Seller Rating & Reviews
-- Fulfillment Rate & Time
-- Return/Refund Rate
-- Payout Frequency & Amounts
-
-### **Product Metrics**
-
-- View-to-Purchase Ratio
-- Review Ratings & Count
-- Inventory Turnover
-- Category Performance
-
-### **User Metrics**
-
-- Engagement Frequency
-- Cart Abandonment Rate
-- Repeat Purchase Rate
-- Feature Usage Patterns
-
----
-
-_Last Updated: Jan 15,2026  
-\_Schema Version: 0.1  
-\_Designed for: Multi-vendor E-commerce Zemlo_Platform_
+Missing-index gaps that matter at scale are tracked in `BACKEND-TODO.md`
+(catalog pagination needs a compound `[status, isFeatured, createdAt]`
+index and a `[price]` index once sort/filter/pagination ships) — not
+repeated here to avoid the two docs drifting out of sync.

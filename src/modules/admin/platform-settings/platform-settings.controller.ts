@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -9,15 +9,12 @@ import {
 import { PERMISSIONS } from '../../../common/constants/permissions';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
-import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import type { AuthenticatedUser } from '../../../common/types/authenticated-user.type';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PlatformSettingsResponseDto, UpdatePlatformSettingsDto } from './dto';
 import { PlatformSettingsService } from './platform-settings.service';
 
 @ApiTags('Admin - Platform Settings')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin/platform-settings')
 export class PlatformSettingsController {
   constructor(

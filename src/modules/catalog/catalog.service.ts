@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ProductStatus } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import type { CatalogQueryDto } from './dto';
 
 const publicProductListSelect = {
   id: true,
@@ -152,21 +153,81 @@ type PublicProductDetail = Prisma.ProductGetPayload<{
 export class CatalogService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findProducts() {
-    const products = await this.prisma.product.findMany({
-      where: this.getActiveProductWhere(),
-      orderBy: [
-        {
-          isFeatured: Prisma.SortOrder.desc,
-        },
-        {
-          createdAt: Prisma.SortOrder.desc,
-        },
-      ],
-      select: publicProductListSelect,
-    });
+  async findProducts(query: CatalogQueryDto = {}) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 24;
 
-    return products.map((product) => this.toPublicProductListItem(product));
+    const where: Prisma.ProductWhereInput = {
+      ...this.getActiveProductWhere(),
+      ...(query.category
+        ? {
+            category: {
+              slug: query.category,
+            },
+          }
+        : {}),
+      ...(query.brand
+        ? {
+            brand: {
+              slug: query.brand,
+            },
+          }
+        : {}),
+      ...(query.search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: query.search,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+              {
+                shortDescription: {
+                  contains: query.search,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+              {
+                keywords: {
+                  has: query.search.toLowerCase(),
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput[] =
+      query.sort === 'newest'
+        ? [{ createdAt: Prisma.SortOrder.desc }]
+        : query.sort === 'price-asc'
+          ? [{ price: Prisma.SortOrder.asc }]
+          : query.sort === 'price-desc'
+            ? [{ price: Prisma.SortOrder.desc }]
+            : [
+                { isFeatured: Prisma.SortOrder.desc },
+                { createdAt: Prisma.SortOrder.desc },
+              ];
+
+    const [total, products] = await this.prisma.$transaction([
+      this.prisma.product.count({ where }),
+      this.prisma.product.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: publicProductListSelect,
+      }),
+    ]);
+
+    return {
+      items: products.map((product) => this.toPublicProductListItem(product)),
+      total,
+      page,
+      limit,
+      pageCount: Math.max(1, Math.ceil(total / limit)),
+    };
   }
 
   async findProductBySlug(slug: string) {

@@ -66,6 +66,13 @@ export default () => {
       ),
     },
 
+    inventory: {
+      expiredReservationRelease: {
+        enabled: parseBoolean(process.env.INVENTORY_RELEASE_CRON_ENABLED, true),
+        batchLimit: parseInteger(process.env.INVENTORY_RELEASE_BATCH_LIMIT, 50),
+      },
+    },
+
     database: {
       url: process.env.DATABASE_URL,
     },
@@ -74,6 +81,25 @@ export default () => {
       secretKey: process.env.STRIPE_SECRET_KEY,
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    },
+
+    email: {
+      resendApiKey: process.env.RESEND_API_KEY,
+      fromAddress:
+        process.env.EMAIL_FROM_ADDRESS || 'Zemlo <no-reply@zemlo.shop>',
+      passwordResetUrl:
+        process.env.FRONTEND_PASSWORD_RESET_URL ||
+        'http://localhost:3000/reset-password',
+      passwordResetTokenTtlMinutes: parseInteger(
+        process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES,
+        60,
+      ),
+    },
+
+    cloudinary: {
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      apiSecret: process.env.CLOUDINARY_API_SECRET,
     },
   };
 };

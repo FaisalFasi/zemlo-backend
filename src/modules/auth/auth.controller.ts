@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,21 +17,24 @@ import { minutes, Throttle } from '@nestjs/throttler';
 
 import { MessageResponseDto } from '../../common/dto/message-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { AuthService } from './auth.service';
 import {
   AuthSessionResponseDto,
   CurrentUserResponseDto,
+  ForgotPasswordDto,
   LoginDto,
   RegisterDto,
+  ResetPasswordDto,
 } from './dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Throttle({
     default: {
       limit: 5,
@@ -46,6 +48,7 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  @Public()
   @Throttle({
     default: {
       limit: 10,
@@ -60,8 +63,37 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Public()
+  @Throttle({
+    default: {
+      limit: 3,
+      ttl: minutes(60),
+    },
+  })
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request a password reset email' })
+  @ApiOkResponse({ type: MessageResponseDto })
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Public()
+  @Throttle({
+    default: {
+      limit: 10,
+      ttl: minutes(60),
+    },
+  })
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password using a valid reset token' })
+  @ApiOkResponse({ type: MessageResponseDto })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
+  }
+
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get current logged-in user' })
   @ApiOkResponse({ type: CurrentUserResponseDto })
@@ -70,7 +102,6 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout current user' })

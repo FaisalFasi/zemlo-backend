@@ -1,10 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { Public } from '../../common/decorators/public.decorator';
 import { PublicSettingsResponseDto } from './dto';
 import { PublicSettingsService } from './public-settings.service';
 
 @ApiTags('Public Settings')
+@Public()
 @Controller('public/settings')
 export class PublicSettingsController {
   constructor(private readonly publicSettingsService: PublicSettingsService) {}

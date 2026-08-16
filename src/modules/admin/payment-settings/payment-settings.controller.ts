@@ -5,7 +5,6 @@ import {
   Param,
   ParseEnumPipe,
   Patch,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,8 +17,6 @@ import { PaymentMethod } from '@prisma/client';
 
 import { PERMISSIONS } from '../../../common/constants/permissions';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
-import { PermissionsGuard } from '../../../common/guards/permissions.guard';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import {
   PaymentMethodSettingResponseDto,
   UpdatePaymentMethodSettingDto,
@@ -28,7 +25,6 @@ import { PaymentSettingsService } from './payment-settings.service';
 
 @ApiTags('Admin - Payment Settings')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin/payment-settings')
 export class PaymentSettingsController {
   constructor(

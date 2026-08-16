@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -23,6 +24,7 @@ import {
 import type { Request } from 'express';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CartService } from './cart.service';
@@ -36,6 +38,7 @@ import { AddCartItemDto, CartResponseDto, UpdateCartItemDto } from './dto';
   description:
     'Required only for guest cart requests. Not required when Authorization bearer token is valid.',
 })
+@Public()
 @UseGuards(OptionalJwtAuthGuard)
 @Controller('cart')
 export class CartController {
@@ -76,6 +79,26 @@ export class CartController {
       this.getGuestId(request),
       itemId,
       dto,
+    );
+  }
+
+  @Post('merge')
+  @ApiOperation({
+    summary:
+      'Merge the guest cart (x-guest-id) into the authenticated user cart, then discard the guest cart',
+  })
+  @ApiOkResponse({ type: CartResponseDto })
+  mergeGuestCart(
+    @CurrentUser() user: AuthenticatedUser | undefined,
+    @Req() request: Request,
+  ) {
+    if (!user) {
+      throw new UnauthorizedException('Cart merge requires a logged-in user');
+    }
+
+    return this.cartService.mergeGuestCartIntoUser(
+      user.id,
+      this.getGuestId(request),
     );
   }
 

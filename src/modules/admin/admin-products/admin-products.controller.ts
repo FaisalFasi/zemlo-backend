@@ -6,7 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -19,8 +18,6 @@ import {
 import { AdminMessageResponseDto } from '../common/dto/admin-message-response.dto';
 import { PERMISSIONS } from '../../../common/constants/permissions';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
-import { PermissionsGuard } from '../../../common/guards/permissions.guard';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { AdminProductsService } from './admin-products.service';
 import {
   AdminProductResponseDto,
@@ -30,7 +27,6 @@ import {
 
 @ApiTags('Admin - Products')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin/products')
 export class AdminProductsController {
   constructor(private readonly adminProductsService: AdminProductsService) {}

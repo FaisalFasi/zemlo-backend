@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   OrderInventoryStatus,
   OrderStatus,
+  PaymentMethod,
   PaymentStatus,
 } from '@prisma/client';
 
@@ -22,9 +23,23 @@ type ReleaseReservedInventoryParams = {
   releasedAt?: Date;
 };
 
+export type ExpiredReservationOrderRef = {
+  id: string;
+  orderNumber: string;
+  payment: {
+    method: PaymentMethod;
+    paymentIntentId: string | null;
+  } | null;
+};
+
 @Injectable()
 export class OrderInventoryLifecycleService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(OrderInventoryLifecycleService.name);
+
+  constructor(
+    @Inject(PrismaService)
+    private readonly prisma: PrismaService,
+  ) {}
 
   async commitReservedInventory(
     tx: PrismaTransactionClient,
@@ -99,18 +114,26 @@ export class OrderInventoryLifecycleService {
     return true;
   }
 
+  /**
+   * `shouldRelease` lets a caller veto releasing a specific order (e.g. the
+   * payments module checks the live Stripe PaymentIntent status first) without
+   * this module depending on payment-provider code. Defaults to "always release".
+   */
   async releaseExpiredReservations(params?: {
     limit?: number;
     dryRun?: boolean;
     now?: Date;
+    shouldRelease?: (order: ExpiredReservationOrderRef) => Promise<boolean>;
   }): Promise<{
     checkedCount: number;
     releasedCount: number;
+    skippedCount: number;
     dryRun: boolean;
   }> {
     const now = params?.now ?? new Date();
     const limit = params?.limit ?? 50;
     const dryRun = params?.dryRun ?? false;
+    const shouldRelease = params?.shouldRelease;
 
     const orders = await this.prisma.order.findMany({
       where: {
@@ -123,6 +146,13 @@ export class OrderInventoryLifecycleService {
       },
       select: {
         id: true,
+        orderNumber: true,
+        payment: {
+          select: {
+            method: true,
+            paymentIntentId: true,
+          },
+        },
       },
       orderBy: {
         inventoryExpiresAt: 'asc',
@@ -134,46 +164,65 @@ export class OrderInventoryLifecycleService {
       return {
         checkedCount: orders.length,
         releasedCount: 0,
+        skippedCount: 0,
         dryRun: true,
       };
     }
 
     let releasedCount = 0;
+    let skippedCount = 0;
 
     for (const order of orders) {
-      const released = await this.prisma.$transaction(async (tx) => {
-        const wasReleased = await this.releaseReservedInventory(tx, {
-          orderId: order.id,
-          orderStatus: OrderStatus.EXPIRED,
-          paymentStatus: PaymentStatus.EXPIRED,
-          note: 'Reserved inventory expired and was released automatically.',
-          releasedAt: now,
-        });
-
-        if (wasReleased) {
-          await tx.payment.updateMany({
-            where: {
-              orderId: order.id,
-              status: PaymentStatus.PENDING,
-            },
-            data: {
-              status: PaymentStatus.EXPIRED,
-              expiredAt: now,
-            },
-          });
+      try {
+        if (shouldRelease && !(await shouldRelease(order))) {
+          skippedCount += 1;
+          continue;
         }
 
-        return wasReleased;
-      });
+        const released = await this.prisma.$transaction(async (tx) => {
+          const wasReleased = await this.releaseReservedInventory(tx, {
+            orderId: order.id,
+            orderStatus: OrderStatus.EXPIRED,
+            paymentStatus: PaymentStatus.EXPIRED,
+            note: 'Reserved inventory expired and was released automatically.',
+            releasedAt: now,
+          });
 
-      if (released) {
-        releasedCount += 1;
+          if (wasReleased) {
+            await tx.payment.updateMany({
+              where: {
+                orderId: order.id,
+                status: PaymentStatus.PENDING,
+              },
+              data: {
+                status: PaymentStatus.EXPIRED,
+                expiredAt: now,
+              },
+            });
+          }
+
+          return wasReleased;
+        });
+
+        if (released) {
+          releasedCount += 1;
+        } else {
+          skippedCount += 1;
+        }
+      } catch (error) {
+        skippedCount += 1;
+        this.logger.error(
+          `Failed to release ${order.orderNumber}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     }
 
     return {
       checkedCount: orders.length,
       releasedCount,
+      skippedCount,
       dryRun: false,
     };
   }

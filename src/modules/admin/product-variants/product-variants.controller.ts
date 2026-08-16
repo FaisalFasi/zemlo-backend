@@ -6,7 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,9 +17,7 @@ import {
 
 import { PERMISSIONS } from '../../../common/constants/permissions';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
-import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { AdminMessageResponseDto } from '../common/dto/admin-message-response.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ProductVariantsService } from './product-variants.service';
 import {
   CreateProductVariantDto,
@@ -30,7 +27,6 @@ import {
 
 @ApiTags('Admin - Product Variants')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin/products/:productId/variants')
 export class ProductVariantsController {
   constructor(

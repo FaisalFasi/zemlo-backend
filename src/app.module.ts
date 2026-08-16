@@ -14,6 +14,10 @@ import { HealthModule } from './modules/health/health.module';
 
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from './common/guards/permissions.guard';
 
 import { validate } from './config/env.config'; // ✅ Yaha se import
 
@@ -38,6 +42,8 @@ import { validate } from './config/env.config'; // ✅ Yaha se import
       ],
     }),
 
+    ScheduleModule.forRoot(),
+
     PrismaModule,
     AuthModule,
     CheckoutModule,
@@ -53,6 +59,17 @@ import { validate } from './config/env.config'; // ✅ Yaha se import
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Secure by default: every route requires a valid JWT + its declared
+    // permissions unless explicitly opted out with @Public(). Order matters —
+    // JwtAuthGuard populates request.user before PermissionsGuard reads it.
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
   ],
 })

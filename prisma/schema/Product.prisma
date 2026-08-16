@@ -128,6 +128,8 @@ model Product {
   @@index([brandId])
   @@index([status])
   @@index([isFeatured])
+  @@index([status, isFeatured, createdAt])
+  @@index([price])
   @@map("products")
 }
 

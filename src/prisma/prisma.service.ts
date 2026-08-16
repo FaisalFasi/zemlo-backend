@@ -11,7 +11,13 @@
  *  we can write
  *   await prisma.user.findUnique({ where: { email: 'test@test.com' } });
  * */
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 
 import { prismaPGAdapter } from '../../prisma/adapter/prismaPGAdapter';
@@ -21,19 +27,25 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  constructor() {
-    const databaseUrl = process.env.DATABASE_URL;
+  constructor(
+    @Inject(ConfigService)
+    configService: ConfigService,
+  ) {
+    const databaseUrl = configService.get<string>('database.url');
 
     if (!databaseUrl) {
       throw new Error('DATABASE_URL is missing');
     }
 
+    const environment = configService.get<string>(
+      'app.environment',
+      'development',
+    );
+
     super({
       adapter: prismaPGAdapter(databaseUrl),
       log:
-        process.env.NODE_ENV === 'development'
-          ? ['warn', 'error']
-          : ['warn', 'error'],
+        environment === 'development' ? ['warn', 'error'] : ['warn', 'error'],
     });
   }
 
