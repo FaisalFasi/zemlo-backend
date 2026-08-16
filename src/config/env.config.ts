@@ -52,6 +52,17 @@ export class EnvironmentVariables {
   @Max(120)
   INVENTORY_RESERVATION_MINUTES?: number;
 
+  @IsOptional()
+  @IsIn(['true', 'false'])
+  INVENTORY_RELEASE_CRON_ENABLED?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(500)
+  INVENTORY_RELEASE_BATCH_LIMIT?: number;
+
   @IsString()
   DATABASE_URL: string;
 
@@ -80,6 +91,49 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   RATE_LIMIT_MAX?: number;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_SECRET_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_PUBLISHABLE_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_WEBHOOK_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  RESEND_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  EMAIL_FROM_ADDRESS?: string;
+
+  @IsOptional()
+  @IsString()
+  FRONTEND_PASSWORD_RESET_URL?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(5)
+  @Max(1440)
+  PASSWORD_RESET_TOKEN_TTL_MINUTES?: number;
+
+  @IsOptional()
+  @IsString()
+  CLOUDINARY_CLOUD_NAME?: string;
+
+  @IsOptional()
+  @IsString()
+  CLOUDINARY_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  CLOUDINARY_API_SECRET?: string;
 }
 
 export function validate(

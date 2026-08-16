@@ -1,24 +1,27 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { Public } from '../../common/decorators/public.decorator';
 import { CatalogService } from './catalog.service';
 import {
+  CatalogQueryDto,
+  PaginatedProductsResponseDto,
   PublicBrandResponseDto,
   PublicCategoryResponseDto,
   PublicProductDetailResponseDto,
-  PublicProductListItemResponseDto,
 } from './dto';
 
 @ApiTags('Catalog')
+@Public()
 @Controller()
 export class CatalogController {
   constructor(private readonly catalogService: CatalogService) {}
 
   @Get('products')
-  @ApiOperation({ summary: 'Public: get active products' })
-  @ApiOkResponse({ type: [PublicProductListItemResponseDto] })
-  findProducts() {
-    return this.catalogService.findProducts();
+  @ApiOperation({ summary: 'Public: get active products (paginated)' })
+  @ApiOkResponse({ type: PaginatedProductsResponseDto })
+  findProducts(@Query() query: CatalogQueryDto) {
+    return this.catalogService.findProducts(query);
   }
 
   @Get('products/:slug')

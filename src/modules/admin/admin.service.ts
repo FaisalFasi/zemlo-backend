@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { PaymentStatus, Prisma, ProductStatus, UserRole } from '@prisma/client';
 
 import { hashPassword } from '../../common/utils/hash.util';
 import { PrismaService } from '../../prisma/prisma.service';
+import type { AdminStatsQueryDto, AdminStatsResponseDto } from './dto';
 
 export type BootstrapSuperAdminInput = {
   email: string;
@@ -32,6 +33,52 @@ type BootstrapSuperAdminResult = {
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getStats(
+    query: AdminStatsQueryDto = {},
+  ): Promise<AdminStatsResponseDto> {
+    const lowStockThreshold = query.lowStockThreshold ?? 5;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const [ordersToday, revenueAgg, lowStockCount] = await Promise.all([
+      this.prisma.order.count({
+        where: {
+          createdAt: {
+            gte: startOfToday,
+          },
+        },
+      }),
+      this.prisma.order.aggregate({
+        where: {
+          paymentStatus: PaymentStatus.PAID,
+          paidAt: {
+            gte: startOfToday,
+          },
+        },
+        _sum: {
+          total: true,
+        },
+      }),
+      this.prisma.product.count({
+        where: {
+          status: ProductStatus.ACTIVE,
+          trackInventory: true,
+          stock: {
+            lte: lowStockThreshold,
+          },
+        },
+      }),
+    ]);
+
+    return {
+      ordersToday,
+      revenueToday: Number(revenueAgg._sum.total ?? 0),
+      lowStockCount,
+      lowStockThreshold,
+    };
+  }
 
   async bootstrapSuperAdmin(
     input: BootstrapSuperAdminInput,

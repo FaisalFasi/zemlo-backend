@@ -6,6 +6,7 @@ import { type User, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthService } from './auth.service';
 import { PermissionResolverService } from './services/permission-resolver.service';
+import { EmailService } from '../email/email.service';
 
 jest.mock('../../common/utils/hash.util', () => ({
   hashPassword: jest.fn().mockResolvedValue('hashed-password'),
@@ -38,6 +39,10 @@ describe('AuthService registration security', () => {
     getUserPermissions: jest.fn(),
   };
 
+  const emailServiceMock = {
+    sendPasswordResetEmail: jest.fn(),
+  };
+
   let service: AuthService;
 
   const createdUser: User = {
@@ -67,6 +72,7 @@ describe('AuthService registration security', () => {
       jwtServiceMock as unknown as JwtService,
       configServiceMock as unknown as ConfigService,
       permissionResolverMock as unknown as PermissionResolverService,
+      emailServiceMock as unknown as EmailService,
     );
 
     prismaMock.user.findUnique.mockResolvedValue(null);

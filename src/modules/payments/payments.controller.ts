@@ -22,6 +22,7 @@ import {
 import type { Request } from 'express';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import {
@@ -39,6 +40,7 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('stripe/create-intent')
+  @Public()
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({
@@ -58,6 +60,7 @@ export class PaymentsController {
   }
 
   @Post('stripe/webhook')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Stripe webhook endpoint',

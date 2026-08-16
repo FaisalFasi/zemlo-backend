@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -16,10 +8,9 @@ import {
 
 import { PERMISSIONS } from '../../common/constants/permissions';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   GuestOrderLookupDto,
   OrderDetailResponseDto,
@@ -36,7 +27,6 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get('orders/my-orders')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get current user orders' })
   @ApiOkResponse({ type: [OrderSummaryResponseDto] })
   findMyOrders(@CurrentUser() user: AuthenticatedUser) {
@@ -44,7 +34,6 @@ export class OrdersController {
   }
 
   @Get('orders/my-orders/:orderNumber')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get current user order by order number' })
   @ApiOkResponse({ type: OrderDetailResponseDto })
   findMyOrderByOrderNumber(
@@ -55,6 +44,7 @@ export class OrdersController {
   }
 
   @Post('orders/guest/lookup')
+  @Public()
   @ApiOperation({ summary: 'Guest: lookup order by order number and email' })
   @ApiOkResponse({ type: OrderDetailResponseDto })
   findGuestOrder(@Body() dto: GuestOrderLookupDto) {
@@ -62,7 +52,6 @@ export class OrdersController {
   }
 
   @Get('admin/orders')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions(PERMISSIONS.ORDERS_VIEW_ALL)
   @ApiOperation({ summary: 'Admin: get all orders' })
   @ApiOkResponse({ type: [OrderSummaryResponseDto] })
@@ -71,7 +60,6 @@ export class OrdersController {
   }
 
   @Get('admin/orders/:id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions(PERMISSIONS.ORDERS_VIEW_ALL)
   @ApiOperation({ summary: 'Admin: get order by ID' })
   @ApiOkResponse({ type: OrderDetailResponseDto })
@@ -80,7 +68,6 @@ export class OrdersController {
   }
 
   @Patch('admin/orders/:id/status')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions(PERMISSIONS.ORDERS_UPDATE)
   @ApiOperation({ summary: 'Admin: update order status' })
   @ApiOkResponse({ type: OrderDetailResponseDto })
@@ -93,7 +80,6 @@ export class OrdersController {
   }
 
   @Patch('admin/orders/:id/shipping')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions(PERMISSIONS.ORDERS_UPDATE)
   @ApiOperation({ summary: 'Admin: update order shipping and tracking' })
   @ApiOkResponse({ type: OrderDetailResponseDto })

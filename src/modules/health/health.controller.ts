@@ -7,6 +7,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { Public } from '../../common/decorators/public.decorator';
 import {
   LivenessResponseDto,
   ReadinessResponseDto,
@@ -15,6 +16,7 @@ import { DatabaseHealthIndicator } from './indicators/database-health.indicator'
 
 @ApiTags('Health')
 @SkipThrottle()
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

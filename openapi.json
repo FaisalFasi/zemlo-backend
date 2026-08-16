@@ -45,6 +45,50 @@
         ]
       }
     },
+    "/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request a password reset email",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reset password using a valid reset token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/auth/me": {
       "get": {
         "operationId": "AuthController_me",
@@ -182,6 +226,33 @@
         "summary": "Create checkout order from current cart",
         "tags": [
           "Checkout"
+        ]
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "operationId": "AdminController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: dashboard stats (orders today, revenue today, low-stock count)",
+        "tags": [
+          "Admin"
         ]
       }
     },
@@ -1099,6 +1170,49 @@
         ]
       }
     },
+    "/admin/uploads/image": {
+      "post": {
+        "operationId": "UploadsController_uploadImage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Admin: upload a product/variant image (returns a Cloudinary URL)",
+        "tags": [
+          "Admin - Uploads"
+        ]
+      }
+    },
     "/orders/my-orders": {
       "get": {
         "operationId": "OrdersController_findMyOrders",
@@ -1304,16 +1418,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PublicProductListItemResponseDto"
-                  }
+                  "$ref": "#/components/schemas/PaginatedProductsResponseDto"
                 }
               }
             }
           }
         },
-        "summary": "Public: get active products",
+        "summary": "Public: get active products (paginated)",
         "tags": [
           "Catalog"
         ]
@@ -1554,6 +1665,43 @@
           }
         ],
         "summary": "Remove item from cart",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/cart/merge": {
+      "post": {
+        "operationId": "CartController_mergeGuestCart",
+        "parameters": [
+          {
+            "name": "x-guest-id",
+            "in": "header",
+            "description": "Required only for guest cart requests. Not required when Authorization bearer token is valid.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Merge the guest cart (x-guest-id) into the authenticated user cart, then discard the guest cart",
         "tags": [
           "Cart"
         ]
@@ -1946,17 +2094,6 @@
           "accessToken"
         ]
       },
-      "CurrentUserResponseDto": {
-        "type": "object",
-        "properties": {
-          "user": {
-            "$ref": "#/components/schemas/AuthUserResponseDto"
-          }
-        },
-        "required": [
-          "user"
-        ]
-      },
       "MessageResponseDto": {
         "type": "object",
         "properties": {
@@ -1967,6 +2104,17 @@
         },
         "required": [
           "message"
+        ]
+      },
+      "CurrentUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUserResponseDto"
+          }
+        },
+        "required": [
+          "user"
         ]
       },
       "OrderStatus": {
@@ -2230,6 +2378,35 @@
           "order",
           "payment",
           "nextStep"
+        ]
+      },
+      "AdminStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "ordersToday": {
+            "type": "number",
+            "example": 12,
+            "description": "Orders created today"
+          },
+          "revenueToday": {
+            "type": "number",
+            "example": 1024.5,
+            "description": "Sum of paid orders’ totals for today"
+          },
+          "lowStockCount": {
+            "type": "number",
+            "example": 3
+          },
+          "lowStockThreshold": {
+            "type": "number",
+            "example": 5
+          }
+        },
+        "required": [
+          "ordersToday",
+          "revenueToday",
+          "lowStockCount",
+          "lowStockThreshold"
         ]
       },
       "PlatformSettingsResponseDto": {
@@ -3220,6 +3397,23 @@
           "_count",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "UploadImageResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://res.cloudinary.com/zemlo/image/upload/v1699999999/zemlo/products/abc123.jpg"
+          },
+          "publicId": {
+            "type": "string",
+            "example": "zemlo/products/abc123"
+          }
+        },
+        "required": [
+          "url",
+          "publicId"
         ]
       },
       "OrderProductSummaryResponseDto": {
@@ -4276,6 +4470,40 @@
           "brand",
           "images",
           "variants"
+        ]
+      },
+      "PaginatedProductsResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProductListItemResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 137
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "example": 24
+          },
+          "pageCount": {
+            "type": "number",
+            "example": 6
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "limit",
+          "pageCount"
         ]
       },
       "PublicBrandDetailResponseDto": {

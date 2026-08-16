@@ -158,9 +158,22 @@ TRUST_PROXY_HOPS=0
 RATE_LIMIT_TTL_MS=60000
 RATE_LIMIT_MAX=120
 
+INVENTORY_RESERVATION_MINUTES=20
+INVENTORY_RELEASE_CRON_ENABLED=true
+INVENTORY_RELEASE_BATCH_LIMIT=50
+
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+
+RESEND_API_KEY=re_...
+EMAIL_FROM_ADDRESS="Zemlo <no-reply@zemlo.shop>"
+FRONTEND_PASSWORD_RESET_URL=http://localhost:3000/reset-password
+PASSWORD_RESET_TOKEN_TTL_MINUTES=60
+
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
 ```
 
 Important rules:
@@ -170,12 +183,26 @@ Important rules:
 - Never use `CORS_ORIGINS=*`
 - Separate multiple origins with commas and no spaces
 - Do not add a trailing slash to origins
+- Every env var above is validated (type/presence) in
+  `src/config/env.config.ts` and resolved into one nested object by
+  `src/config/configuration.ts` — that's the single place the whole app
+  reads config from. If you're adding a new env var, add it in both files;
+  don't read `process.env.X` directly anywhere else in `src/`.
 
 Example:
 
 ```env
 CORS_ORIGINS=http://localhost:3000,https://zemlo.shop,https://www.zemlo.shop
 ```
+
+### If email/image upload aren't configured yet
+
+Both degrade gracefully instead of crashing the app:
+
+- No `RESEND_API_KEY` → password reset emails aren't sent; the reset URL is
+  logged instead (useful for local testing without a Resend account yet).
+- No `CLOUDINARY_*` vars → `POST /admin/uploads/image` returns `503`
+  instead of failing at app boot.
 
 ---
 
@@ -573,9 +600,22 @@ TRUST_PROXY_HOPS=1
 RATE_LIMIT_TTL_MS=60000
 RATE_LIMIT_MAX=120
 
+INVENTORY_RESERVATION_MINUTES=20
+INVENTORY_RELEASE_CRON_ENABLED=true
+INVENTORY_RELEASE_BATCH_LIMIT=50
+
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+
+RESEND_API_KEY=re_...
+EMAIL_FROM_ADDRESS="Zemlo <no-reply@zemlo.shop>"
+FRONTEND_PASSWORD_RESET_URL=https://zemlo.shop/reset-password
+PASSWORD_RESET_TOKEN_TTL_MINUTES=60
+
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
 ```
 
 During frontend development, localhost may temporarily be included:
@@ -588,42 +628,124 @@ Do not commit these values to Git.
 
 ---
 
-## 13. Create the first super-admin
+## 13. Create the first production super-admin
 
-Required temporary environment variables:
+### Important rule
+
+The super-admin bootstrap is a **one-time production operation**.
+
+- Run it only when the production database does not yet contain a `SUPER_ADMIN`.
+- The backend intentionally refuses to create a second `SUPER_ADMIN`.
+- Public registration always creates a normal customer.
+- Future admin/staff accounts should be created from the protected staff-management API/admin dashboard, not by rerunning the bootstrap.
+
+### Why the compiled command is used
+
+The direct TypeScript script can fail to inject `PrismaService` correctly in some local `tsx` runs. Build the backend first, then execute the compiled CLI.
+
+### Create the production super-admin from the local backend terminal
+
+1. Copy the production `DATABASE_URL` from Render or Neon.
+2. Replace the two placeholders below.
+3. Run this command from the Zemlo backend project root.
 
 ```bash
-export ADMIN_EMAIL="admin@example.com"
-export ADMIN_PASSWORD="strong-unique-password"
-export ADMIN_FIRST_NAME="Faisal"
-export ADMIN_LAST_NAME="Rehman"
+npm run build
+
+DATABASE_URL='PASTE_PRODUCTION_DATABASE_URL' \
+ADMIN_EMAIL='admin@example.com' \
+ADMIN_PASSWORD='PASTE_STRONG_ADMIN_PASSWORD' \
+ADMIN_FIRST_NAME='Faisal' \
+ADMIN_LAST_NAME='Rehman' \
+node dist/src/cli/admin.js bootstrap
 ```
 
-Validate without changing the database:
+To check what would happen without touching the database:
 
 ```bash
-npm run admin -- bootstrap --dry-run
+node dist/src/cli/admin.js bootstrap --dry-run
 ```
 
-Create the account:
+Password requirements:
 
-```bash
-npm run admin -- bootstrap
+```text
+At least 12 characters
+At least one uppercase letter
+At least one lowercase letter
+At least one number
+At least one special character
 ```
 
-Public registration must never create admin users.
+Expected result:
+
+```text
+✅ SUPER_ADMIN created successfully
+```
+
+The temporary values apply only to this command and are not written into the repository.
+
+Never commit or share:
+
+```text
+DATABASE_URL
+ADMIN_PASSWORD
+JWT secrets
+Stripe secrets
+```
 
 ---
 
-## 14. Stripe webhook setup
+## 14. Stripe webhook setup and testing
 
-Stripe webhook endpoint:
+### Why a Stripe webhook is needed
+
+Stripe processes payment updates outside the normal frontend request.
+
+The webhook allows Stripe to inform the backend when a payment:
 
 ```text
-https://YOUR-BACKEND-DOMAIN/payments/stripe/webhook
+succeeds
+fails
+is cancelled
 ```
 
-Required events:
+The backend then updates the related payment/order and safely handles inventory lifecycle changes.
+
+Without the webhook, the frontend may show a payment result, but the backend would not have a trusted server-to-server confirmation from Stripe.
+
+### Sandbox and live environments
+
+Stripe sandbox and live mode are separate environments.
+
+Use this combination during development:
+
+```text
+Stripe sandbox API keys
+Stripe sandbox webhook destination
+Stripe sandbox webhook signing secret
+```
+
+Use live keys and a live webhook destination only when real payments are ready.
+
+A sandbox event does not appear in a live destination, and a live event does not appear in a sandbox destination.
+
+### Create the sandbox event destination
+
+In the Stripe sandbox:
+
+```text
+Workbench
+→ Webhooks / Event destinations
+→ Add destination
+```
+
+Listen to events from:
+
+```text
+Your account
+```
+
+Select these events:
 
 ```text
 payment_intent.succeeded
@@ -631,37 +753,248 @@ payment_intent.payment_failed
 payment_intent.canceled
 ```
 
-Copy the webhook signing secret to Render:
+Choose:
+
+```text
+Webhook endpoint
+```
+
+Production backend endpoint:
+
+```text
+https://zemlo-store.onrender.com/payments/stripe/webhook
+```
+
+### Why these three events are used
+
+```text
+payment_intent.succeeded
+```
+
+Used when Stripe confirms that payment completed successfully. The backend can mark the payment as paid and commit the reserved inventory.
+
+```text
+payment_intent.payment_failed
+```
+
+Used when payment fails. The backend can record the failure and release inventory when appropriate.
+
+```text
+payment_intent.canceled
+```
+
+Used when the PaymentIntent is cancelled. The backend can cancel the payment flow and release its reservation according to the lifecycle rules.
+
+### Configure the signing secret
+
+Open the created destination and reveal:
+
+```text
+Signing secret
+```
+
+It begins with:
+
+```text
+whsec_...
+```
+
+Add it to the Render environment:
 
 ```env
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-Start with Stripe test keys. Replace them with live keys only when real payments are ready.
+Then save the Render environment changes and deploy.
+
+### Why the signing secret is required
+
+The backend uses this secret to verify the Stripe signature.
+
+It proves that the webhook request came from Stripe and that its payload was not modified.
+
+Do not use these values as the webhook signing secret:
+
+```text
+sk_test_...
+sk_live_...
+pk_test_...
+pk_live_...
+```
+
+The webhook signing secret must begin with:
+
+```text
+whsec_...
+```
+
+Do not commit or share it.
+
+### Local `.env` versus Render
+
+Render must contain the signing secret of the Stripe destination that points to the Render backend.
+
+A local Stripe CLI listener can produce a separate signing secret. That local secret belongs only in the local `.env` when forwarding events to localhost.
+
+```text
+Render STRIPE_WEBHOOK_SECRET
+= signing secret for the Render webhook destination
+
+Local .env STRIPE_WEBHOOK_SECRET
+= signing secret printed by `stripe listen`, when local forwarding is used
+```
+
+### Test the webhook delivery
+
+The Stripe dashboard's **Send test events** button may display CLI instructions rather than sending the event directly.
+
+Log in to the Stripe CLI:
+
+```bash
+stripe login
+```
+
+Make sure the CLI login belongs to the same Stripe sandbox where the webhook destination was created.
+
+Trigger a test event:
+
+```bash
+stripe trigger payment_intent.succeeded
+```
+
+Expected terminal result:
+
+```text
+Trigger succeeded! Check dashboard for event details.
+```
+
+### Why this test is performed
+
+This confirms that:
+
+```text
+Stripe can generate the event
+the correct sandbox receives it
+Stripe can reach the Render webhook URL
+the backend accepts the Stripe signature
+the endpoint returns a valid HTTP response
+```
+
+### Check Event deliveries
+
+Open:
+
+```text
+Stripe sandbox
+→ Workbench
+→ Webhooks / Event destinations
+→ your destination
+→ Event deliveries
+```
+
+Refresh the page and open the latest:
+
+```text
+payment_intent.succeeded
+```
+
+Successful result:
+
+```text
+Delivered
+HTTP 200
+```
+
+A failed delivery should be opened to inspect:
+
+```text
+HTTP status
+response body
+delivery attempts
+```
+
+### Important CLI note
+
+A message such as:
+
+```text
+A newer version of the Stripe CLI is available
+```
+
+is only an update warning.
+
+When the command also says:
+
+```text
+Trigger succeeded!
+```
+
+the test event was created successfully. Missing deliveries are then usually caused by checking a different sandbox/live environment or a different webhook destination, not by the version warning.
+
+Optional Stripe CLI update on macOS with Homebrew:
+
+```bash
+brew upgrade stripe/stripe-cli/stripe
+stripe version
+```
 
 ---
 
 ## 15. Expired inventory reservation cleanup
 
-Command:
+**Updated 2026-08-16 — this now runs automatically from inside the app.**
+As of this date the app schedules its own cleanup in-process
+(`@nestjs/schedule`, `InventoryReleaseCron`, every 5 minutes), controlled by:
+
+```env
+INVENTORY_RELEASE_CRON_ENABLED=true
+INVENTORY_RELEASE_BATCH_LIMIT=50
+```
+
+No external scheduler is required for this to work — a single Render web
+service instance now cleans up its own expired reservations.
+
+### There is also a separate Render Cron Job already configured
+
+`zemlo-inventory-expiry-cleanup` (see `RENDER_INVENTORY_CRON_GUIDE.md`) was
+set up on 6 July 2026, before the in-process cron existed. It runs the same
+underlying logic externally, every 5 minutes, via:
 
 ```bash
 npm run inventory:release-expired -- --limit=100
 ```
 
-Recommended production schedule:
+**Both are safe to run at the same time** — the release logic only acts on
+orders still `RESERVED`, so a duplicate run is a no-op, not a bug. But
+running both is redundant infrastructure, not redundant safety: pick one.
 
 ```text
-Every 10 minutes
+Keep only the in-process cron  → simplest; one fewer Render service to pay
+                                  for and maintain; recommended default.
+Keep only the Render Cron Job  → useful if you want cleanup to keep running
+                                  even when the web service itself is down
+                                  for some reason.
+Keep both                       → belt-and-suspenders; harmless, but two
+                                  things to remember exist.
 ```
 
-Cron expression:
+If you decide to retire the Render Cron Job, delete the
+`zemlo-inventory-expiry-cleanup` service from the Render dashboard — nothing
+in this repo needs to change either way.
 
-```text
-*/10 * * * *
+### Manual run (debugging / one-off cleanup)
+
+The npm script still works standalone, independent of either scheduler:
+
+```bash
+npm run inventory:release-expired -- --limit=100
 ```
 
-This releases inventory for expired or abandoned payment reservations according to the backend lifecycle rules.
+Dry run (no database changes):
+
+```bash
+npm run inventory:release-expired -- --dry-run --limit=100
+```
 
 ---
 
@@ -900,6 +1233,6 @@ Before accepting the Render deployment:
 [ ] CORS contains only trusted frontend domains
 [ ] Stripe webhook secret configured
 [ ] Super-admin created securely
-[ ] Inventory cleanup schedule configured
+[ ] Inventory cleanup scheduler decided (in-process, Render Cron Job, or both — see §15)
 [ ] Core checkout/payment smoke test passed
 ```

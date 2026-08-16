@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, ProductStatus } from '@prisma/client';
+import { type CartItem, Prisma, ProductStatus } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AddCartItemDto, CartResponseDto, UpdateCartItemDto } from './dto';
@@ -310,6 +310,142 @@ export class CartService {
     const updatedCart = await this.findCartById(cart.id);
 
     return this.toCartResponse(updatedCart);
+  }
+
+  /**
+   * Folds a guest cart's items into the now-authenticated user's cart, then
+   * deletes the guest cart. Items that are no longer addable (inactive
+   * product/variant, deleted product) are silently skipped rather than
+   * failing the whole merge — this runs right after login, not as a
+   * user-facing "add to cart" action.
+   */
+  async mergeGuestCartIntoUser(
+    userId: string,
+    guestId?: string,
+  ): Promise<CartResponseDto> {
+    const userCart = await this.getOrCreateCart(userId, undefined);
+
+    if (!guestId) {
+      return this.toCartResponse(userCart);
+    }
+
+    const guestCart = await this.prisma.cart.findUnique({
+      where: {
+        guestId,
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!guestCart || guestCart.items.length === 0) {
+      return this.toCartResponse(userCart);
+    }
+
+    for (const guestItem of guestCart.items) {
+      await this.mergeGuestCartItem(userCart.id, guestItem);
+    }
+
+    await this.prisma.cart.delete({
+      where: {
+        id: guestCart.id,
+      },
+    });
+
+    const mergedCart = await this.findCartById(userCart.id);
+
+    return this.toCartResponse(mergedCart);
+  }
+
+  private async mergeGuestCartItem(
+    userCartId: string,
+    guestItem: CartItem,
+  ): Promise<void> {
+    const product = await this.prisma.product.findUnique({
+      where: {
+        id: guestItem.productId,
+      },
+      select: cartProductSelect,
+    });
+
+    if (!product) {
+      return;
+    }
+
+    try {
+      this.assertProductCanBeAdded(product);
+    } catch {
+      return;
+    }
+
+    const variant = guestItem.variantId
+      ? await this.prisma.productVariant.findFirst({
+          where: {
+            id: guestItem.variantId,
+            productId: guestItem.productId,
+          },
+          select: cartVariantSelect,
+        })
+      : null;
+
+    if (guestItem.variantId && !variant) {
+      return;
+    }
+
+    if (variant) {
+      try {
+        this.assertVariantCanBeAdded(variant);
+      } catch {
+        return;
+      }
+    }
+
+    const existingUserItem = await this.prisma.cartItem.findUnique({
+      where: {
+        cartId_productId_variantKey: {
+          cartId: userCartId,
+          productId: guestItem.productId,
+          variantKey: guestItem.variantKey,
+        },
+      },
+    });
+
+    const requestedQuantity =
+      (existingUserItem?.quantity ?? 0) + guestItem.quantity;
+
+    const stock = variant?.stock ?? product.stock;
+    const trackInventory = variant?.trackInventory ?? product.trackInventory;
+    const allowBackorder = variant?.allowBackorder ?? product.allowBackorder;
+
+    const cappedQuantity = Math.min(
+      requestedQuantity,
+      MAX_CART_ITEM_QUANTITY,
+      trackInventory && !allowBackorder ? Math.max(stock, 0) : Infinity,
+    );
+
+    if (cappedQuantity <= 0) {
+      return;
+    }
+
+    await this.prisma.cartItem.upsert({
+      where: {
+        cartId_productId_variantKey: {
+          cartId: userCartId,
+          productId: guestItem.productId,
+          variantKey: guestItem.variantKey,
+        },
+      },
+      update: {
+        quantity: cappedQuantity,
+      },
+      create: {
+        cartId: userCartId,
+        productId: guestItem.productId,
+        variantId: guestItem.variantId,
+        variantKey: guestItem.variantKey,
+        quantity: cappedQuantity,
+      },
+    });
   }
 
   async clearCart(userId?: string, guestId?: string): Promise<CartResponseDto> {

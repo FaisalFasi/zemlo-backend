@@ -9,8 +9,8 @@ import {
 import type { Request } from 'express';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.type';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CheckoutService } from './checkout.service';
 import {
@@ -26,6 +26,7 @@ export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
 
   @Post('guest')
+  @Public()
   @ApiOperation({ summary: 'Guest checkout without login' })
   @ApiCreatedResponse({ type: CheckoutResponseDto })
   guestCheckout(@Body() dto: GuestCheckoutDto) {
@@ -33,7 +34,6 @@ export class CheckoutController {
   }
 
   @Post('auth')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Authenticated user checkout' })
   @ApiCreatedResponse({ type: CheckoutResponseDto })
@@ -45,6 +45,7 @@ export class CheckoutController {
   }
 
   @Post('from-cart')
+  @Public()
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiHeader({

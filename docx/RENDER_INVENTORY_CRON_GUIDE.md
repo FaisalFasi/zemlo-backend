@@ -3,6 +3,15 @@
 > **Suggested repository path:** `docs/RENDER_INVENTORY_CRON_GUIDE.md`  
 > **Verified setup date:** 6 July 2026  
 > **Purpose:** Future deployment or recovery ke waqt expired inventory cleanup Cron Job ko quickly configure aur verify karna.
+>
+> ⚠️ **2026-08-16 update:** the backend now *also* schedules this same
+> cleanup in-process (`@nestjs/schedule`, every 5 minutes — no separate
+> Render service needed). Both this Render Cron Job and the in-process
+> scheduler are safe to run at the same time (the release logic is
+> idempotent), but running both is redundant infrastructure. See
+> `BACKEND_DEV_PROD_GUIDE.md` §15 for the decision to make (keep one or
+> both) — nothing in this file is wrong, it's just no longer the only
+> mechanism.
 
 ---
 

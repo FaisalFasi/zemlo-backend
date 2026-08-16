@@ -9,6 +9,7 @@ import { ProductImagesModule } from './product-images/product-images.module';
 import { ProductVariantsModule } from './product-variants/product-variants.module';
 import { AdminCategoriesModule } from './categories/admin-categories.module';
 import { AdminBrandsModule } from './brands/admin-brands.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AdminBrandsModule } from './brands/admin-brands.module';
     ProductVariantsModule,
     AdminCategoriesModule,
     AdminBrandsModule,
+    UploadsModule,
   ],
   providers: [AdminService],
   controllers: [AdminController],
